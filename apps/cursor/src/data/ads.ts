@@ -20,16 +20,6 @@ export const ads: Ad[] = [
     link: "https://go.midday.ai/7kRYLa5",
   },
   {
-    id: "runpod",
-    title: "RunPod",
-    description: "Train, fine-tune and deploy AI models on demand.",
-    link: "https://dub.sh/8x2aNff",
-    logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-runpod-logo.jpg",
-    imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-runpod.jpg",
-  },
-  {
     id: "coderabbit",
     title: "CodeRabbit",
     description:
@@ -44,12 +34,12 @@ export const ads: Ad[] = [
     id: "braingrid",
     title: "BrainGrid",
     description:
-      "Turn half-baked thoughts into crystal-clear, AI-ready specs and tasks that Cursor can nail, the first time",
+      "Spec ideas, plan features, and prioritize tasks that your AI coding tools can build right the first time.",
     logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-braingrid-logo.svg",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-braingrid-logo-v2.svg",
     link: "https://braingrid.link/1lKu4x2",
     imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/braingrid1000x1000_2.png",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-braingrid-grid-v2.1.png",
   },
   {
     id: "endgame",
@@ -60,17 +50,6 @@ export const ads: Ad[] = [
     link: "https://go.midday.ai/wC5Vy8q",
     logoUrl:
       "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-endgame.webp",
-  },
-  {
-    id: "brand.dev",
-    title: "Brand.dev",
-    description:
-      "#1 API to personalize your product with logos, colors, and company info from any domain.",
-    imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/band-dev-grid-ad.png",
-    link: "https://dub.sh/yaOVmSI",
-    logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/brand-dev-logo.png",
   },
 ];
 
