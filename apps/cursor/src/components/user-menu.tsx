@@ -4,6 +4,8 @@ import { createClient } from "@/utils/supabase/client";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useQueryStates } from "nuqs";
+import { parseAsBoolean } from "nuqs";
 import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -28,6 +30,11 @@ export function UserMenu() {
   const supabase = createClient();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [_, setQueryStates] = useQueryStates({
+    addCompany: parseAsBoolean.withDefault(false),
+    redirect: parseAsBoolean.withDefault(false),
+  });
 
   useEffect(() => {
     async function getUser() {
@@ -76,7 +83,7 @@ export function UserMenu() {
     >
       {user ? (
         <div className="flex items-center gap-2">
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Avatar className="size-6 rounded-none cursor-pointer">
                 <AvatarImage src={user?.image} className="rounded-none" />
@@ -93,6 +100,20 @@ export function UserMenu() {
             >
               <DropdownMenuItem asChild>
                 <Link href={`/u/${user?.slug}`}>Profile</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setQueryStates({ addCompany: true, redirect: true })
+                  }
+                  className="w-full text-left"
+                >
+                  Add Company
+                </button>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/jobs/new">Post a job</Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleSignOut}>
                 Sign out

@@ -1,6 +1,7 @@
 import { Banner } from "@/components/banner";
 import "./globals.css";
 import { Header } from "@/components/header";
+import { GlobalModals } from "@/components/modals/global-modals";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
@@ -29,12 +30,12 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://cdn.midday.ai/cursor/opengraph-image.png",
+        url: "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/opengraph-image-v2.png",
         width: 800,
         height: 600,
       },
       {
-        url: "https://cdn.midday.ai/cursor/opengraph-image.png",
+        url: "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/opengraph-image-v2.png",
         width: 1800,
         height: 1600,
       },
@@ -45,12 +46,12 @@ export const metadata: Metadata = {
     description: "Find the best cursor rules for your framework and language",
     images: [
       {
-        url: "https://cdn.midday.ai/cursor/opengraph-image.png",
+        url: "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/opengraph-image-v2.png",
         width: 800,
         height: 600,
       },
       {
-        url: "https://cdn.midday.ai/cursor/opengraph-image.png",
+        url: "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/opengraph-image-v2.png",
         width: 1800,
         height: 1600,
       },
@@ -64,7 +65,7 @@ export const viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: [
-    { media: "(prefers-color-scheme: light)" },
+    // { media: "(prefers-color-scheme: light)" },
     { media: "(prefers-color-scheme: dark)" },
   ],
 };
@@ -80,7 +81,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={cn(
         `${GeistSans.variable} ${GeistMono.variable}`,
-        "whitespace-pre-line antialiased bg-background text-foreground",
+        "whitespace-pre-line antialiased bg-background text-foreground !dark",
       )}
     >
       <body>
@@ -90,26 +91,35 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Header />
+          <NuqsAdapter>
+            <Header />
+            {children}
 
-          <NuqsAdapter>{children}</NuqsAdapter>
-
-          <a
-            href="https://github.com/pontusab/cursor.directory"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Button
-              className="hidden size-[48px] bg-[#F5F5F3]/30 text-black border border-black rounded-full font-medium fixed bottom-4 left-6 z-10 backdrop-blur-lg dark:bg-[#F5F5F3]/30 dark:text-white dark:border-white"
-              variant="outline"
-              size="icon"
+            <a
+              href="https://github.com/pontusab/cursor.directory"
+              target="_blank"
+              rel="noreferrer"
             >
-              <PlusIcon className="w-4 h-4" />
-            </Button>
-          </a>
+              <Button
+                className="hidden size-[48px] bg-[#F5F5F3]/30 text-black border border-black rounded-full font-medium fixed bottom-4 left-6 z-10 backdrop-blur-lg dark:bg-[#F5F5F3]/30 dark:text-white dark:border-white"
+                variant="outline"
+                size="icon"
+              >
+                <PlusIcon className="w-4 h-4" />
+              </Button>
+            </a>
 
-          <Banner />
-          <Toaster />
+            <Banner />
+            <Toaster />
+            <GlobalModals />
+
+            <footer className="py-8 text-center">
+              <p className="text-[11px] text-[#878787]/60">
+                This site is not affiliated with, endorsed by, or sponsored by
+                Anysphere Inc.
+              </p>
+            </footer>
+          </NuqsAdapter>
         </ThemeProvider>
       </body>
 

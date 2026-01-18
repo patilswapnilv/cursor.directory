@@ -13,11 +13,13 @@ import { Button } from "./ui/button";
 const navigationLinks = [
   { href: "/rules", label: "Rules" },
   { href: "/board", label: "Board" },
+  { href: "/jobs", label: "Jobs" },
   { href: "/mcp", label: "MCP Store" },
   { href: "/learn", label: "Learn" },
   { href: "/games", label: "Games" },
   { href: "/advertise", label: "Advertise" },
   { href: "/about", label: "About" },
+  { href: "/events", label: "Events" },
 ] as const;
 
 type User = {

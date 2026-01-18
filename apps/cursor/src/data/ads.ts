@@ -1,4 +1,5 @@
 export interface Ad {
+  id: string;
   title: string;
   description: string;
   logoUrl: string;
@@ -8,60 +9,60 @@ export interface Ad {
 
 export const ads: Ad[] = [
   {
-    title: "Novu",
-    description: "The open-source notification Inbox platform for React",
-    logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-novu-logo.png",
-    link: "https://dub.sh/nmIKfit",
-    imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-novu.png",
-  },
-  {
-    title: "Midday",
+    id: "sentry",
+    title: "Sentry.io - Build with AI, debug broken code.",
     description:
-      "Invoicing, Time tracking, File reconciliation, Storage, Financial Overview & your own Assistant",
+      "Monitor your AI agents with Sentry. Cursor.directory users get 3 months free of our team plan here.",
     logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-midday-logo.png",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-sentry-logo-v2.png",
     imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-midday.png",
-    link: "https://go.midday.ai/8cX3F4o",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-sentry.jpg",
+    link: "https://go.midday.ai/7kRYLa5",
   },
   {
-    title: "Languine",
-    description: "Localization infrastructure made for fast-paced startups.",
-    logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-languine-logo.png",
-    imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-languine.png",
-    link: "https://go.midday.ai/NnI1CUO",
-  },
-  {
-    title: "our cto when MCP is not MCPin’!!!!",
+    id: "coderabbit",
+    title: "CodeRabbit",
     description:
-      "just one more mcp bro. I promise bro just one more mcp to agi and it'll fix everything bro. bro. just one more.",
+      "AI Code Reviews. Spot bugs, 1-click fixes, refactor effortlessly",
     logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-composio-logo.png",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-coderabbit-logo.webp",
+    link: "https://coderabbit.link/XrK0XJY",
     imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-composio.jpg",
-    link: "https://dub.sh/yFjYSKz",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-coderabbit.jpg",
   },
   {
-    title: "Taska for GitHub & GitLab Issues",
+    id: "braingrid",
+    title: "BrainGrid",
     description:
-      "Taska is a beautifully designed Mac app for quickly creating and editing issues.",
+      "Spec ideas, plan features, and prioritize tasks that your AI coding tools can build right the first time.",
     logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-taska-logo.png",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-braingrid-logo-v2.svg",
+    link: "https://braingrid.link/1lKu4x2",
     imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-taska.png",
-    link: "https://dub.sh/8nBbSLT",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-braingrid-grid-v2.1.png",
   },
   {
-    title: "Polar",
-    description: "The fastest growing engine for SaaS & Digital Products",
-    logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-polar-logo.svg",
+    id: "endgame",
+    title: "Endgame",
+    description: "Let your AI deploy, validate and iterate endlessly.",
     imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-polar.png",
-    link: "https://go.midday.ai/JYZ5WcG",
+      "https://assets.serverless-extras.com/endgame/endgame-ad-square-1.gif",
+    link: "https://go.midday.ai/wC5Vy8q",
+    logoUrl:
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-endgame.webp",
+  },
+];
+
+export const rulePageAds = [
+  {
+    id: "coderabbit",
+    title: "CodeRabbit",
+    description:
+      "AI Code Reviews. Spot bugs, 1-click fixes, refactor effortlessly",
+    logoUrl:
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-coderabbit-logo.webp",
+    link: "https://coderabbit.link/GshBpe7",
+    imageUrl:
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-coderabbit.jpg",
   },
 ];

@@ -1,15 +1,15 @@
-import data from "@directories/data/mcp";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import slugify from "slugify";
+import type { MCP } from "./mcps/mcps-featured";
 
-export default function MCPList() {
+export default function MCPList({ data }: { data?: MCP[] | null }) {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-regular mb-4">MCP Servers</h3>
+        <h3 className="text-base font-regular">Featured MCPs</h3>
         <Link
           href="/mcp"
           className="text-sm text-[#878787] flex items-center gap-1"
@@ -51,7 +51,7 @@ export default function MCPList() {
             staggerChildren: 0.05,
           }}
         >
-          {data.map((mcp, index) => (
+          {data?.map((mcp, index) => (
             <motion.div
               key={mcp.name}
               initial={{ y: 20, opacity: 0 }}
@@ -63,7 +63,7 @@ export default function MCPList() {
               }}
             >
               <Link
-                href={`/mcp/${slugify(mcp.name, { lower: true })}`}
+                href={`/mcp/${mcp.slug || slugify(mcp.name, { lower: true })}`}
                 className="px-6 py-2 text-sm rounded-full font-medium whitespace-nowrap flex items-center gap-2 border border-border"
               >
                 {mcp.logo && (

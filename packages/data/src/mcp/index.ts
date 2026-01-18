@@ -42,6 +42,13 @@ export default [
     logo: "https://cdn.brandfetch.io/idsSceG8fK/w/436/h/449/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B",
   },
   {
+    name: "Prisma",
+    url: "https://github.com/prisma/mcp",
+    description:
+      "Gives LLMs the ability to manage Prisma Postgres databases (e.g. spin up new databases and run migrations or queries)",
+    logo: "https://cdn.brandfetch.io/idBBE3_R9e/idI_xi9A1U.svg?c=1dxbfHSJFAPEGdCLU4o5B",
+  },
+  {
     name: "Vercel",
     url: "https://github.com/nganiet/mcp-vercel",
     description:
@@ -143,6 +150,11 @@ export default [
     description: "Unified API for search, crawling, and sitemaps",
   },
   {
+    name: "Logseq MCP Tools",
+    description: "A Model Context Protocol (MCP) server that provides AI assistants with structured access to your Logseq knowledge graph.",
+    url: "https://github.com/joelhooks/logseq-mcp-tools",
+  },
+  {
     name: "Docker",
     url: "https://github.com/ckreiling/mcp-server-docker",
     description: "Manage containers, images, volumes, and networks",
@@ -227,5 +239,12 @@ export default [
     url: "https://github.com/elie222/inbox-zero",
     description:
       "A Model Context Protocol (MCP) server that enables AI assistants like Claude to interact with your Inbox Zero account. This allows for natural language querying and management of your email during conversations.",
+  },
+    {
+    name: "SettleMint",
+    url: "https://console.settlemint.com/documentation/building-with-settlemint/dev-tools/mcp",
+    description:
+      "Leverage SettleMint's Model Context Protocol server to seamlessly interact with enterprise blockchain infrastructure. Build, deploy, and manage smart contracts through AI-powered assistants, streamlining your blockchain development workflow for maximum efficiency.",
+    logo: "https://console.settlemint.com/android-chrome-512x512.png",
   },
 ];

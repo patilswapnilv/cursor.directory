@@ -1,5 +1,6 @@
 "use client";
 
+import { useOpenPanel } from "@openpanel/nextjs";
 import { XIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -8,6 +9,7 @@ export function Banner() {
   const [isVisible, setIsVisible] = useState(false);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const pathname = usePathname();
+  const op = useOpenPanel();
 
   useEffect(() => {
     setCurrentBannerIndex(Math.floor(Math.random() * 2));
@@ -18,134 +20,44 @@ export function Banner() {
 
   const banners = [
     {
-      href: "https://go.midday.ai/8cX3F4o",
+      id: "coderabbit",
+      href: "https://coderabbit.link/cdir",
       logo: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width={50}
-          height={50}
+          width={32} // Reduced width
+          height={28} // Reduced height maintaining aspect ratio (approx 94/82)
           fill="none"
-          className="absolute left-1 top-4 scale-[.65]"
+          className="absolute left-4 top-5" // Added positioning like other logos
+          viewBox="0 0 94 82" // Added viewBox to scale correctly
         >
           <path
-            fill="currentColor"
+            fill="#FF570A"
             fillRule="evenodd"
-            d="M23.912 0a24.885 24.885 0 0 0-10.47 2.8l10.47 18.134V0Zm0 29.069L13.444 47.201A24.886 24.886 0 0 0 23.912 50V29.069ZM26.088 50V29.055l10.474 18.142A24.884 24.884 0 0 1 26.088 50Zm0-29.052V0a24.885 24.885 0 0 1 10.476 2.803L26.088 20.948ZM3.893 38.446 22.03 27.974 11.56 46.111a25.156 25.156 0 0 1-7.667-7.665ZM46.11 11.56 27.976 22.03l10.47-18.136a25.156 25.156 0 0 1 7.665 7.666Zm-42.22-.002a25.157 25.157 0 0 1 7.668-7.667l10.473 18.14L3.891 11.558ZM2.8 13.44A24.885 24.885 0 0 0 0 23.916h20.946L2.801 13.44Zm.002 23.123A24.886 24.886 0 0 1 0 26.093H20.94L2.803 36.562Zm26.256-12.647H50a24.887 24.887 0 0 0-2.8-10.473L29.06 23.916ZM47.2 36.561 29.066 26.092H50a24.887 24.887 0 0 1-2.802 10.469Zm-19.222-8.585 10.469 18.132a25.158 25.158 0 0 0 7.663-7.664L27.977 27.976Z"
+            d="M49.45.297C73.526 1.41 93.007 21.056 93.955 45.15v-.02c.411 10.996-2.966 21.17-8.917 29.345-3.42 4.696-8.938 7.373-14.746 7.373h-2.45c.226-.536.7-2.183-.412-3.666-.49-.652-1.33-1.04-2.207-1.445-1.56-.719-3.23-1.49-3.23-3.889 0-7.441 5.595-10.317 11.58-13.394 6.884-3.54 14.286-7.345 14.286-18.67 0 0-8.176-10.44-18.452-11.038-6.631-.391-8.238.494-8.526 1.153-.412-3.418-3.336-19.255-23.538-22.611 1.775 11.35 6.51 14.431 11.099 17.417 3.237 2.106 6.401 4.165 8.403 9.045 0 0-10.585-14.374-27.987-9.081 0 0 6.343 13.303 25.104 16.021 0 0 1.503 5.149 1.956 6.055 0 0-28.893-15.054-37.665 13.839-4.387-.878-5.318 1.43-5.71 2.4l-.036.092s-1.36 4.324 4.53 7.949c0 0 1.277-5.066 4.387-6.57 0 0-6.672 7.435 1.174 16.331a18.42 18.42 0 0 1-13.407-7.64C3.713 66.506.5 57.136.5 47.004.5 20.459 22.617-.918 49.45.297Zm5.903 76.246c2.005 2.382 3.938 4.678 5.898 5.326H50.748c.618-1.03 3.83-7.064-3.727-11.615 3.04 0 5.746 3.215 8.332 6.289Z"
             clipRule="evenodd"
           />
         </svg>
       ),
-      title: "Made by Midday",
+      title: "CodeRabbit",
       description:
-        "An all-in-one tool for freelancers to monitor financial health, time-track, and send invoices. ↗",
+        "AI Code Reviews. Spot bugs, 1-click fixes, refactor effortlessly. ↗",
     },
     {
-      href: "https://go.midday.ai/NnI1CUO",
-      logo: (
-        <svg
-          width="30"
-          height="30"
-          viewBox="0 0 20 20"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="absolute left-4 top-7"
-        >
-          {/* SVG paths for Languine logo */}
-          <path
-            d="M16.7534 19.4328V15.601H19.0896V19.4328H16.7534Z"
-            fill="currentColor"
-          />
-          <path
-            d="M14.1123 19.4328V15.601H16.4485V19.4328H14.1123Z"
-            fill="currentColor"
-          />
-          <path
-            d="M11.4722 19.4328V15.601H13.8084V19.4328H11.4722Z"
-            fill="currentColor"
-          />
-          <path
-            d="M8.83154 19.4328V15.601H11.1677V19.4328H8.83154Z"
-            fill="currentColor"
-          />
-          <path
-            d="M6.19238 19.4328V15.601H8.52857V19.4328H6.19238Z"
-            fill="currentColor"
-          />
-          <path
-            d="M3.55127 19.4328V15.601H5.88746V19.4328H3.55127Z"
-            fill="currentColor"
-          />
-          <path
-            d="M0.910645 19.4328V15.601H3.24683V19.4328H0.910645Z"
-            fill="currentColor"
-          />
-          <path
-            d="M6.91895 15.8689V11.0791H7.21257V15.8689H6.91895ZM7.5062 15.8689V11.0791H7.79983V15.8689H7.5062Z"
-            fill="currentColor"
-          />
-          <path
-            d="M3.55127 15.6744V11.8425H5.88746V15.6744H3.55127Z"
-            fill="currentColor"
-          />
-          <path
-            d="M0.910645 15.6744V11.8425H3.24683V15.6744H0.910645Z"
-            fill="currentColor"
-          />
-          <path
-            d="M6.91895 12.1104V7.32056H7.21257V12.1104H6.91895ZM7.5062 12.1104V7.32056H7.79983V12.1104H7.5062Z"
-            fill="currentColor"
-          />
-          <path
-            d="M3.55127 11.9159V8.08405H5.88746V11.9159H3.55127Z"
-            fill="currentColor"
-          />
-          <path
-            d="M0.910645 11.9159V8.08405H3.24683V11.9159H0.910645Z"
-            fill="currentColor"
-          />
-          <path
-            d="M6.91895 8.35202V3.56219H7.21257V8.35202H6.91895ZM7.5062 8.35202V3.56219H7.79983V8.35202H7.5062Z"
-            fill="currentColor"
-          />
-          <path
-            d="M3.55127 8.15749V4.32562H5.88746V8.15749H3.55127Z"
-            fill="currentColor"
-          />
-          <path
-            d="M0.910645 8.15749V4.32562H3.24683V8.15749H0.910645Z"
-            fill="currentColor"
-          />
-          <path
-            d="M7.50637 4.59354V2.2335H6.19238V1.91785H7.8V4.59354H7.50637ZM6.91912 4.59354V2.8648H6.19238V2.54915H7.21274V4.59354H6.91912Z"
-            fill="currentColor"
-          />
-          <path
-            d="M3.55127 4.399V0.567139H5.88746V4.399H3.55127Z"
-            fill="currentColor"
-          />
-          <path
-            d="M0.910645 4.399V0.567139H3.24683V4.399H0.910645Z"
-            fill="currentColor"
-          />
-        </svg>
-      ),
-      title: "Languine",
-      description:
-        "Translate your application with AI. Fast, accurate, and easy to integrate. ↗",
-    },
-    {
-      href: "https://dub.sh/DwzRg5D",
+      id: "braingrid",
+      href: "https://braingrid.link/7EDS8pZ",
       logo: (
         <img
-          src="https://pbs.twimg.com/profile_images/1892599077042319360/XurHmwNP_400x400.jpg"
-          alt="Composio"
+          src="https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-braingrid-logo-v2.svg"
+          alt="BrainGrid"
           className="absolute left-4 top-5"
           width={32}
           height={32}
         />
       ),
-      title: "Comp AI",
-      description: "Open Source - Get SOC 2, ISO 27001 & GDPR compliant. ↗",
+      title: "BrainGrid AI",
+      description:
+        " Dream. Scope. Prioritize. Turn Ideas Into AI-Ready Specs in Minutes. ↗",
     },
   ];
 
@@ -202,8 +114,6 @@ export function Banner() {
     }, 300);
   };
 
-  if (!isVisible) return null;
-
   const slideClass = isAnimating
     ? animateDirection === "down"
       ? "animate-out slide-out-to-bottom duration-300"
@@ -212,18 +122,34 @@ export function Banner() {
 
   const currentBanner = banners[currentBannerIndex];
 
+  if (!isVisible) return null;
+
   // Hide banner on /generate page
   if (
     pathname === "/generate" ||
     pathname.includes("/games") ||
-    pathname.includes("/board")
-  )
+    pathname.includes("/board") ||
+    pathname.endsWith("/new") ||
+    pathname.endsWith("/edit")
+  ) {
     return null;
+  }
 
   return (
-    <a href={currentBanner.href} target="_blank" rel="noreferrer">
+    <a
+      href={currentBanner.href}
+      target="_blank"
+      rel="noreferrer"
+      onClick={() => {
+        op.track("banner_clicked", {
+          banner_id: currentBanner.id,
+          banner_url: currentBanner.href,
+          type: "banner",
+        });
+      }}
+    >
       <div
-        className={`fixed overflow-hidden ${slideClass} z-50 bottom-4 md:bottom-4 left-4 md:left-auto right-4 md:right-4 w-[calc(100vw-32px)] md:w-[calc(100vw-16px)] md:max-w-[350px] border border-border p-4 transition-all bg-background h-[88px] group`}
+        className={`fixed overflow-hidden ${slideClass} z-50 bottom-4 md:bottom-4 left-4 md:left-auto right-4 md:right-4 w-[calc(100vw-32px)] md:w-[calc(100vw-16px)] md:max-w-[370px] border border-border p-4 transition-all bg-background h-[95px] group`}
       >
         {currentBanner.logo}
 

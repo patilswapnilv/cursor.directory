@@ -26,6 +26,15 @@ const nextConfig = {
       {
         hostname: "avatars.githubusercontent.com",
       },
+      {
+        hostname: "knhgkaawjfqqwmsgmxns.supabase.co",
+      },
+      {
+        hostname: "console.settlemint.com",
+      },
+      {
+        hostname: "assets.serverless-extras.com",
+      },
     ],
   },
 };
