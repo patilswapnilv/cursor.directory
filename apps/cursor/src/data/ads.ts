@@ -28,7 +28,7 @@ export const ads: Ad[] = [
       "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-coderabbit-logo.webp",
     link: "https://coderabbit.link/XrK0XJY",
     imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-coderabbit.jpg",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-coderabbit-v2.0.jpg",
   },
   {
     id: "braingrid",
