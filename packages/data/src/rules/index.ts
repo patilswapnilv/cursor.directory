@@ -53,6 +53,7 @@ import { prismaRules } from "./prisma";
 import { pythonRules } from "./python";
 import { railsRules } from "./rails";
 import { reactNativeRules } from "./react-native";
+import { reactVite2026 } from "./react-vite-2026";
 import { remixRules } from "./remix";
 import { robocorpRules } from "./robocorp";
 import { rspecRules } from "./rspec";
@@ -134,6 +135,7 @@ export const rules: Rule[] = [
   ...pythonRules,
   ...railsRules,
   ...reactNativeRules,
+  ...reactVite2026,
   ...remixRules,
   ...robocorpRules,
   ...rspecRules,
