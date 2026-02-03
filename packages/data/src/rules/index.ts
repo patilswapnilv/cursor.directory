@@ -8,6 +8,7 @@ import { astroRules } from "./astro";
 import { autohotkeyRules } from "./autohotkey";
 import { blazorRules } from "./blazor";
 import { bootstrapRules } from "./bootstrap";
+import { cotiEthers } from "./coti-ethers";
 import { buddyOsRules } from "./buddy-os";
 import { cRules } from "./c";
 import { chromeExtensionRules } from "./chrome-extension";
@@ -108,6 +109,7 @@ export const rules: Rule[] = [
   ...buddyOsRules,
   ...cosmwasmRules,
   ...bootstrapRules,
+  ...cotiEthers,
   ...chromeExtensionRules,
   ...convexRules,
   ...cppRules,
