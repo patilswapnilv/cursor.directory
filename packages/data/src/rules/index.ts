@@ -76,6 +76,7 @@ import { rspecRules } from "./rspec";
 import { rushRules } from "./rush";
 import { rustRules } from "./rust";
 import { salesforceRules } from "./salesforce";
+import { softwareCraftsmanshipRules } from "./software-craftsmanship";
 import { sanityRules } from "./sanity";
 import { scoutRules } from "./scout";
 import { shopifyThemeRules } from "./shopify-theme-development";
@@ -195,6 +196,7 @@ export const rules: Rule[] = [
   ...wordpressRules,
   ...wordpressWoocommerce,
   ...typescriptRules,
+  ...softwareCraftsmanshipRules,
   ...zetaChainRules,
   ...kotlinJetpackRules,
   ...viewComfyRules,
