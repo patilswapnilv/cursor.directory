@@ -44,6 +44,7 @@ import { luaRules } from "./lua";
 import { manifestRules } from "./manifest";
 import { metaPromptRules } from "./meta-prompt";
 import { monorepoTamagui } from "./monorepo-tamagui";
+import { nangoRules } from "./nango";
 import { nestjsRules } from "./nestjs";
 import { nextjsRules } from "./nextjs";
 import { nextjsSecurityAuditRules } from "./nextjs-security-audit";
@@ -138,6 +139,7 @@ export const rules: Rule[] = [
   ...manifestRules,
   ...metaPromptRules,
   ...monorepoTamagui,
+  ...nangoRules,
   ...nestjsRules,
   ...nextjsRules,
   ...nextjsSecurityAuditRules,
