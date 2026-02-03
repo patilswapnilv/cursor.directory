@@ -9,108 +9,60 @@ export interface Ad {
 
 export const ads: Ad[] = [
   {
-    id: "novu",
-    title: "Novu",
-    description: "The open-source notification Inbox platform for React",
-    logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-novu-logo.png",
-    link: "https://dub.sh/nmIKfit",
-    imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-novu.png",
-  },
-  {
-    id: "midday",
-    title: "Midday",
+    id: "sentry",
+    title: "Sentry.io - Build with AI, debug broken code.",
     description:
-      "Invoicing, Time tracking, File reconciliation, Storage, Financial Overview & your own Assistant",
+      "Monitor your AI agents with Sentry. Cursor.directory users get 3 months free of our team plan here.",
     logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-midday-logo.png",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-sentry-logo-v2.png",
     imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-midday.png?cache=1",
-    link: "https://go.midday.ai/8cX3F4o",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-sentry.jpg",
+    link: "https://go.midday.ai/7kRYLa5",
   },
   {
-    id: "languine",
-    title: "Languine",
-    description: "Localization infrastructure made for fast-paced startups.",
-    logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-languine-logo.png",
-    imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-languine.png?cache=1",
-    link: "https://go.midday.ai/NnI1CUO",
-  },
-  {
-    id: "composio",
-    title: "our cto when MCP is not MCPin’!!!!",
+    id: "coderabbit",
+    title: "CodeRabbit",
     description:
-      "just one more mcp bro. I promise bro just one more mcp to agi and it'll fix everything bro. bro. just one more.",
+      "AI Code Reviews. Spot bugs, 1-click fixes, refactor effortlessly",
     logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-composio-logo.png",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-coderabbit-logo.webp",
+    link: "https://coderabbit.link/XrK0XJY",
     imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-composio.jpg",
-    link: "https://dub.sh/yFjYSKz",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-coderabbit-v2.0.jpg",
   },
   {
-    id: "taska",
-    title: "Taska for GitHub & GitLab Issues",
+    id: "braingrid",
+    title: "BrainGrid",
     description:
-      "Taska is a beautifully designed Mac app for quickly creating and editing issues.",
+      "Spec ideas, plan features, and prioritize tasks that your AI coding tools can build right the first time.",
     logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-taska-logo.png",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-braingrid-logo-v2.svg",
+    link: "https://braingrid.link/1lKu4x2",
     imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-taska.png",
-    link: "https://dub.sh/8nBbSLT",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-braingrid-grid-v2.1.png",
   },
   {
-    id: "polar",
-    title: "Polar",
-    description: "The fastest growing engine for SaaS & Digital Products",
-    logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-polar-logo.svg",
+    id: "endgame",
+    title: "Endgame",
+    description: "Let your AI deploy, validate and iterate endlessly.",
     imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-polar.png",
-    link: "https://go.midday.ai/JYZ5WcG",
+      "https://assets.serverless-extras.com/endgame/endgame-ad-square-1.gif",
+    link: "https://go.midday.ai/wC5Vy8q",
+    logoUrl:
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-endgame.webp",
   },
+];
+
+export const rulePageAds = [
   {
-    id: "convex",
-    title: "Convex",
+    id: "coderabbit",
+    title: "CodeRabbit",
     description:
-      "The database designed for AI code generation and vibe coding.",
+      "AI Code Reviews. Spot bugs, 1-click fixes, refactor effortlessly",
     logoUrl:
-      "https://pbs.twimg.com/profile_images/1886599096636694528/0Y8VYt94_400x400.png",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-coderabbit-logo.webp",
+    link: "https://coderabbit.link/GshBpe7",
     imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-convex-v2.jpg",
-    link: "https://dub.sh/quKS4BD",
-  },
-  {
-    id: "upstash",
-    title: "Upstash",
-    description: "Serverless Data Platform for Developers and Agents",
-    logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-upstash-logo.png",
-    imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-upstash.jpg",
-    link: "https://dub.sh/O0Fclmb",
-  },
-  {
-    id: "compai",
-    title: "Comp AI",
-    description: "Open Source - Get SOC 2, ISO 27001 & GDPR compliant",
-    logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-compai-logo.jpg",
-    imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-compai.png",
-    link: "https://dub.sh/DwzRg5D",
-  },
-  {
-    id: "speakeasy",
-    title: "Build APIs LLMs love",
-    description:
-      "The modern API toolchain — generate SDKs, docs, and agent tools from OpenAPI",
-    logoUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-speakeasy-logo.png",
-    imageUrl:
-      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-speakeasy.jpg",
-    link: "https://dub.sh/kSWogBB",
+      "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-coderabbit.jpg",
   },
 ];

@@ -30,12 +30,12 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://cdn.midday.ai/cursor/opengraph-image.png",
+        url: "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/opengraph-image-v2.png",
         width: 800,
         height: 600,
       },
       {
-        url: "https://cdn.midday.ai/cursor/opengraph-image.png",
+        url: "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/opengraph-image-v2.png",
         width: 1800,
         height: 1600,
       },
@@ -46,12 +46,12 @@ export const metadata: Metadata = {
     description: "Find the best cursor rules for your framework and language",
     images: [
       {
-        url: "https://cdn.midday.ai/cursor/opengraph-image.png",
+        url: "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/opengraph-image-v2.png",
         width: 800,
         height: 600,
       },
       {
-        url: "https://cdn.midday.ai/cursor/opengraph-image.png",
+        url: "https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/opengraph-image-v2.png",
         width: 1800,
         height: 1600,
       },
@@ -112,6 +112,13 @@ export default function RootLayout({
             <Banner />
             <Toaster />
             <GlobalModals />
+
+            <footer className="py-8 text-center">
+              <p className="text-[11px] text-[#878787]/60">
+                This site is not affiliated with, endorsed by, or sponsored by
+                Anysphere Inc.
+              </p>
+            </footer>
           </NuqsAdapter>
         </ThemeProvider>
       </body>
