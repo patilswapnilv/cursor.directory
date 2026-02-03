@@ -13,8 +13,6 @@ If you want to submit a **new rule** that does not already exist in the Director
 1. **Locate the Rule Index**:
 
    Add your new rule in the `packages/data/src/rules/index.ts` file. For example:
-
-   Add your new rule in the `packages/data/src/rules/index.ts` file. For example:
    
    ```typescript
    import { cRules } from "./rules/c";
