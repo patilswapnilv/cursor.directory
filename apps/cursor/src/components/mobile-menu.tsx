@@ -19,6 +19,7 @@ const navigationLinks = [
   { href: "/games", label: "Games" },
   { href: "/advertise", label: "Advertise" },
   { href: "/about", label: "About" },
+  { href: "/events", label: "Events" },
 ] as const;
 
 type User = {
