@@ -50,6 +50,7 @@ import { metaPromptRules } from "./meta-prompt";
 import { monorepoTamagui } from "./monorepo-tamagui";
 import { nangoRules } from "./nango";
 import { nestjsRules } from "./nestjs";
+import { netlifyRules } from "./netlify";
 import { nextjsRules } from "./nextjs";
 import { nextjsSecurityAuditRules } from "./nextjs-security-audit";
 import { nuxtJsRules } from "./nuxtjs";
@@ -152,6 +153,7 @@ export const rules: Rule[] = [
   ...monorepoTamagui,
   ...nangoRules,
   ...nestjsRules,
+  ...netlifyRules,
   ...nextjsRules,
   ...nextjsSecurityAuditRules,
   ...nuxtJsRules,
@@ -232,19 +234,20 @@ export function getRuleBySlug(slug: string) {
 }
 
 export interface Rule {
-  title: string;
-  slug: string;
-  tags: string[];
-  libs: string[];
-  content: string;
-  author?: {
-    name: string;
-    url: string | null;
-    avatar: string | null;
-  };
-}
+    title: string;
+    slug: string;
+    tags: string[];
+    libs: string[];
+    content: string;
+    author?: {
+      name: string;
+      url: string | null;
+      avatar: string | null;
+    };
+  }
+
 
 export type Section = {
-  tag: string;
-  rules: Rule[];
-};
+    tag: string;
+    rules: Rule[];
+  };
