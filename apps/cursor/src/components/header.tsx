@@ -22,24 +22,25 @@ const navigationLinks = [
   { href: "/jobs", label: "Jobs" },
   { href: "/mcp", label: "MCPs" },
   { href: "/generate", label: "Generate" },
-  // { href: "/community", label: "Community" },
+  { href: "/members", label: "Members" },
   { href: "/games", label: "Games" },
   { href: "/learn", label: "Learn" },
   { href: "/advertise", label: "Advertise" },
   { href: "/about", label: "About" },
   { href: "/companies", label: "Companies" },
+  { href: "/events", label: "Events" },
 ] as const;
 
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const mainNavItems = navigationLinks.slice(0, 5);
-  const dropdownNavItems = navigationLinks.slice(5);
+  const mainNavItems = navigationLinks.slice(0, 6);
+  const dropdownNavItems = navigationLinks.slice(6);
 
   return (
     <div className="flex justify-between items-center mt-2 md:mt-0">
-      <div className="md:fixed z-50 flex justify-between items-center top-0 px-6 py-2 w-full bg-background backdrop-filter backdrop-blur-sm bg-opacity-30">
+      <div className="md:fixed z-20 flex justify-between items-center top-0 px-6 py-2 w-full bg-background backdrop-filter backdrop-blur-sm bg-opacity-30">
         <Link href="/" className="font-medium font-mono text-sm">
           cursor.directory
         </Link>
