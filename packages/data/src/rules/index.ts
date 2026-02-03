@@ -21,10 +21,12 @@ import { devopsRules } from "./devops-backend";
 import { djangoRules } from "./django";
 import { dotnetRules } from "./dotnet";
 import { drupalRules } from "./drupal";
+import { electronRules } from "./electron";
 import { elixirRules } from "./elixir";
 import { expoReactNativeRules } from "./expo";
 import { fastapiRules } from "./fastapi";
 import { fastifyRules } from "./fastify";
+import { flaskRules } from "./flask"
 import { fastmcpRules } from "./fastmcp";
 import { flaskRules } from "./flask";
 import { flutterRules } from "./flutter";
@@ -123,6 +125,7 @@ export const rules: Rule[] = [
   ...djangoRules,
   ...dotnetRules,
   ...drupalRules,
+  ...electronRules,
   ...elixirRules,
   ...expoReactNativeRules,
   ...fastapiRules,
