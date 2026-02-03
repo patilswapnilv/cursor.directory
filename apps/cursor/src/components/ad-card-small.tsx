@@ -1,9 +1,23 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Ad } from "@/data/ads";
 import { cn } from "@/lib/utils";
+import { useOpenPanel } from "@openpanel/nextjs";
 import Image from "next/image";
+import { useEffect } from "react";
 
 export function AdCardSmall({ ad, small }: { ad: Ad; small?: boolean }) {
+  const op = useOpenPanel();
+
+  useEffect(() => {
+    op.track("ad_grid_viewed", {
+      ad_id: ad.title,
+      ad_url: ad.link,
+      type: "ad_card_small",
+    });
+  }, [ad]);
+
   return (
     <Card
       className={cn(
@@ -22,6 +36,13 @@ export function AdCardSmall({ ad, small }: { ad: Ad; small?: boolean }) {
           target="_blank"
           rel="noopener noreferrer"
           className="h-full"
+          onClick={() => {
+            op.track("ad_card_clicked", {
+              ad_id: ad.id,
+              ad_url: ad.link,
+              type: "ad_card_small",
+            });
+          }}
         >
           <div className="h-full overflow-y-auto">
             <code className={cn("block pr-3", small ? "text-xs" : "text-sm")}>

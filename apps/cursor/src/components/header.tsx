@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { ChevronDownIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { CommandMenu } from "./command-menu";
 import { MobileMenu } from "./mobile-menu";
 import { Button } from "./ui/button";
@@ -18,26 +18,29 @@ import { UserMenu } from "./user-menu";
 
 const navigationLinks = [
   { href: "/rules", label: "Rules" },
-  { href: "/board", label: "Board" },
-  { href: "/generate", label: "Generate" },
+  { href: "/board", label: "Trending" },
+  { href: "/jobs", label: "Jobs" },
   { href: "/mcp", label: "MCPs" },
-  // { href: "/community", label: "Community" },
+  { href: "/generate", label: "Generate" },
+  { href: "/members", label: "Members" },
   { href: "/games", label: "Games" },
   { href: "/learn", label: "Learn" },
   { href: "/advertise", label: "Advertise" },
   { href: "/about", label: "About" },
+  { href: "/companies", label: "Companies" },
+  { href: "/events", label: "Events" },
 ] as const;
 
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const mainNavItems = navigationLinks.slice(0, 4);
-  const dropdownNavItems = navigationLinks.slice(4);
+  const mainNavItems = navigationLinks.slice(0, 6);
+  const dropdownNavItems = navigationLinks.slice(6);
 
   return (
     <div className="flex justify-between items-center mt-2 md:mt-0">
-      <div className="md:fixed z-50 flex justify-between items-center top-0 px-6 py-2 w-full bg-background backdrop-filter backdrop-blur-sm bg-opacity-30">
+      <div className="md:fixed z-20 flex justify-between items-center top-0 px-6 py-2 w-full bg-background backdrop-filter backdrop-blur-sm bg-opacity-30">
         <Link href="/" className="font-medium font-mono text-sm">
           cursor.directory
         </Link>
@@ -88,7 +91,9 @@ export function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <UserMenu />
+          <Suspense fallback={null}>
+            <UserMenu />
+          </Suspense>
         </div>
       </div>
       <MobileMenu />

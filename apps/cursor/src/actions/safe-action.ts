@@ -41,5 +41,11 @@ export const authActionClient = actionClient.use(async ({ next }) => {
     throw new Error("Session not found!");
   }
 
-  return next({ ctx: { userId: session.user.id } });
+  return next({
+    ctx: {
+      userId: session.user.id,
+      email: session.user.email,
+      name: session.user.user_metadata.name,
+    },
+  });
 });

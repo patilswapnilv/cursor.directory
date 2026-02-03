@@ -8,7 +8,7 @@ export function Search({ data }: { data?: MCP[] }) {
     <div className="w-full container mx-auto mb-16 px-4">
       <div className="max-w-[600px] mx-auto">
         <SearchTitle />
-        <SearchInput />
+        <SearchInput placeholder="Search for MCP servers" />
       </div>
 
       <SearchList data={data ?? []} />

@@ -1,4 +1,4 @@
-import { Link, LinkIcon, XIcon } from "lucide-react";
+import { LinkIcon, XIcon } from "lucide-react";
 
 export function ProfileContent({
   bio,
@@ -37,7 +37,11 @@ export function ProfileContent({
             <div className="flex items-center gap-2 ">
               <LinkIcon className="size-3.5 mt-2" />
               <p className="text-sm font-mono text-[#878787] mt-2">
-                <a href={website} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={`${website}?utm_source=cursor.directory`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Website
                 </a>
               </p>
@@ -53,7 +57,7 @@ export function ProfileContent({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  X
+                  {social_x_link ? `@${social_x_link.split("/").pop()}` : "X"}
                 </a>
               </p>
             </div>

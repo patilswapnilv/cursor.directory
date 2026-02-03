@@ -23,12 +23,12 @@ export default function Advertise() {
             <p className="text-[#878787] leading-relaxed text-sm">
               Cursor Directory attracts over{" "}
               <a
-                href="https://dashboard.openpanel.dev/share/overview/a5hhbY?range=30d"
+                href="https://dashboard.openpanel.dev/share/overview/a5hhbY?range=6m"
                 className="text-primary border-border border-dashed border-b-[1px]"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                200,000 unique visitors monthly
+                250,000 unique visitors monthly
               </a>{" "}
               - and we're growing steadily. Our audience consists of developers,
               engineering leaders, and technical decision-makers who are
@@ -101,7 +101,7 @@ export default function Advertise() {
             <p className="text-primary mt-8 text-sm w-full">
               <Button asChild className="w-full">
                 <a href="https://buy.polar.sh/polar_cl_XZNMJtIvsTBndqeeVF5Xf1CNMBzpb0N69IpOc0hhCpX">
-                  By ad slot
+                  Buy ad slot
                 </a>
               </Button>
             </p>
