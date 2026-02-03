@@ -2,7 +2,7 @@
 
 # How to Contribute to Directories
 
-### This guide will help you understand how to add new rules or prompts to the both Cursor and Windsurf Directories.
+### This guide will help you understand how to add new rules or prompts to the Cursor Directory.
 
 #### 1. Fork the Repo
 
@@ -14,11 +14,13 @@ If you want to submit a **new rule** that does not already exist in the Director
 
    Add your new rule in the `packages/data/src/rules/index.ts` file. For example:
 
+   Add your new rule in the `packages/data/src/rules/index.ts` file. For example:
+   
    ```typescript
    import { cRules } from "./rules/c";
 
 2. **Create a Rule File**:
-
+    
     Create a new file in the `packages/data/src/rules/` directory with the appropriate name. For example, if you're adding a rule for Next.js, name the file `nextjs.ts`.
 
 3. **Define the Rule**:

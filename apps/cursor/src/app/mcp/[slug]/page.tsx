@@ -67,8 +67,8 @@ export default async function Page({
         </div>
         <p className="text-[#878787] mb-4">{mcp.description}</p>
 
-        {mcp?.config ? (
-          <CursorDeepLink name={mcp.name} config={mcp.config} />
+        {mcp?.mcp_link ? (
+          <CursorDeepLink mcp_link={mcp.mcp_link} />
         ) : (
           <Link
             href={mcp.link}

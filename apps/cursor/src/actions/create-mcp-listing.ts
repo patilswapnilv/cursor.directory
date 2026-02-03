@@ -18,14 +18,22 @@ export const createMCPListingAction = authActionClient
       company_id: z.string().nullable(),
       logo: z.string().nullable(),
       description: z.string(),
-      config: z.record(z.string(), z.any()).nullable(),
+      mcp_link: z.string().nullable().optional(),
       link: z.string().url(),
       plan: z.enum(["standard", "featured", "premium"]),
     }),
   )
   .action(
     async ({
-      parsedInput: { name, company_id, logo, description, link, plan, config },
+      parsedInput: {
+        name,
+        company_id,
+        logo,
+        description,
+        link,
+        plan,
+        mcp_link,
+      },
       ctx: { userId, email, name: customerName },
     }) => {
       const supabase = await createClient();
@@ -38,24 +46,14 @@ export const createMCPListingAction = authActionClient
         throw new Error("Too many requests. Please try again later.");
       }
 
-      const { data: existingMCP } = await supabase
-        .from("mcps")
-        .select()
-        .eq("link", link)
-        .limit(1);
-
-      if (existingMCP && existingMCP.length > 0) {
-        throw new Error("This URL has already been submitted.");
-      }
-
       const { data, error } = await supabase
         .from("mcps")
         .insert({
           name,
-          company_id,
-          logo,
+          company_id: company_id === "" ? null : company_id,
+          logo: logo === "" ? null : logo,
           description,
-          config,
+          mcp_link: mcp_link === "" ? null : mcp_link,
           link,
           plan,
           active: plan === "standard",
