@@ -10,7 +10,7 @@
 
 If you want to submit a **new rule** that does not already exist in the Directories, follow these steps:
 
-1. **Locate the Rule Index**:  
+1. **Locate the Rule Index**:
 
    Add your new rule in the `packages/data/src/rules/index.ts` file. For example:
    
@@ -22,7 +22,7 @@ If you want to submit a **new rule** that does not already exist in the Director
     Create a new file in the `packages/data/src/rules/` directory with the appropriate name. For example, if you're adding a rule for Next.js, name the file `nextjs.ts`.
 
 3. **Define the Rule**:
-   
+
     Add your prompts inside the newly created file. Refer to the existing rules for formatting guidance.  Make sure your prompts are accurate, clear, and helpful to developers.
 
     Your prompts should:
@@ -69,7 +69,7 @@ If you want to add new prompts to an existing rule, follow these steps:
 
   5. **author**: Include details about yourself as the contributor. This helps others recognize your contributions and allows them to reach out if needed.
 
-  
+
      - **name**: Your full name or GitHub username.
      - **URL**: A link to your GitHub, Twitter, website, or any other profile you want to share. This is optional but recommended.
      - **avatar**: The URL path to an image or avatar that represents you. You can use a photo from a service like Gravatar or any image hosting service.
