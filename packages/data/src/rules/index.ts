@@ -90,6 +90,7 @@ import { webDevelopmentRules } from "./web-development";
 import { webScrapingRules } from "./web-scraping";
 import { wordpressRules } from "./wordpress";
 import { wordpressWoocommerce } from "./wordpress-woocommerce";
+import { zetaChainRules } from "./zetachain";
 import { kotlinJetpackRules } from "./kotlin-jetpack";
 import { expressJsRules } from "./expressjs";
 import { rushRules } from "./rush";
@@ -190,6 +191,7 @@ export const rules: Rule[] = [
   ...wordpressRules,
   ...wordpressWoocommerce,
   ...typescriptRules,
+  ...zetaChainRules,
   ...kotlinJetpackRules,
   ...viewComfyRules,
   ...rushRules,
