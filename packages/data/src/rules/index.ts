@@ -86,6 +86,7 @@ import { webDevelopmentRules } from "./web-development";
 import { webScrapingRules } from "./web-scraping";
 import { wordpressRules } from "./wordpress";
 import { wordpressWoocommerce } from "./wordpress-woocommerce";
+import { phpRules } from "./php";
 import { shopifyThemeRules } from "./shopify-theme-development";
 import {RRules} from "./r"
 import { reactRules } from "./react";
@@ -180,6 +181,7 @@ export const rules: Rule[] = [
   ...wordpressWoocommerce,
   ...typescriptRules,
   ...viewComfyRules,
+  ...phpRules,
   ...shopifyThemeRules,
   ...RRules
   ...zettelkastenRules,
