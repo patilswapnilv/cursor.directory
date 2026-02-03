@@ -24,6 +24,7 @@ import { elixirRules } from "./elixir";
 import { expoReactNativeRules } from "./expo";
 import { fastapiRules } from "./fastapi";
 import { fastifyRules } from "./fastify";
+import { fastmcpRules } from "./fastmcp";
 import { flaskRules } from "./flask";
 import { flutterRules } from "./flutter";
 import { frontEndRules } from "./front-end";
@@ -115,6 +116,7 @@ export const rules: Rule[] = [
   ...expoReactNativeRules,
   ...fastapiRules,
   ...fastifyRules,
+  ...fastmcpRules,
   ...flaskRules,
   ...flutterRules,
   ...frontEndRules,
