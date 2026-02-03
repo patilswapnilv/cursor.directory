@@ -84,6 +84,7 @@ import { webScrapingRules } from "./web-scraping";
 import { wordpressRules } from "./wordpress";
 import { wordpressWoocommerce } from "./wordpress-woocommerce";
 import { shopifyThemeRules } from "./shopify-theme-development";
+import { reactRules } from "./react";
 import { zettelkastenRules } from "./zettelkasten";
 
 export const rules: Rule[] = [
@@ -143,6 +144,7 @@ export const rules: Rule[] = [
   ...pythonRules,
   ...railsRules,
   ...reactNativeRules,
+  ...reactRules,
   ...reactVite2026,
   ...remultRules,
   ...remixRules,
