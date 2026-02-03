@@ -21,7 +21,7 @@ export function JobsBuy() {
 
       <div className="relative z-10 text-white">
         <h1 className="text-3xl sm:text-4xl tracking-tight">
-          Reach 250k+ developers per <br />
+          Reach 300k+ developers per <br />
           month.
         </h1>
 
