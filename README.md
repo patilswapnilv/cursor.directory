@@ -2,7 +2,7 @@
 
 # How to Contribute to Directories
 
-### This guide will help you understand how to add new rules or prompts to the both Cursor and Windsurf Directories.
+### This guide will help you understand how to add new rules or prompts to the Cursor Directory.
 
 #### 1. Fork the Repo
 

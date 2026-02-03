@@ -48,7 +48,7 @@ export function Banner() {
       href: "https://braingrid.link/7EDS8pZ",
       logo: (
         <img
-          src="https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-braingrid-logo.svg"
+          src="https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-braingrid-logo-v2.svg"
           alt="BrainGrid"
           className="absolute left-4 top-5"
           width={32}
@@ -57,23 +57,7 @@ export function Banner() {
       ),
       title: "BrainGrid AI",
       description:
-        "Turn Ideas Into AI-Ready Specs in Minutes → Ship 100x Faster. ↗",
-    },
-    {
-      id: "keboola",
-      href: "https://go.midday.ai/DzbAojh",
-      logo: (
-        <img
-          src="https://pub-abe1cd4008f5412abb77357f87d7d7bb.r2.dev/ads-keboola-logo.webp"
-          alt="Keboola MCP"
-          className="absolute left-4 top-5"
-          width={32}
-          height={32}
-        />
-      ),
-      title: "Keboola MCP",
-      description:
-        "From words to production data pipelines and trusted analyses. Governed, secure, and deterministic—never shadow AI. ↗",
+        " Dream. Scope. Prioritize. Turn Ideas Into AI-Ready Specs in Minutes. ↗",
     },
   ];
 
