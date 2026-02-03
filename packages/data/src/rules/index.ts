@@ -66,6 +66,7 @@ import { robocorpRules } from "./robocorp";
 import { rspecRules } from "./rspec";
 import { rustRules } from "./rust";
 import { salesforceRules } from "./salesforce";
+import { sparkRules } from "./spark";
 import { sanityRules } from "./sanity";
 import { scoutRules } from "./scout";
 import { solanaRules } from "./solana";
@@ -169,6 +170,7 @@ export const rules: Rule[] = [
   ...scoutRules,
   ...solanaRules,
   ...solidityRules,
+  ...sparkRules,
   ...svelteRules,
   ...svelteKitRules,
   ...swiftuiRules,
