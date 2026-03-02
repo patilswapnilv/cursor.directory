@@ -1,6 +1,5 @@
 "use server";
 
-import { createMCPListingCheckoutSession } from "@/lib/polar";
 import { createPostRatelimit } from "@/lib/ratelimit";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -20,21 +19,12 @@ export const createMCPListingAction = authActionClient
       description: z.string(),
       mcp_link: z.string().nullable().optional(),
       link: z.string().url(),
-      plan: z.enum(["standard", "featured", "premium"]),
     }),
   )
   .action(
     async ({
-      parsedInput: {
-        name,
-        company_id,
-        logo,
-        description,
-        link,
-        plan,
-        mcp_link,
-      },
-      ctx: { userId, email, name: customerName },
+      parsedInput: { name, company_id, logo, description, link, mcp_link },
+      ctx: { userId },
     }) => {
       const supabase = await createClient();
 
@@ -55,8 +45,8 @@ export const createMCPListingAction = authActionClient
           description,
           mcp_link: mcp_link === "" ? null : mcp_link,
           link,
-          plan,
-          active: plan === "standard",
+          plan: "standard",
+          active: true,
         })
         .select("id")
         .single();
@@ -73,18 +63,8 @@ export const createMCPListingAction = authActionClient
         .eq("id", data.id)
         .single();
 
-      if (plan === "standard" && mcp) {
+      if (mcp) {
         redirect(`/mcp/${mcp.slug}`);
       }
-
-      const session = await createMCPListingCheckoutSession({
-        plan,
-        mcpListingId: data.id,
-        companyId: company_id ?? "",
-        email: email ?? "",
-        customerName: customerName ?? "",
-      });
-
-      redirect(session.url);
     },
   );

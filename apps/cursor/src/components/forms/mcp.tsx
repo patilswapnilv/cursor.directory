@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { getFormattedMCPPlanPrice } from "@/utils/pricing";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks";
 import { useForm } from "react-hook-form";
@@ -39,9 +38,6 @@ const formSchema = z.object({
   logo: z.string().optional(),
   mcp_link: z.string().optional(),
   company_id: z.string().optional(),
-  plan: z.enum(["standard", "featured", "premium"] as const, {
-    required_error: "Please select a plan.",
-  }),
 });
 
 export function MCPForm() {
@@ -55,7 +51,6 @@ export function MCPForm() {
       link: "",
       logo: "",
       company_id: "",
-      plan: "standard",
       mcp_link: "",
     },
   });
@@ -68,7 +63,6 @@ export function MCPForm() {
       mcp_link: values.mcp_link ?? null,
       logo: values.logo ?? null,
       company_id: values.company_id ?? null,
-      plan: values.plan,
     });
   };
 
@@ -188,77 +182,10 @@ export function MCPForm() {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="plan"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Select option</FormLabel>
-                <div className="flex flex-col gap-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button
-                      type="button"
-                      className={`p-4 border rounded-lg cursor-pointer text-left ${
-                        field.value === "standard"
-                          ? "border-primary"
-                          : "border-border"
-                      }`}
-                      onClick={() => field.onChange("standard")}
-                    >
-                      <div>Standard</div>
-                      <div className="text-xl mt-2">Free</div>
-                      <div className="text-sm text-[#878787] mt-2">
-                        Get your MCP listed in our MCP board and reach 300k+
-                        developers each month.
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      className={`p-4 border rounded-lg cursor-pointer text-left ${
-                        field.value === "featured"
-                          ? "border-primary"
-                          : "border-border"
-                      }`}
-                      onClick={() => field.onChange("featured")}
-                    >
-                      <div>Featured</div>
-                      <div className="text-xl mt-2">$299/m</div>
-                      <div className="text-sm text-[#878787] mt-2">
-                        Get prime placement in the featured section at the top
-                        for maximum visibility.
-                      </div>
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    className={`p-4 border rounded-lg cursor-pointer text-left ${
-                      field.value === "premium"
-                        ? "border-primary"
-                        : "border-border"
-                    }`}
-                    onClick={() => field.onChange("premium")}
-                  >
-                    <div>Premium</div>
-                    <div className="text-xl mt-2">$499/m</div>
-                    <div className="text-sm text-[#878787] mt-2">
-                      Get maximum exposure with featured placement, email
-                      promotion to our entire developer network, social media
-                      promotion, and homepage spotlight.
-                    </div>
-                  </button>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
 
         <Button type="submit" className="w-full" disabled={isExecuting}>
-          {isExecuting
-            ? "Saving..."
-            : form.watch("plan") === "standard"
-              ? "Submit"
-              : `Submit & Pay (${getFormattedMCPPlanPrice(form.watch("plan"))})`}
+          {isExecuting ? "Saving..." : "Submit"}
         </Button>
       </form>
     </Form>

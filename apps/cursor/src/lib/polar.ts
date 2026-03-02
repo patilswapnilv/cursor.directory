@@ -81,16 +81,6 @@ export function getJobListingProduct(plan: string) {
   return PRODUCTS_SANDBOX.jobs[plan as keyof typeof PRODUCTS_SANDBOX.jobs];
 }
 
-export function getMCPListingProduct(plan: string) {
-  if (process.env.POLAR_ENVIRONMENT === "production") {
-    return PRODUCTS_PRODUCTION.mcps[
-      plan as keyof typeof PRODUCTS_PRODUCTION.mcps
-    ];
-  }
-
-  return PRODUCTS_SANDBOX.mcps[plan as keyof typeof PRODUCTS_SANDBOX.mcps];
-}
-
 export async function createJobListingCheckoutSession({
   plan,
   jobListingId,
@@ -114,36 +104,6 @@ export async function createJobListingCheckoutSession({
     successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/jobs`,
     metadata: {
       jobListingId,
-      plan,
-    },
-  });
-
-  return session;
-}
-
-export async function createMCPListingCheckoutSession({
-  plan,
-  mcpListingId,
-  companyId,
-  email,
-  customerName,
-}: {
-  plan: string;
-  mcpListingId: string;
-  companyId: string;
-  email: string;
-  customerName: string;
-}) {
-  const productId = getMCPListingProduct(plan).id;
-
-  const session = await polar.checkouts.create({
-    products: [productId],
-    externalCustomerId: companyId,
-    customerEmail: email,
-    customerName,
-    successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/mcp`,
-    metadata: {
-      mcpListingId,
       plan,
     },
   });

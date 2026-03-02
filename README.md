@@ -76,6 +76,34 @@ If you want to add new prompts to an existing rule, follow these steps:
 
 ### 5. Create a PR
 
+---
+
+## Adding a New MCP Server
+
+MCP servers are added through the [Cursor Directory website](https://cursor.directory/mcp/new), not via pull requests.
+
+#### 1. Sign In
+
+Go to [cursor.directory/mcp/new](https://cursor.directory/mcp/new) and sign in with your GitHub or Google account.
+
+#### 2. Fill In the Form
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| **Logo** | No | Upload a logo for your MCP server |
+| **Name** | Yes | The name of your MCP server (min 2 characters) |
+| **Description** | Yes | A short description of what your MCP server does (10–500 characters) |
+| **Cursor Deep Link** | No | A one-click install link for Cursor users. [Generate one from Cursor](https://docs.cursor.com/tools/developers#generate-install-link), then paste it here |
+| **Link to install instructions** | Yes | A URL pointing to setup/install docs (e.g. your GitHub repo) |
+| **Company** | No | Select the company associated with this MCP server |
+
+#### 3. Submit
+
+Click **Submit** and your MCP server will be listed on [cursor.directory/mcp](https://cursor.directory/mcp).
+
+For more information on using MCP servers in Cursor, see the [Cursor MCP documentation](https://docs.cursor.com/context/model-context-protocol).
+
+---
 
 ## Getting Started
 
