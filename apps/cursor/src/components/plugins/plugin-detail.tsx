@@ -26,7 +26,7 @@ export function PluginDetail({ plugin }: { plugin: Plugin }) {
               alt={`${plugin.name} logo`}
               width={48}
               height={48}
-              className="rounded-none mt-1"
+              className={`rounded-none mt-1 ${plugin.logo.endsWith(".svg") ? "invert" : ""}`}
             />
           )}
           <div>
