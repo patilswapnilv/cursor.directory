@@ -20,7 +20,7 @@ const nextConfig = {
       },
       {
         source: "/rules/:path*",
-        destination: "/plugins",
+        destination: "/plugins/:path*",
         permanent: true,
       },
       {
