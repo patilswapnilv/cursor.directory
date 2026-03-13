@@ -4,7 +4,22 @@ const nextConfig = {
     return [
       {
         source: "/popular",
-        destination: "/rules/popular",
+        destination: "/plugins",
+        permanent: true,
+      },
+      {
+        source: "/rules",
+        destination: "/plugins",
+        permanent: true,
+      },
+      {
+        source: "/rules/:path*",
+        destination: "/plugins",
+        permanent: true,
+      },
+      {
+        source: "/mcp",
+        destination: "/plugins",
         permanent: true,
       },
     ];

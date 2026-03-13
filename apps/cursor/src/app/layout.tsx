@@ -4,6 +4,7 @@ import { GlobalModals } from "@/components/modals/global-modals";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
+import { getPlugins } from "@directories/data/plugins";
 import { OpenPanelComponent } from "@openpanel/nextjs";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
@@ -91,7 +92,12 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <NuqsAdapter>
-            <Header />
+            <Header
+              pluginItems={getPlugins().map((p) => ({
+                name: p.name,
+                slug: p.slug,
+              }))}
+            />
             {children}
 
             <a
