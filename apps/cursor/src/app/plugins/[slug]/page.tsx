@@ -70,6 +70,7 @@ export default async function Page({ params }: { params: Params }) {
                   alt={`${mcp.name} logo`}
                   width={48}
                   height={48}
+                  className={mcp.logo.endsWith(".svg") ? "invert" : ""}
                 />
               )}
               <div className="flex items-center gap-2 justify-between w-full">

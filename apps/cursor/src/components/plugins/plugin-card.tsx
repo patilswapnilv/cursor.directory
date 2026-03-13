@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -13,6 +14,8 @@ export type PluginCardData = {
   href: string;
 };
 
+const isSvgLogo = (url: string) => url.endsWith(".svg");
+
 export function PluginCard({ plugin }: { plugin: PluginCardData }) {
   return (
     <Link href={plugin.href}>
@@ -21,7 +24,11 @@ export function PluginCard({ plugin }: { plugin: PluginCardData }) {
           <div className="flex items-center gap-3">
             <Avatar className="size-8 rounded-none flex-shrink-0">
               {plugin.logo ? (
-                <AvatarImage src={plugin.logo} alt={plugin.name} />
+                <AvatarImage
+                  src={plugin.logo}
+                  alt={plugin.name}
+                  className={cn(isSvgLogo(plugin.logo) && "invert")}
+                />
               ) : (
                 <AvatarFallback className="bg-[#1c1c1c] rounded-none text-xs">
                   {plugin.name.charAt(0).toUpperCase()}
