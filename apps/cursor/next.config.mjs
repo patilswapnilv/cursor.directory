@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingIncludes: {
+    "/plugins": ["../../plugins/**/*"],
+    "/plugins/[slug]": ["../../plugins/**/*"],
+    "/": ["../../plugins/**/*"],
+    "/sitemap.xml": ["../../plugins/**/*"],
+  },
   redirects: async () => {
     return [
       {
