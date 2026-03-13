@@ -1,6 +1,7 @@
 import "./globals.css";
 import { Header } from "@/components/header";
 import { GlobalModals } from "@/components/modals/global-modals";
+import { ScrollToTop } from "@/components/scroll-to-top";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
@@ -92,6 +93,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <NuqsAdapter>
+            <ScrollToTop />
             <Header
               pluginItems={getPlugins().map((p) => ({
                 name: p.name,
