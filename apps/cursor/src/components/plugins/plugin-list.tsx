@@ -10,12 +10,6 @@ import { type PluginCardData, PluginCard } from "./plugin-card";
 
 const ITEMS_PER_PAGE = 36;
 
-const tabs = [
-  { key: null, label: "All" },
-  { key: "mcp", label: "MCPs" },
-  { key: "rules", label: "Rules" },
-] as const;
-
 export function PluginList({
   plugins,
   tags,
@@ -26,6 +20,12 @@ export function PluginList({
   const [search] = useQueryState("q");
   const [selectedTag, setSelectedTag] = useQueryState("tag");
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+
+  const tabs = [
+    { key: null, label: "All" },
+    { key: "mcp", label: "MCPs" },
+    { key: "rules", label: "Rules" },
+  ] as const;
 
   const fuse = useMemo(
     () =>

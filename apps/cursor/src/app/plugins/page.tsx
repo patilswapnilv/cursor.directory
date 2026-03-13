@@ -47,7 +47,26 @@ export default async function Page() {
       seen.add(p.slug);
       return true;
     })
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => {
+      const aHasLogo = a.logo ? 0 : 1;
+      const bHasLogo = b.logo ? 0 : 1;
+      if (aHasLogo !== bHasLogo) return aHasLogo - bHasLogo;
+      if (a.type !== b.type) return a.type === "rules" ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+
+  const mixed: PluginCardData[] = [];
+  const sortedRules = allPlugins.filter((p) => p.type === "rules");
+  const sortedMcps = allPlugins.filter((p) => p.type === "mcp");
+  const ratio = Math.max(1, Math.floor(sortedMcps.length / (sortedRules.length || 1)));
+  let ri = 0;
+  let mi = 0;
+  while (ri < sortedRules.length || mi < sortedMcps.length) {
+    if (ri < sortedRules.length) mixed.push(sortedRules[ri++]);
+    for (let j = 0; j < ratio && mi < sortedMcps.length; j++) {
+      mixed.push(sortedMcps[mi++]);
+    }
+  }
 
   const tags = [
     ...new Set(filePlugins.flatMap((p) => p.keywords)),
@@ -71,7 +90,7 @@ export default async function Page() {
       </div>
 
       <Suspense>
-        <PluginList plugins={allPlugins} tags={tags} />
+        <PluginList plugins={mixed} tags={tags} />
       </Suspense>
     </div>
   );
