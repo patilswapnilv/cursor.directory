@@ -3,8 +3,8 @@
   "private": true,
   "workspaces": ["packages/*", "apps/*"],
   "devDependencies": {
-    "@biomejs/biome": "^2.4.12",
-    "@tailwindcss/postcss": "^4.2.2",
+    "@biomejs/biome": "^2.4.14",
+    "@tailwindcss/postcss": "^4.2.4",
     "postgres": "^3.4.9"
   }
 }
