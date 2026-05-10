@@ -1,5 +1,5 @@
-import { getPlugins } from "@/data/queries";
 import { NextResponse } from "next/server";
+import { getPlugins } from "@/data/queries";
 
 export const revalidate = 86400;
 export const dynamic = "force-static";

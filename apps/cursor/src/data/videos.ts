@@ -1,39 +1,47 @@
 export const videos = [
   {
-    "title": "Cursor UPDATE: Code Editor just got EVEN BETTER! (MCP Servers, Codebase Understanding, Fusion Model)",
-    "description": "In this video, we dive into the latest and most powerful update to Cursor, the agentic AI code editor! This update brings MCP servers, improved codebase understanding, and the game-changing Fusion Model—making Cursor smarter, faster, and more intuitive than ever before.",
-    "url": "https://www.youtube.com/embed/2vJobjx1p6w",
-    "author": {
-      "name": "WorldofAI",
-      "image": "https://yt3.ggpht.com/Aee59geVCIWJz9y7AzVdnY3I1jPR1S4VFF4kIkNJ46VD6jrEGhH2VszD-vKly0XhHz_sLBN3u4A=s88-c-k-c0x00ffffff-no-rj"
-    }
+    title:
+      "Cursor UPDATE: Code Editor just got EVEN BETTER! (MCP Servers, Codebase Understanding, Fusion Model)",
+    description:
+      "In this video, we dive into the latest and most powerful update to Cursor, the agentic AI code editor! This update brings MCP servers, improved codebase understanding, and the game-changing Fusion Model—making Cursor smarter, faster, and more intuitive than ever before.",
+    url: "https://www.youtube.com/embed/2vJobjx1p6w",
+    author: {
+      name: "WorldofAI",
+      image:
+        "https://yt3.ggpht.com/Aee59geVCIWJz9y7AzVdnY3I1jPR1S4VFF4kIkNJ46VD6jrEGhH2VszD-vKly0XhHz_sLBN3u4A=s88-c-k-c0x00ffffff-no-rj",
+    },
   },
   {
-    "title": "I spent 400+ hours in Cursor, here’s what I learned",
-    "description": "I spent 400+ hours in Cursor, here’s what I learned",
-    "url": "https://www.youtube.com/embed/gYLNxUxVomY",
-    "author": {
-      "name": "David Ondrej",
-      "image": "https://yt3.ggpht.com/Ksq0cOgKhbOuQMtIAjJlmrHSIDNbqmLtwosJNUZUuEZwNR3bc_W8l8Ve_xulQNidyb7dxqffyYI=s88-c-k-c0x00ffffff-no-rj"
-    }
+    title: "I spent 400+ hours in Cursor, here’s what I learned",
+    description: "I spent 400+ hours in Cursor, here’s what I learned",
+    url: "https://www.youtube.com/embed/gYLNxUxVomY",
+    author: {
+      name: "David Ondrej",
+      image:
+        "https://yt3.ggpht.com/Ksq0cOgKhbOuQMtIAjJlmrHSIDNbqmLtwosJNUZUuEZwNR3bc_W8l8Ve_xulQNidyb7dxqffyYI=s88-c-k-c0x00ffffff-no-rj",
+    },
   },
   {
-    "title": "Cursor AI for Beginners: A Complete Guide",
-    "description": "Are you new to Cursor AI and wondering how to get started? In this video you'll learn exactly how to use Cursor AI (No Experience Needed).",
-    "url": "https://www.youtube.com/embed/YG459bD8qmw",
-    "author": {
-      "name": "Richardson Dackam",
-      "image": "https://yt3.ggpht.com/wfdn_1ByKhAo3OaoSF3dXcKUM79Slz8p7m2DSLdk_nkCrDBdRAqFYieWziwmVTfiMf0sM2YhNA=s176-c-k-c0x00ffffff-no-rj"
-    }
+    title: "Cursor AI for Beginners: A Complete Guide",
+    description:
+      "Are you new to Cursor AI and wondering how to get started? In this video you'll learn exactly how to use Cursor AI (No Experience Needed).",
+    url: "https://www.youtube.com/embed/YG459bD8qmw",
+    author: {
+      name: "Richardson Dackam",
+      image:
+        "https://yt3.ggpht.com/wfdn_1ByKhAo3OaoSF3dXcKUM79Slz8p7m2DSLdk_nkCrDBdRAqFYieWziwmVTfiMf0sM2YhNA=s176-c-k-c0x00ffffff-no-rj",
+    },
   },
   {
-    "title": "How to Use Cursor’s New Repository Rules (.cursor/rules)",
-    "description": "Cursor upgraded its rule system! Instead of a single .cursorrules file, you can now write multiple repository-level rules inside .cursor/rules",
-    "url": "https://www.youtube.com/embed/1AxTVGxbkPs",
-    "author": {
-      "name": "Richardson Dackam",
-      "image": "https://yt3.ggpht.com/wfdn_1ByKhAo3OaoSF3dXcKUM79Slz8p7m2DSLdk_nkCrDBdRAqFYieWziwmVTfiMf0sM2YhNA=s176-c-k-c0x00ffffff-no-rj"
-    }
+    title: "How to Use Cursor’s New Repository Rules (.cursor/rules)",
+    description:
+      "Cursor upgraded its rule system! Instead of a single .cursorrules file, you can now write multiple repository-level rules inside .cursor/rules",
+    url: "https://www.youtube.com/embed/1AxTVGxbkPs",
+    author: {
+      name: "Richardson Dackam",
+      image:
+        "https://yt3.ggpht.com/wfdn_1ByKhAo3OaoSF3dXcKUM79Slz8p7m2DSLdk_nkCrDBdRAqFYieWziwmVTfiMf0sM2YhNA=s176-c-k-c0x00ffffff-no-rj",
+    },
   },
   {
     title: "Cursor AI tutorial for beginners",
@@ -156,7 +164,8 @@ export const videos = [
     },
   },
   {
-    title: "Cursor Composer Tutorial: Building a directory in 30 minutes from scratch",
+    title:
+      "Cursor Composer Tutorial: Building a directory in 30 minutes from scratch",
     url: "https://www.youtube.com/embed/nUTR11D8q08?si=aqh18rsdLbRWAOol",
     description:
       "@krisbuildsstuff shows how to build web directory using Cursor Composer and V0 Dev. You'll learn to build a tool listing, implement submission features, design individual pages, and organize tools into categories, and deploy with Vercel.",
@@ -167,7 +176,8 @@ export const videos = [
     },
   },
   {
-    title: "Building (and deploying!) with AI-assistance using Cursor, Claude and Cloudflare",
+    title:
+      "Building (and deploying!) with AI-assistance using Cursor, Claude and Cloudflare",
     url: "https://www.youtube.com/embed/oBDdcVaRhUk?si=8j-33MdX-1nHdxkR",
     description:
       "@rickyrobinett walks you through how to build, and deploy, an application using Cursor, Claude and Cloudflare.",
@@ -178,12 +188,14 @@ export const videos = [
     },
   },
   {
-    "title": "Master Cursor Rules and Fix AI Code Mistakes—Here’s How",
-    "description": "Frustrated with AI messing up your code? Here’s how I use Cursor Rules to make it work for me. ",
-    "url": "https://www.youtube.com/embed/FLdCJe3Fxzw?si=5Z0SzMIY0RE4Mhra",
-    "author": {
-      "name": "Richardson Dackam",
-      "image": "https://yt3.ggpht.com/wfdn_1ByKhAo3OaoSF3dXcKUM79Slz8p7m2DSLdk_nkCrDBdRAqFYieWziwmVTfiMf0sM2YhNA=s176-c-k-c0x00ffffff-no-rj"
-    }
-  }
+    title: "Master Cursor Rules and Fix AI Code Mistakes—Here’s How",
+    description:
+      "Frustrated with AI messing up your code? Here’s how I use Cursor Rules to make it work for me. ",
+    url: "https://www.youtube.com/embed/FLdCJe3Fxzw?si=5Z0SzMIY0RE4Mhra",
+    author: {
+      name: "Richardson Dackam",
+      image:
+        "https://yt3.ggpht.com/wfdn_1ByKhAo3OaoSF3dXcKUM79Slz8p7m2DSLdk_nkCrDBdRAqFYieWziwmVTfiMf0sM2YhNA=s176-c-k-c0x00ffffff-no-rj",
+    },
+  },
 ];

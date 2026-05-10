@@ -1,4 +1,4 @@
-import { OG, OGLayout, CursorIcon, createOGResponse } from "@/lib/og";
+import { CursorIcon, createOGResponse, OG, OGLayout } from "@/lib/og";
 
 export const alt = "Cursor Directory";
 export const size = { width: OG.width, height: OG.height };

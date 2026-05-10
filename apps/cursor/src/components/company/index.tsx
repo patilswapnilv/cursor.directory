@@ -1,6 +1,6 @@
+import { format } from "date-fns";
 import { getCompanyProfile } from "@/data/queries";
 import { getSession } from "@/utils/supabase/auth";
-import { format } from "date-fns";
 import { CompanyContent } from "./company-content";
 import { CompanyHeader } from "./company-header";
 import { CompanyHero } from "./company-hero";

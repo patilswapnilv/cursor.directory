@@ -1,5 +1,5 @@
-import { getCompanies, getPlugins } from "@/data/queries";
 import type { MetadataRoute } from "next";
+import { getCompanies, getPlugins } from "@/data/queries";
 
 const BASE_URL = "https://cursor.directory";
 

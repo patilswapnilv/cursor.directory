@@ -1,9 +1,9 @@
 "use server";
 
-import { createClient as createAdminClient } from "@/utils/supabase/admin-client";
-import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { createClient as createAdminClient } from "@/utils/supabase/admin-client";
+import { createClient } from "@/utils/supabase/server";
 import { authActionClient } from "./safe-action";
 
 export const starPluginAction = authActionClient

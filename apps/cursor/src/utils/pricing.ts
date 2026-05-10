@@ -17,4 +17,3 @@ export function formatPrice(amount: number): string {
 export function getFormattedJobPlanPrice(plan: JobPlan): string {
   return formatPrice(getJobPlanPrice(plan));
 }
-

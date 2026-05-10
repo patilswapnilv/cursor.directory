@@ -1,5 +1,5 @@
-import { SearchField } from "@/components/ui/search-field";
 import { useState } from "react";
+import { SearchField } from "@/components/ui/search-field";
 
 interface FilterInputProps {
   onSearch: (term: string) => void;

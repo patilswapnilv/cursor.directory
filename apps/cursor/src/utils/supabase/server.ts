@@ -3,7 +3,9 @@ import { cookies } from "next/headers";
 
 export async function createClient({
   admin = false,
-}: { admin?: boolean } = {}) {
+}: {
+  admin?: boolean;
+} = {}) {
   const cookieStore = await cookies();
 
   const auth = admin

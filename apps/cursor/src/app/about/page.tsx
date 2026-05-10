@@ -89,7 +89,6 @@ export default function About() {
             Languine.
           </p>
         </section>
-
       </div>
     </div>
   );

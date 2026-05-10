@@ -1,8 +1,8 @@
+import type { Metadata } from "next";
+import { Suspense } from "react";
 import { AddCompanyButton } from "@/components/company/add-company-button";
 import { CompanyList } from "@/components/company/company-list";
 import { getCompanies } from "@/data/queries";
-import type { Metadata } from "next";
-import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Companies using Cursor | Cursor Directory",

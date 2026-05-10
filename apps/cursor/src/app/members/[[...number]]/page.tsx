@@ -1,9 +1,9 @@
-import { MembersTabs } from "@/components/members/members-tabs";
-import { getCompanies, getMembers, getTotalUsers } from "@/data/queries";
-import { formatNumber } from "@/utils/format";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { MembersTabs } from "@/components/members/members-tabs";
+import { getCompanies, getMembers, getTotalUsers } from "@/data/queries";
+import { formatNumber } from "@/utils/format";
 
 export const metadata: Metadata = {
   title: "Members | Cursor Directory",

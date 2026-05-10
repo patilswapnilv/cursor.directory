@@ -1,5 +1,3 @@
-import { Footer } from "@/emails/components/footer";
-import { Logo } from "@/emails/components/logo";
 import {
   Body,
   Container,
@@ -11,6 +9,8 @@ import {
   Tailwind,
   Text,
 } from "@react-email/components";
+import { Footer } from "@/emails/components/footer";
+import { Logo } from "@/emails/components/logo";
 
 export default function FollowerEmail({
   name = "Pontus",
@@ -26,11 +26,15 @@ export default function FollowerEmail({
   return (
     <Html>
       <Head />
-      <Preview>
-        {followerName} is now following you on Cursor Directory
-      </Preview>
+      <Preview>{followerName} is now following you on Cursor Directory</Preview>
       <Tailwind>
-        <Body style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', backgroundColor: '#f6f8fa' }}>
+        <Body
+          style={{
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            backgroundColor: "#f6f8fa",
+          }}
+        >
           <Container className="mx-auto max-w-[580px] bg-white py-5 pb-12">
             <Logo />
 

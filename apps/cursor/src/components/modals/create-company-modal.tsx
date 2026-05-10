@@ -1,12 +1,12 @@
 "use client";
 
+import { parseAsBoolean, useQueryStates } from "nuqs";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { parseAsBoolean, useQueryStates } from "nuqs";
 import { CompanyForm } from "../forms/company";
 
 export function CreateCompanyModal() {

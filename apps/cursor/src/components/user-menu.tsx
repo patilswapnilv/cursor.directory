@@ -1,14 +1,13 @@
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
 import { motion } from "framer-motion";
 import { Monitor, Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useQueryStates } from "nuqs";
-import { parseAsBoolean } from "nuqs";
+import { useTheme } from "next-themes";
+import { parseAsBoolean, useQueryStates } from "nuqs";
 import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {
@@ -128,17 +127,29 @@ export function UserMenu() {
                     <DropdownMenuItem onClick={() => setTheme("light")}>
                       <Sun className="mr-2 size-3.5" />
                       Light
-                      {theme === "light" && <span className="ml-auto text-xs text-muted-foreground">✓</span>}
+                      {theme === "light" && (
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          ✓
+                        </span>
+                      )}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setTheme("dark")}>
                       <Moon className="mr-2 size-3.5" />
                       Dark
-                      {theme === "dark" && <span className="ml-auto text-xs text-muted-foreground">✓</span>}
+                      {theme === "dark" && (
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          ✓
+                        </span>
+                      )}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setTheme("system")}>
                       <Monitor className="mr-2 size-3.5" />
                       System
-                      {theme === "system" && <span className="ml-auto text-xs text-muted-foreground">✓</span>}
+                      {theme === "system" && (
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          ✓
+                        </span>
+                      )}
                     </DropdownMenuItem>
                   </DropdownMenuSubContent>
                 </DropdownMenuPortal>

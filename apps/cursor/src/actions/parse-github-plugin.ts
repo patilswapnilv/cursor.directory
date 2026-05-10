@@ -1,8 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { ActionError } from "./safe-action";
-import { authActionClient } from "./safe-action";
+import { ActionError, authActionClient } from "./safe-action";
 
 type ParsedComponent = {
   type: string;
@@ -94,7 +93,6 @@ function parseFrontmatter(input: string): {
     const objectKeyMatch = rawLine.match(/^([A-Za-z_][A-Za-z0-9_-]*):\s*$/);
     if (objectKeyMatch && !currentArrayKey) {
       currentObjectKey = objectKeyMatch[1];
-      continue;
     }
   }
 
@@ -106,9 +104,7 @@ function parseFrontmatter(input: string): {
 }
 
 function parseGitHubUrl(url: string): { owner: string; repo: string } | null {
-  const match = url.match(
-    /github\.com\/([^/]+)\/([^/]+?)(?:\.git)?(?:\/|$)/,
-  );
+  const match = url.match(/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?(?:\/|$)/);
   if (!match) return null;
   return { owner: match[1], repo: match[2] };
 }
@@ -257,9 +253,7 @@ export const parseGitHubPluginAction = authActionClient
         components.push({
           type: "rule",
           name:
-            (data.title as string) ||
-            (data.description as string) ||
-            filename,
+            (data.title as string) || (data.description as string) || filename,
           slug: slugify(filename),
           description:
             (data.description as string) || body.trim().slice(0, 200),
@@ -275,8 +269,7 @@ export const parseGitHubPluginAction = authActionClient
               ? {
                   author_name: (data.author as Record<string, string>).name,
                   author_url: (data.author as Record<string, string>).url,
-                  author_avatar: (data.author as Record<string, string>)
-                    .avatar,
+                  author_avatar: (data.author as Record<string, string>).avatar,
                 }
               : {}),
           },

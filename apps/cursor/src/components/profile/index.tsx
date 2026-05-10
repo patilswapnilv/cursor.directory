@@ -1,7 +1,7 @@
-import { getUserProfile } from "@/data/queries";
-import { getSession } from "@/utils/supabase/auth";
 import { format } from "date-fns";
 import { Suspense } from "react";
+import { getUserProfile } from "@/data/queries";
+import { getSession } from "@/utils/supabase/auth";
 import { ProfileCompanies } from "./profile-companies";
 import { ProfileContent } from "./profile-content";
 import { ProfilePlugins } from "./profile-plugins";

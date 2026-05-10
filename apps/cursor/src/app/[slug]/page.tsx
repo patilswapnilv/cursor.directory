@@ -1,6 +1,5 @@
+import { notFound, redirect } from "next/navigation";
 import { getPlugins } from "@/data/queries";
-import { redirect } from "next/navigation";
-import { notFound } from "next/navigation";
 
 type Params = Promise<{ slug: string }>;
 

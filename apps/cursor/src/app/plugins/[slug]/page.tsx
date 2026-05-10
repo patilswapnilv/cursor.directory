@@ -1,7 +1,7 @@
-import { PluginDetailView } from "@/components/plugins/plugin-detail";
-import { getPluginBySlug, getPlugins } from "@/data/queries";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { PluginDetailView } from "@/components/plugins/plugin-detail";
+import { getPluginBySlug, getPlugins } from "@/data/queries";
 
 type Params = Promise<{ slug: string }>;
 

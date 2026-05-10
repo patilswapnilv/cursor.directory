@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { useQueryState } from "nuqs";
+import { cn } from "@/lib/utils";
 import { SearchField } from "./ui/search-field";
 
 export function SearchInput({

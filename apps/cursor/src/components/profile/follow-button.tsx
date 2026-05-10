@@ -1,10 +1,10 @@
 "use client";
 
+import { useAction } from "next-safe-action/hooks";
+import { useEffect, useState } from "react";
 import { toggleFollowAction } from "@/actions/toggle-follow-action";
 import { createClient } from "@/utils/supabase/client";
 import { isAuthenticated as isAuthenticatedClient } from "@/utils/supabase/client-session";
-import { useAction } from "next-safe-action/hooks";
-import { useEffect, useState } from "react";
 import { SignInModal } from "../modals/sign-in-modal";
 import { Button } from "../ui/button";
 

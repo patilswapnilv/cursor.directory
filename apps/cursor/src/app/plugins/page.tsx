@@ -1,23 +1,20 @@
-import type { PluginCardData } from "@/components/plugins/plugin-card";
-import { PluginList } from "@/components/plugins/plugin-list";
-import { getPlugins } from "@/data/queries";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import type { PluginCardData } from "@/components/plugins/plugin-card";
+import { PluginList } from "@/components/plugins/plugin-list";
+import { getPlugins } from "@/data/queries";
 
 export const metadata: Metadata = {
   title: "Plugins | Cursor Directory",
-  description:
-    "Rules, MCP servers, and integrations built by the community.",
+  description: "Rules, MCP servers, and integrations built by the community.",
   openGraph: {
     title: "Plugins | Cursor Directory",
-    description:
-      "Rules, MCP servers, and integrations built by the community.",
+    description: "Rules, MCP servers, and integrations built by the community.",
   },
   twitter: {
     title: "Plugins | Cursor Directory",
-    description:
-      "Rules, MCP servers, and integrations built by the community.",
+    description: "Rules, MCP servers, and integrations built by the community.",
   },
 };
 
@@ -57,9 +54,7 @@ export default async function Page() {
 
   const allPlugins = dbPluginCards;
 
-  const tags = [
-    ...new Set(allPlugins.flatMap((p) => p.keywords ?? [])),
-  ].sort();
+  const tags = [...new Set(allPlugins.flatMap((p) => p.keywords ?? []))].sort();
 
   return (
     <div className="page-shell pb-32 pt-24 md:pt-32">

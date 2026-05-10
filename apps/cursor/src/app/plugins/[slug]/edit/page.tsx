@@ -1,10 +1,10 @@
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { EditPluginForm } from "@/components/forms/edit-plugin-form";
 import { Login } from "@/components/login";
 import { getPluginBySlug } from "@/data/queries";
 import { getSession } from "@/utils/supabase/auth";
-import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { Suspense } from "react";
 
 type Params = Promise<{ slug: string }>;
 

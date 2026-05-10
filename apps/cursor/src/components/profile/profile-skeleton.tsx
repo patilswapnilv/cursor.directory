@@ -51,7 +51,10 @@ export function ProfileSkeleton() {
 
         <div className="mt-6 space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex gap-3 rounded-lg border border-border p-4">
+            <div
+              key={i}
+              className="flex gap-3 rounded-lg border border-border p-4"
+            >
               <Skeleton className="size-8 shrink-0 rounded-full" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-3/4" />

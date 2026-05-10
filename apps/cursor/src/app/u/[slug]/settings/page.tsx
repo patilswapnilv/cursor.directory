@@ -1,8 +1,8 @@
+import { redirect } from "next/navigation";
 import { NotificationSettings } from "@/components/profile/notification-settings";
 import { ProfileTop } from "@/components/profile/profile-top";
 import { getUserProfile } from "@/data/queries";
 import { getSession } from "@/utils/supabase/auth";
-import { redirect } from "next/navigation";
 
 type Params = Promise<{ slug: string }>;
 

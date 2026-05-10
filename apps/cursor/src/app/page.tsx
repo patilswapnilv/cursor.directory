@@ -1,12 +1,8 @@
-import type { PluginCardData } from "@/components/plugins/plugin-card";
-import { Startpage } from "@/components/startpage";
-import {
-  getMembers,
-  getPlugins,
-  getTotalUsers,
-} from "@/data/queries";
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import type { PluginCardData } from "@/components/plugins/plugin-card";
+import { Startpage } from "@/components/startpage";
+import { getMembers, getPlugins, getTotalUsers } from "@/data/queries";
 
 export const metadata: Metadata = {
   title: "Cursor Directory - Plugins for Cursor",
@@ -24,7 +20,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-static";
 export const revalidate = 86400;
 
-function getPluginType(components: { type: string }[]): "rules" | "mcp" | "both" {
+function getPluginType(
+  components: { type: string }[],
+): "rules" | "mcp" | "both" {
   const hasRules = components.some((c) => c.type === "rule");
   const hasMcp = components.some((c) => c.type === "mcp_server");
   if (hasRules && hasMcp) return "both";
@@ -32,7 +30,9 @@ function getPluginType(components: { type: string }[]): "rules" | "mcp" | "both"
   return "rules";
 }
 
-function toPluginCard(p: NonNullable<Awaited<ReturnType<typeof getPlugins>>["data"]>[number]): PluginCardData {
+function toPluginCard(
+  p: NonNullable<Awaited<ReturnType<typeof getPlugins>>["data"]>[number],
+): PluginCardData {
   const components = p.plugin_components ?? [];
   return {
     name: p.name,
@@ -49,15 +49,12 @@ function toPluginCard(p: NonNullable<Awaited<ReturnType<typeof getPlugins>>["dat
 }
 
 export default async function Page() {
-  const [
-    { data: totalUsers },
-    { data: members },
-    { data: allPluginsData },
-  ] = await Promise.all([
-    getTotalUsers(),
-    getMembers({ page: 1, limit: 16 }),
-    getPlugins({ fetchAll: true }),
-  ]);
+  const [{ data: totalUsers }, { data: members }, { data: allPluginsData }] =
+    await Promise.all([
+      getTotalUsers(),
+      getMembers({ page: 1, limit: 16 }),
+      getPlugins({ fetchAll: true }),
+    ]);
 
   const allPluginsRaw = allPluginsData ?? [];
 
@@ -72,7 +69,10 @@ export default async function Page() {
     .map(toPluginCard);
 
   const recentPlugins = [...allPluginsRaw]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    )
     .slice(0, 20)
     .map(toPluginCard);
 

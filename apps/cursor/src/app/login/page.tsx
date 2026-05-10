@@ -1,6 +1,6 @@
-import { Login } from "@/components/login";
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { Login } from "@/components/login";
 
 export const metadata: Metadata = {
   title: "Sign in | Cursor Directory",

@@ -1,8 +1,8 @@
+import { redirect } from "next/navigation";
 import { MembersCard } from "@/components/members/members-card";
 import { ProfileTop } from "@/components/profile/profile-top";
 import { getUserFollowing, getUserProfile } from "@/data/queries";
 import { getSession } from "@/utils/supabase/auth";
-import { redirect } from "next/navigation";
 
 type Params = Promise<{ slug: string }>;
 
@@ -52,9 +52,9 @@ export default async function Page({ params }: { params: Params }) {
             )}
             {following?.map((user) => (
               <MembersCard
-                // @ts-ignore
+                // @ts-expect-error
                 key={user.following.id}
-                // @ts-ignore
+                // @ts-expect-error
                 member={user.following}
                 noBorder
               />

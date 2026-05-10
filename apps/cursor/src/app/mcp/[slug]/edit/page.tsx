@@ -1,11 +1,11 @@
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { EditMCPForm } from "@/components/forms/edit-mcp";
 import { Login } from "@/components/login";
 import { MCPListingSwitch } from "@/components/mcps/mcps-listing-switch";
 import { getMCPBySlug } from "@/data/queries";
 import { getSession } from "@/utils/supabase/auth";
-import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { Suspense } from "react";
 
 type Params = Promise<{ slug: string }>;
 

@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { useQueryState } from "nuqs";
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 const TABS = [
   { key: "plugins", label: "Plugins" },
@@ -18,7 +18,9 @@ export function ProfileTabs({
   children: Record<TabKey, ReactNode>;
 }) {
   const [tab, setTab] = useQueryState("tab");
-  const activeTab = (TABS.some((t) => t.key === tab) ? tab : "plugins") as TabKey;
+  const activeTab = (
+    TABS.some((t) => t.key === tab) ? tab : "plugins"
+  ) as TabKey;
 
   return (
     <div className="mt-12 w-full">
@@ -40,9 +42,7 @@ export function ProfileTabs({
         ))}
       </div>
 
-      <div className="mt-6 min-h-[300px]">
-        {children[activeTab]}
-      </div>
+      <div className="mt-6 min-h-[300px]">{children[activeTab]}</div>
     </div>
   );
 }

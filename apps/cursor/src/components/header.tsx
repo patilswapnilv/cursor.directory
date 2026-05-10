@@ -1,9 +1,9 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
+import { cn } from "@/lib/utils";
 import { MobileMenu } from "./mobile-menu";
 import { UserMenu } from "./user-menu";
 
@@ -23,10 +23,7 @@ export function Header() {
     <div className="relative z-30 flex items-center justify-between">
       <div className="fixed inset-x-0 top-0 z-50 bg-background/92 backdrop-blur-xl">
         <div className="mx-auto flex h-[56px] w-full max-w-[1300px] items-center justify-between px-4 text-[15px] md:h-[60px] md:px-6">
-          <Link
-            href="/"
-            className="flex items-center text-foreground"
-          >
+          <Link href="/" className="flex items-center text-foreground">
             <img
               src="/logo-lockup.svg"
               alt="Cursor Directory"

@@ -1,5 +1,3 @@
-import { Footer } from "@/emails/components/footer";
-import { Logo } from "@/emails/components/logo";
 import {
   Body,
   Container,
@@ -11,20 +9,25 @@ import {
   Tailwind,
   Text,
 } from "@react-email/components";
+import { Footer } from "@/emails/components/footer";
+import { Logo } from "@/emails/components/logo";
 
-export default function WelcomeEmail({
-  name = "there",
-}: {
-  name: string;
-}) {
+export default function WelcomeEmail({ name = "there" }: { name: string }) {
   return (
     <Html>
       <Head />
       <Preview>
-        Welcome to Cursor Directory — plugins, MCP servers, and resources for Cursor
+        Welcome to Cursor Directory — plugins, MCP servers, and resources for
+        Cursor
       </Preview>
       <Tailwind>
-        <Body style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', backgroundColor: '#f6f8fa' }}>
+        <Body
+          style={{
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            backgroundColor: "#f6f8fa",
+          }}
+        >
           <Container className="mx-auto max-w-[580px] bg-white py-5 pb-12">
             <Logo />
 
@@ -48,7 +51,8 @@ export default function WelcomeEmail({
                 >
                   Plugins
                 </Link>{" "}
-                — Rules, MCP servers, skills, and more you can install in one click
+                — Rules, MCP servers, skills, and more you can install in one
+                click
               </Text>
 
               <Text className="text-sm leading-7 mb-1">
@@ -83,9 +87,7 @@ export default function WelcomeEmail({
                 </Link>
               </Text>
 
-              <Text className="text-sm leading-7">
-                Happy building!
-              </Text>
+              <Text className="text-sm leading-7">Happy building!</Text>
             </Section>
 
             <Footer />

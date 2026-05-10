@@ -1,5 +1,5 @@
-import { getPluginBySlug } from "@/data/queries";
 import { NextResponse } from "next/server";
+import { getPluginBySlug } from "@/data/queries";
 
 export const dynamic = "force-dynamic";
 

@@ -1,7 +1,7 @@
+import { Suspense } from "react";
 import { Company } from "@/components/company";
 import { CompanySkeleton } from "@/components/company/company-skeleton";
 import { getCompanyProfile } from "@/data/queries";
-import { Suspense } from "react";
 
 type Params = Promise<{ slug: string }>;
 

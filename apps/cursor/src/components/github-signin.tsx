@@ -1,8 +1,8 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { GithubIcon } from "@/components/icons/github-icon";
 import { createClient } from "@/utils/supabase/client";
-import { useSearchParams } from "next/navigation";
 import { Button } from "./ui/button";
 
 export function GithubSignin({ redirectTo }: { redirectTo?: string }) {

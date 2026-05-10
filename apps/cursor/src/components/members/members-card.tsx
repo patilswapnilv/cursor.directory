@@ -1,10 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { AmbassadorBadge } from "@/components/ambassador-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/utils/format";
-import Link from "next/link";
 
 export function MembersCard({
   member,
@@ -58,7 +58,8 @@ export function MembersCard({
       </div>
       {(member.follower_count ?? 0) > 0 && (
         <span className="flex-shrink-0 text-xs text-muted-foreground">
-          {formatNumber(member.follower_count!)} {member.follower_count === 1 ? "follower" : "followers"}
+          {formatNumber(member.follower_count!)}{" "}
+          {member.follower_count === 1 ? "follower" : "followers"}
         </span>
       )}
     </Link>

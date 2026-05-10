@@ -1,5 +1,11 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { nanoid } from "nanoid";
+import { useAction } from "next-safe-action/hooks";
+import { parseAsBoolean, useQueryState } from "nuqs";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { upsertCompanyAction } from "@/actions/upsert-company";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,12 +20,6 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { nanoid } from "nanoid";
-import { useAction } from "next-safe-action/hooks";
-import { parseAsBoolean, useQueryState } from "nuqs";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import UploadLogo from "../upload-logo";
 
 const formSchema = z.object({
@@ -248,7 +248,12 @@ export function CompanyForm({
           </div>
         </ScrollArea>
 
-        <Button type="submit" size="lg" className="w-full" disabled={isExecuting}>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          disabled={isExecuting}
+        >
           {isExecuting ? "Saving..." : "Save Company"}
         </Button>
       </form>

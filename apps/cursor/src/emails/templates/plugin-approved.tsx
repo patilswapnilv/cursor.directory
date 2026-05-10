@@ -1,5 +1,3 @@
-import { Footer } from "@/emails/components/footer";
-import { Logo } from "@/emails/components/logo";
 import {
   Body,
   Button,
@@ -12,6 +10,8 @@ import {
   Tailwind,
   Text,
 } from "@react-email/components";
+import { Footer } from "@/emails/components/footer";
+import { Logo } from "@/emails/components/logo";
 
 export default function PluginApprovedEmail({
   name = "there",
@@ -31,7 +31,13 @@ export default function PluginApprovedEmail({
         Your plugin "{pluginName}" is now live on Cursor Directory
       </Preview>
       <Tailwind>
-        <Body style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', backgroundColor: '#f6f8fa' }}>
+        <Body
+          style={{
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            backgroundColor: "#f6f8fa",
+          }}
+        >
           <Container className="mx-auto max-w-[580px] bg-white py-5 pb-12">
             <Logo />
 
@@ -54,8 +60,8 @@ export default function PluginApprovedEmail({
               </Section>
 
               <Text className="text-sm leading-7 mb-4">
-                Share it with others so they can install it directly into Cursor.
-                You can edit your plugin anytime from its page.
+                Share it with others so they can install it directly into
+                Cursor. You can edit your plugin anytime from its page.
               </Text>
 
               <Text className="text-sm leading-7 mb-4">
