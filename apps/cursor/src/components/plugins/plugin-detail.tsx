@@ -21,6 +21,8 @@ import { cn, formatCount } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
 import { PluginIconFallback } from "./plugin-icon";
 import { StarButton } from "./star-button";
+import { VerifiedBadge } from "./verified-badge";
+import { VerifyControls } from "./verify-controls";
 
 function isValidImageUrl(url: string | null): url is string {
   if (!url) return false;
@@ -97,6 +99,7 @@ function ScanStatusBanner({
   const status = plugin.scan_status;
 
   if (status === "safe") return null;
+  if (status === "unscanned") return null;
   if (status === "flagged" && plugin.active && !isOwner) return null;
   if (!isOwner && status === "error") return null;
 
@@ -231,11 +234,15 @@ export function PluginDetailView({ plugin }: { plugin: PluginRow }) {
         <div className="mb-6 flex items-center gap-4">
           <PluginLogo logo={plugin.logo} name={plugin.name} size={40} />
           <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-semibold tracking-tight">
-                {plugin.name}
-              </h1>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <h1 className="text-3xl font-semibold tracking-tight">
+                  {plugin.name}
+                </h1>
+                {plugin.verified && <VerifiedBadge size="md" />}
+              </div>
               <div className="flex items-center gap-2">
+                <VerifyControls plugin={plugin} />
                 <span className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground">
                   <Download className="size-3.5" />
                   <span className="text-xs">{formatCount(installCount)}</span>

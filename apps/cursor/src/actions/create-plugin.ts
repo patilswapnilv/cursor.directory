@@ -1,11 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { start } from "workflow/api";
 import { z } from "zod";
+import { InsertPluginError, insertPlugin } from "@/lib/plugins/insert";
 import { pluginScanRatelimit } from "@/lib/rate-limit";
-import { createClient } from "@/utils/supabase/admin-client";
-import { scanPluginWorkflow } from "@/workflows/scan-plugin";
 import { ActionError, authActionClient } from "./safe-action";
 
 const componentSchema = z.object({
@@ -64,76 +62,34 @@ export const createPluginAction = authActionClient
         );
       }
 
-      const supabase = await createClient();
-
-      const { data: plugin, error: pluginError } = await supabase
-        .from("plugins")
-        .insert({
-          name,
-          description,
-          logo: logo || null,
-          repository: repository || null,
-          homepage: homepage || null,
-          keywords: keywords || [],
-          owner_id: userId,
-          active: false,
-          plan: "standard",
-          scan_status: "pending",
-        })
-        .select("id, slug")
-        .single();
-
-      if (pluginError) {
-        if (pluginError.code === "23505") {
-          throw new ActionError(
-            "A plugin with this name already exists. Please choose a different name or repository.",
-          );
-        }
-        throw new ActionError(
-          `Failed to create plugin: ${pluginError.message}`,
-        );
-      }
-
-      type ComponentInput = z.infer<typeof componentSchema>;
-      const componentRows = components.map(
-        (comp: ComponentInput, i: number) => ({
-          plugin_id: plugin.id,
-          type: comp.type,
-          name: comp.name,
-          slug:
-            comp.slug ||
-            comp.name
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, "-")
-              .replace(/^-+|-+$/g, ""),
-          description: comp.description || null,
-          content: comp.content || null,
-          metadata: comp.metadata || {},
-          sort_order: i,
-        }),
-      );
-
-      const { error: compError } = await supabase
-        .from("plugin_components")
-        .insert(componentRows);
-
-      if (compError) {
-        await supabase.from("plugins").delete().eq("id", plugin.id);
-        throw new ActionError(
-          `Failed to save plugin components: ${compError.message}`,
-        );
-      }
-
+      let result: { id: string; slug: string };
       try {
-        await start(scanPluginWorkflow, [plugin.id]);
-      } catch (workflowError) {
-        // Don't fail the submission if workflow enqueue fails — the plugin is
-        // saved and can be re-scanned manually from the admin panel.
-        console.error("Failed to enqueue scan workflow", workflowError);
+        result = await insertPlugin(
+          {
+            name,
+            description,
+            logo,
+            repository,
+            homepage,
+            keywords,
+            components,
+          },
+          { ownerId: userId, source: "user", skipScan: false },
+        );
+      } catch (err) {
+        if (err instanceof InsertPluginError) {
+          if (err.code === "duplicate_name" || err.code === "duplicate_repo") {
+            throw new ActionError(
+              "A plugin with this name or repository already exists. Please choose a different name or repository.",
+            );
+          }
+          throw new ActionError(err.message);
+        }
+        throw err;
       }
 
       revalidatePath("/plugins");
 
-      return { slug: plugin.slug };
+      return { slug: result.slug };
     },
   );

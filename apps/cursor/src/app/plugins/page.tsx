@@ -48,6 +48,7 @@ export default async function Page() {
       mcpCount,
       keywords: p.keywords,
       installCount: p.install_count,
+      verified: p.verified,
       href: `/plugins/${p.slug}`,
     };
   });

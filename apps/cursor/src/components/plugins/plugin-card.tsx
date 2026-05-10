@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn, formatCount } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { PluginIconFallback } from "./plugin-icon";
+import { VerifiedBadge } from "./verified-badge";
 
 export type PluginCardData = {
   name: string;
@@ -14,6 +15,7 @@ export type PluginCardData = {
   mcpCount?: number;
   keywords?: string[];
   installCount?: number;
+  verified?: boolean;
   href: string;
 };
 
@@ -52,8 +54,9 @@ export function PluginCard({ plugin }: { plugin: PluginCardData }) {
             ) : (
               <PluginIconFallback size={36} />
             )}
-            <h3 className="truncate text-sm font-medium tracking-[0.005em] text-foreground">
-              {plugin.name}
+            <h3 className="flex min-w-0 items-center gap-1.5 truncate text-sm font-medium tracking-[0.005em] text-foreground">
+              <span className="truncate">{plugin.name}</span>
+              {plugin.verified && <VerifiedBadge size="sm" />}
             </h3>
           </div>
 

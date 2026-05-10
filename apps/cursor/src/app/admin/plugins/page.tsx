@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import {
   getFlaggedPlugins,
   getPendingPlugins,
+  getPendingVerificationRequests,
   getStuckScans,
 } from "@/data/queries";
 import { isAdmin } from "@/utils/admin";
@@ -21,12 +22,17 @@ export default async function AdminPluginsPage() {
     redirect("/");
   }
 
-  const [{ data: flagged }, { data: stuck }, { data: pending }] =
-    await Promise.all([
-      getFlaggedPlugins(),
-      getStuckScans(),
-      getPendingPlugins(),
-    ]);
+  const [
+    { data: flagged },
+    { data: stuck },
+    { data: pending },
+    { data: verification },
+  ] = await Promise.all([
+    getFlaggedPlugins(),
+    getStuckScans(),
+    getPendingPlugins(),
+    getPendingVerificationRequests(),
+  ]);
 
   return (
     <div className="min-h-screen px-6 pt-24 md:pt-32 pb-32">
@@ -44,6 +50,7 @@ export default async function AdminPluginsPage() {
             flagged={flagged ?? []}
             stuck={stuck ?? []}
             pending={pending ?? []}
+            verification={verification ?? []}
           />
         </Suspense>
       </div>

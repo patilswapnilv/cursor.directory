@@ -254,7 +254,13 @@ export type PluginComponent = {
   created_at: string;
 };
 
-export type ScanStatus = "pending" | "scanning" | "safe" | "flagged" | "error";
+export type ScanStatus =
+  | "pending"
+  | "scanning"
+  | "safe"
+  | "flagged"
+  | "error"
+  | "unscanned";
 export type FlagSeverity = "low" | "medium" | "high";
 export type FlagCategory =
   | "malicious_code"
@@ -303,6 +309,12 @@ export type PluginRow = {
   last_scanned_at: string | null;
   scan_run_id: string | null;
   permanently_blocked: boolean;
+  discovery_source: string | null;
+  github_repo_id: number | null;
+  verified: boolean;
+  verified_at: string | null;
+  verified_by: string | null;
+  verification_requested_at: string | null;
   plugin_components?: PluginComponent[];
 };
 
@@ -412,6 +424,19 @@ export async function getFlaggedPlugins() {
   });
 
   return { data: sorted ?? null, error: null };
+}
+
+export async function getPendingVerificationRequests() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("plugins")
+    .select("*, plugin_components(*)")
+    .not("verification_requested_at", "is", null)
+    .eq("verified", false)
+    .order("verification_requested_at", { ascending: false, nullsFirst: false })
+    .limit(500);
+
+  return { data: data as PluginRow[] | null, error };
 }
 
 export async function getStuckScans() {

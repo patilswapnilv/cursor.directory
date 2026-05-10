@@ -6,23 +6,27 @@ import { cn } from "@/lib/utils";
 import { FlaggedReviewList } from "./flagged-review-list";
 import { PluginReviewList } from "./plugin-review-list";
 import { StuckScanList } from "./stuck-scan-list";
+import { VerificationRequestList } from "./verification-request-list";
 
-type TabKey = "flagged" | "stuck" | "pending";
+type TabKey = "flagged" | "stuck" | "pending" | "verification";
 
 const TABS: ReadonlyArray<{ key: TabKey; label: string }> = [
   { key: "flagged", label: "Flagged" },
   { key: "stuck", label: "Stuck" },
   { key: "pending", label: "All inactive" },
+  { key: "verification", label: "Verification" },
 ];
 
 export function AdminPluginsTabs({
   flagged,
   stuck,
   pending,
+  verification,
 }: {
   flagged: PluginRow[];
   stuck: PluginRow[];
   pending: PluginRow[];
+  verification: PluginRow[];
 }) {
   const [tab, setTab] = useQueryState("tab", { defaultValue: "flagged" });
   const active = (TABS.some((t) => t.key === tab) ? tab : "flagged") as TabKey;
@@ -31,6 +35,7 @@ export function AdminPluginsTabs({
     flagged: flagged.length,
     stuck: stuck.length,
     pending: pending.length,
+    verification: verification.length,
   };
 
   return (
@@ -66,6 +71,9 @@ export function AdminPluginsTabs({
       {active === "flagged" && <FlaggedReviewList plugins={flagged} />}
       {active === "stuck" && <StuckScanList plugins={stuck} />}
       {active === "pending" && <PluginReviewList plugins={pending} />}
+      {active === "verification" && (
+        <VerificationRequestList plugins={verification} />
+      )}
     </div>
   );
 }

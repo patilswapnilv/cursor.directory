@@ -44,6 +44,7 @@ function toPluginCard(
     mcpCount: components.filter((c) => c.type === "mcp_server").length,
     keywords: p.keywords,
     installCount: p.install_count,
+    verified: p.verified,
     href: `/plugins/${p.slug}`,
   };
 }

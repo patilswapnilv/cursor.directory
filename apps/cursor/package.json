@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "seed:extract": "bun run --env-file=.env src/scripts/extract-from-github.ts",
+    "seed:insert": "bun run --env-file=.env src/scripts/insert-from-jsonl.ts",
     "email:dev": "email dev --port 3002 --dir src/emails/templates",
     "email:build": "email build",
     "email:export": "email export"
