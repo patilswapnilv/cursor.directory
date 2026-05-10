@@ -62,28 +62,6 @@ export default function WelcomeEmail({
                 — Got something cool? Share it
               </Text>
 
-              <Text className="text-sm leading-7 mb-1">
-                <span className="text-base">◇ </span>
-                <Link
-                  href="https://cursor.directory/events"
-                  className="underline text-black"
-                >
-                  Events
-                </Link>{" "}
-                — Meetups and events happening around the community
-              </Text>
-
-              <Text className="text-sm leading-7 mb-1">
-                <span className="text-base">◇ </span>
-                <Link
-                  href="https://cursor.directory/jobs"
-                  className="underline text-black"
-                >
-                  Jobs
-                </Link>{" "}
-                — Companies using Cursor that are hiring
-              </Text>
-
               <Text className="text-sm leading-7 mb-4">
                 <span className="text-base">◇ </span>
                 <Link

@@ -1,30 +1,23 @@
 import type { PluginCardData } from "@/components/plugins/plugin-card";
 import { Startpage } from "@/components/startpage";
 import {
-  getFeaturedJobs,
-  getForumPosts,
   getMembers,
   getPlugins,
-  getPopularPosts,
   getTotalUsers,
 } from "@/data/queries";
-import { getEvents } from "@/lib/luma";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "Cursor Directory - Explore What the Community Is Building",
-  description:
-    "Plugins, MCP servers, events, and thousands of developers building with Cursor.",
+  title: "Cursor Directory - Plugins for Cursor",
+  description: "Discover plugins built by the Cursor community.",
   openGraph: {
-    title: "Cursor Directory - Explore What the Community Is Building",
-    description:
-      "Plugins, MCP servers, events, and thousands of developers building with Cursor.",
+    title: "Cursor Directory - Plugins for Cursor",
+    description: "Discover plugins built by the Cursor community.",
   },
   twitter: {
-    title: "Cursor Directory - Explore What the Community Is Building",
-    description:
-      "Plugins, MCP servers, events, and thousands of developers building with Cursor.",
+    title: "Cursor Directory - Plugins for Cursor",
+    description: "Discover plugins built by the Cursor community.",
   },
 };
 
@@ -57,50 +50,37 @@ function toPluginCard(p: NonNullable<Awaited<ReturnType<typeof getPlugins>>["dat
 
 export default async function Page() {
   const [
-    { data: featuredJobs },
     { data: totalUsers },
     { data: members },
-    { data: popularPosts },
     { data: allPluginsData },
-    { entries: eventsData },
-    { data: forumPosts },
   ] = await Promise.all([
-    getFeaturedJobs({ onlyPremium: true }),
     getTotalUsers(),
-    getMembers({ page: 1, limit: 12 }),
-    getPopularPosts(),
+    getMembers({ page: 1, limit: 16 }),
     getPlugins({ fetchAll: true }),
-    getEvents(),
-    getForumPosts(),
   ]);
 
-  const allPlugins = (allPluginsData ?? [])
+  const allPluginsRaw = allPluginsData ?? [];
+
+  const allPlugins = allPluginsRaw
     .map(toPluginCard)
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const popularPlugins = (allPluginsData ?? [])
+  const popularPlugins = allPluginsRaw
     .filter((p) => p.install_count > 0)
     .sort((a, b) => b.install_count - a.install_count)
+    .slice(0, 12)
+    .map(toPluginCard);
+
+  const recentPlugins = [...allPluginsRaw]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 20)
+    .map(toPluginCard);
+
+  const starredPlugins = allPluginsRaw
+    .filter((p) => p.star_count > 0)
+    .sort((a, b) => b.star_count - a.star_count)
     .slice(0, 8)
     .map(toPluginCard);
-
-  const recentPlugins = (allPluginsData ?? [])
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 16)
-    .map(toPluginCard);
-
-  const now = new Date();
-  const upcomingEvents = (eventsData ?? [])
-    .filter(
-      (e) =>
-        e.visibility === "public" && new Date(e.end_at) >= now,
-    )
-    .sort(
-      (a, b) =>
-        new Date(a.start_at).getTime() -
-        new Date(b.start_at).getTime(),
-    )
-    .slice(0, 4);
 
   return (
     <div className="min-h-screen w-full">
@@ -110,12 +90,9 @@ export default async function Page() {
             popularPlugins={popularPlugins}
             allPlugins={allPlugins}
             recentPlugins={recentPlugins}
-            upcomingEvents={upcomingEvents}
-            jobs={featuredJobs}
+            starredPlugins={starredPlugins}
             totalUsers={totalUsers?.count ?? 0}
             members={members}
-            popularPosts={popularPosts}
-            forumPosts={forumPosts}
           />
         </Suspense>
       </div>

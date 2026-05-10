@@ -45,14 +45,7 @@ export default function FollowerEmail({
                   {followerName}
                 </Link>{" "}
                 is now following you on Cursor Directory. They&apos;ll be
-                notified when you share new{" "}
-                <Link
-                  href="https://cursor.directory/board"
-                  className="underline text-black"
-                >
-                  posts
-                </Link>{" "}
-                with the community.
+                notified when you share new plugins with the community.
               </Text>
 
               <Text className="text-sm leading-7 mb-2">
@@ -69,23 +62,13 @@ export default function FollowerEmail({
                 </Link>
               </Text>
 
-              <Text className="text-sm leading-7 mb-1">
+              <Text className="text-sm leading-7 mb-6">
                 •{" "}
                 <Link
                   href="https://cursor.directory/plugins"
                   className="underline text-black"
                 >
                   Browse community plugins
-                </Link>
-              </Text>
-
-              <Text className="text-sm leading-7 mb-6">
-                •{" "}
-                <Link
-                  href="https://cursor.directory/board"
-                  className="underline text-black"
-                >
-                  Join the conversation on the board
                 </Link>
               </Text>
 

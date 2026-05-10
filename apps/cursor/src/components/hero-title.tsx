@@ -16,16 +16,8 @@ export function HeroTitle({ totalUsers }: { totalUsers: number }) {
       <p className="marketing-copy mx-auto max-w-[760px] text-balance">
         <Link href="/plugins" className={linkClass}>
           Plugins
-        </Link>
-        ,{" "}
-        <Link href="/plugins?tag=mcp" className={linkClass}>
-          MCP servers
-        </Link>
-        ,{" "}
-        <Link href="/events" className={linkClass}>
-          events
-        </Link>
-        , and{" "}
+        </Link>{" "}
+        and{" "}
         <Link href="/members" className={linkClass}>
           {formatNumber(totalUsers)}+ developers
         </Link>{" "}

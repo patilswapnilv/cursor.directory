@@ -6,7 +6,7 @@ export async function getUserProfile(slug: string, userId?: string) {
   const query = supabase
     .from("users")
     .select(
-      "id, name, image, hero, status, bio, work, website, slug, social_x_link, created_at, public, follow_email, is_ambassador, posts(*, votes(id)), is_following, follower_count, following_count",
+      "id, name, image, hero, status, bio, work, website, slug, social_x_link, created_at, public, follow_email, is_ambassador, is_following, follower_count, following_count",
     )
     .eq("slug", slug);
 
@@ -32,17 +32,6 @@ export async function getUserProfile(slug: string, userId?: string) {
       follow_email: isOwner ? data.follow_email : undefined,
       following_count: data?.following_count || 0,
       followers_count: data?.follower_count || 0,
-      posts: data?.posts
-        ?.sort(
-          (a: { created_at: string }, b: { created_at: string }) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-        )
-        .map((post: { votes: { id: string }[] }) => ({
-          ...post,
-          user_avatar: data.image,
-          user_name: data.name,
-          vote_count: post.votes.length,
-        })),
     },
   };
 }
@@ -65,19 +54,6 @@ export async function getUserFollowing(id: string) {
     .eq("follower_id", id);
 
   return { data, error };
-}
-
-export async function getPopularPosts() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("get_popular_posts");
-
-  if (error) {
-    console.error(error);
-  }
-
-  return {
-    data,
-  };
 }
 
 export async function getCompanyProfile(slug: string, userId?: string) {
@@ -144,64 +120,6 @@ export async function getCompanies() {
   return { data: all, error: null };
 }
 
-
-export async function getFeaturedJobs({
-  onlyPremium,
-}: {
-  onlyPremium?: boolean;
-} = {}) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("jobs")
-    .select("*, company:companies(*)")
-    .limit(100)
-    .order("order", { ascending: false })
-    .order("created_at", { ascending: false })
-    .eq("active", true)
-    .or(onlyPremium ? "plan.eq.premium" : "plan.eq.featured,plan.eq.premium");
-
-  return {
-    // Shuffle the data
-    data: data?.sort(() => Math.random() - 0.5),
-    error,
-  };
-}
-
-export async function getJobs() {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("jobs")
-    .select("*, company:companies(*)")
-    .limit(1000) // TODO: Pagination
-    .order("created_at", { ascending: false })
-    .eq("active", true);
-
-  return { data, error };
-}
-
-export async function getJobsByCompany(slug: string) {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("jobs")
-    .select("*, companies!inner(*)")
-    .eq("companies.slug", slug)
-    .order("created_at", { ascending: false });
-
-  return { data, error };
-}
-
-export async function getJobById(id: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("jobs")
-    .select("*, company:companies(*)")
-    .eq("id", id)
-    .single();
-
-  return { data, error };
-}
 
 export async function getFeaturedMCPs({
   onlyPremium,
@@ -474,76 +392,6 @@ export async function hasUserStarredPlugin(pluginId: string, userId: string) {
     .maybeSingle();
 
   return !!data;
-}
-
-export type ForumPost = {
-  id: number;
-  title: string;
-  slug: string;
-  url: string;
-  views: number;
-  likeCount: number;
-  postsCount: number;
-  createdAt: string;
-  excerpt: string | null;
-  tags: string[];
-  author: {
-    username: string;
-    name: string | null;
-    avatarUrl: string | null;
-  } | null;
-};
-
-export async function getForumPosts(): Promise<{ data: ForumPost[] }> {
-  try {
-    const res = await fetch("https://forum.cursor.com/top/weekly.json", {
-      next: { revalidate: 86400 },
-    });
-
-    if (!res.ok) return { data: [] };
-
-    const json = await res.json();
-    const topics = json.topic_list?.topics ?? [];
-    const users: Record<number, { username: string; name: string; avatar_template: string }> = {};
-
-    for (const u of json.users ?? []) {
-      users[u.id] = u;
-    }
-
-    const posts: ForumPost[] = topics
-      .filter((t: any) => !t.pinned && !t.pinned_globally)
-      .slice(0, 8)
-      .map((t: any) => {
-        const posterId = t.posters?.[0]?.user_id;
-        const user = posterId != null ? users[posterId] : null;
-        let avatarUrl: string | null = null;
-
-        if (user?.avatar_template) {
-          const tpl = user.avatar_template.replace("{size}", "48");
-          avatarUrl = tpl.startsWith("http") ? tpl : `https://forum.cursor.com${tpl}`;
-        }
-
-        return {
-          id: t.id,
-          title: t.title,
-          slug: t.slug,
-          url: `https://forum.cursor.com/t/${t.slug}/${t.id}`,
-          views: t.views ?? 0,
-          likeCount: t.like_count ?? 0,
-          postsCount: t.posts_count ?? 0,
-          createdAt: t.created_at,
-          excerpt: t.excerpt ?? null,
-          tags: (t.tags ?? []).map((tag: any) => (typeof tag === "string" ? tag : tag.name)),
-          author: user
-            ? { username: user.username, name: user.name || null, avatarUrl }
-            : null,
-        };
-      });
-
-    return { data: posts };
-  } catch {
-    return { data: [] };
-  }
 }
 
 type GetMembersParams = {

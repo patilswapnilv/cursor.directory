@@ -119,7 +119,7 @@ export function UserMenu() {
                 </button>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/jobs/new">Post a job</Link>
+                <Link href="/plugins/new">Submit a plugin</Link>
               </DropdownMenuItem>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>Theme</DropdownMenuSubTrigger>

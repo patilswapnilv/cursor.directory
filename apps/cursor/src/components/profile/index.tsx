@@ -5,7 +5,6 @@ import { Suspense } from "react";
 import { ProfileCompanies } from "./profile-companies";
 import { ProfileContent } from "./profile-content";
 import { ProfilePlugins } from "./profile-plugins";
-import { ProfilePosts } from "./profile-posts";
 import { ProfileStarredPlugins } from "./profile-starred-plugins";
 import { ProfileTabs } from "./profile-tabs";
 import { ProfileTop } from "./profile-top";
@@ -46,10 +45,6 @@ export async function Profile({
 
       <ProfileTabs>
         {{
-          posts: (
-            // @ts-ignore
-            <ProfilePosts data={data?.posts} isOwner={isOwner} />
-          ),
           plugins: (
             <Suspense fallback={<div>Loading...</div>}>
               <ProfilePlugins userId={data?.id} isOwner={isOwner} />
