@@ -1,9 +1,14 @@
-import { getPendingPlugins } from "@/data/queries";
-import { isAdmin } from "@/utils/admin";
-import { getSession } from "@/utils/supabase/auth";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { PluginReviewList } from "./plugin-review-list";
+import { Suspense } from "react";
+import {
+  getFlaggedPlugins,
+  getPendingPlugins,
+  getStuckScans,
+} from "@/data/queries";
+import { isAdmin } from "@/utils/admin";
+import { getSession } from "@/utils/supabase/auth";
+import { AdminPluginsTabs } from "./admin-plugins-tabs";
 
 export const metadata: Metadata = {
   title: "Review Plugins | Admin",
@@ -16,9 +21,12 @@ export default async function AdminPluginsPage() {
     redirect("/");
   }
 
-  const { data: plugins } = await getPendingPlugins({
-    since: "2026-03-16T00:00:00Z",
-  });
+  const [{ data: flagged }, { data: stuck }, { data: pending }] =
+    await Promise.all([
+      getFlaggedPlugins(),
+      getStuckScans(),
+      getPendingPlugins(),
+    ]);
 
   return (
     <div className="min-h-screen px-6 pt-24 md:pt-32 pb-32">
@@ -26,12 +34,18 @@ export default async function AdminPluginsPage() {
         <div className="mb-10">
           <h1 className="marketing-page-title mb-3">Review Plugins</h1>
           <p className="marketing-copy text-muted-foreground">
-            {plugins?.length ?? 0} pending{" "}
-            {plugins?.length === 1 ? "submission" : "submissions"}
+            Auto-publish runs every submission through the security scanner.
+            Anything the agent flags shows up here for human review.
           </p>
         </div>
 
-        <PluginReviewList plugins={plugins ?? []} />
+        <Suspense>
+          <AdminPluginsTabs
+            flagged={flagged ?? []}
+            stuck={stuck ?? []}
+            pending={pending ?? []}
+          />
+        </Suspense>
       </div>
     </div>
   );

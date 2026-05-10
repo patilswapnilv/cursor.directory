@@ -1,10 +1,12 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/admin-client";
 import { revalidatePath } from "next/cache";
+import { start } from "workflow/api";
 import { z } from "zod";
-import { ActionError } from "./safe-action";
-import { authActionClient } from "./safe-action";
+import { pluginScanRatelimit } from "@/lib/rate-limit";
+import { createClient } from "@/utils/supabase/admin-client";
+import { scanPluginWorkflow } from "@/workflows/scan-plugin";
+import { ActionError, authActionClient } from "./safe-action";
 
 const componentSchema = z.object({
   type: z.enum([
@@ -30,19 +32,38 @@ export const createPluginAction = authActionClient
   .schema(
     z.object({
       name: z.string().min(2, "Name must be at least 2 characters"),
-      description: z.string().min(10, "Description must be at least 10 characters"),
+      description: z
+        .string()
+        .min(10, "Description must be at least 10 characters"),
       logo: z.string().nullable().optional(),
       repository: z.string().url().nullable().optional(),
       homepage: z.string().url().nullable().optional(),
       keywords: z.array(z.string()).optional(),
-      components: z.array(componentSchema).min(1, "At least one component is required"),
+      components: z
+        .array(componentSchema)
+        .min(1, "At least one component is required"),
     }),
   )
   .action(
     async ({
-      parsedInput: { name, description, logo, repository, homepage, keywords, components },
+      parsedInput: {
+        name,
+        description,
+        logo,
+        repository,
+        homepage,
+        keywords,
+        components,
+      },
       ctx: { userId },
     }) => {
+      const { success } = await pluginScanRatelimit.limit(userId);
+      if (!success) {
+        throw new ActionError(
+          "Too many plugin submissions in the last hour. Please try again later.",
+        );
+      }
+
       const supabase = await createClient();
 
       const { data: plugin, error: pluginError } = await supabase
@@ -57,6 +78,7 @@ export const createPluginAction = authActionClient
           owner_id: userId,
           active: false,
           plan: "standard",
+          scan_status: "pending",
         })
         .select("id, slug")
         .single();
@@ -73,21 +95,23 @@ export const createPluginAction = authActionClient
       }
 
       type ComponentInput = z.infer<typeof componentSchema>;
-      const componentRows = components.map((comp: ComponentInput, i: number) => ({
-        plugin_id: plugin.id,
-        type: comp.type,
-        name: comp.name,
-        slug:
-          comp.slug ||
-          comp.name
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-+|-+$/g, ""),
-        description: comp.description || null,
-        content: comp.content || null,
-        metadata: comp.metadata || {},
-        sort_order: i,
-      }));
+      const componentRows = components.map(
+        (comp: ComponentInput, i: number) => ({
+          plugin_id: plugin.id,
+          type: comp.type,
+          name: comp.name,
+          slug:
+            comp.slug ||
+            comp.name
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/^-+|-+$/g, ""),
+          description: comp.description || null,
+          content: comp.content || null,
+          metadata: comp.metadata || {},
+          sort_order: i,
+        }),
+      );
 
       const { error: compError } = await supabase
         .from("plugin_components")
@@ -98,6 +122,14 @@ export const createPluginAction = authActionClient
         throw new ActionError(
           `Failed to save plugin components: ${compError.message}`,
         );
+      }
+
+      try {
+        await start(scanPluginWorkflow, [plugin.id]);
+      } catch (workflowError) {
+        // Don't fail the submission if workflow enqueue fails — the plugin is
+        // saved and can be re-scanned manually from the admin panel.
+        console.error("Failed to enqueue scan workflow", workflowError);
       }
 
       revalidatePath("/plugins");

@@ -1,5 +1,18 @@
 "use client";
 
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  Download,
+  Loader2,
+  Pencil,
+  ShieldAlert,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useAction } from "next-safe-action/hooks";
+import { useCallback, useEffect, useState } from "react";
 import { trackInstallAction } from "@/actions/track-install";
 import { CursorDeepLink } from "@/components/cursor-deeplink";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,11 +20,6 @@ import type { PluginRow } from "@/data/queries";
 import { cn, formatCount } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
 import { PluginIconFallback } from "./plugin-icon";
-import { Check, ChevronDown, Copy, Download, Pencil } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { useAction } from "next-safe-action/hooks";
-import { useCallback, useEffect, useState } from "react";
 import { StarButton } from "./star-button";
 
 function isValidImageUrl(url: string | null): url is string {
@@ -24,7 +32,15 @@ function isValidImageUrl(url: string | null): url is string {
   }
 }
 
-function PluginLogo({ logo, name, size = 40 }: { logo: string | null; name: string; size?: number }) {
+function PluginLogo({
+  logo,
+  name,
+  size = 40,
+}: {
+  logo: string | null;
+  name: string;
+  size?: number;
+}) {
   const [error, setError] = useState(false);
   const validUrl = isValidImageUrl(logo);
 
@@ -71,7 +87,96 @@ function buildMCPInstallDeepLink(name: string, config: string) {
   return `cursor://anysphere.cursor-deeplink/mcp/install?name=${encodeURIComponent(name)}&config=${toBase64(config)}`;
 }
 
-type ComponentType = "rule" | "mcp_server" | "skill" | "agent" | "hook" | "lsp_server" | "command";
+function ScanStatusBanner({
+  plugin,
+  isOwner,
+}: {
+  plugin: PluginRow;
+  isOwner: boolean;
+}) {
+  const status = plugin.scan_status;
+
+  if (status === "safe") return null;
+  if (status === "flagged" && plugin.active && !isOwner) return null;
+  if (!isOwner && status === "error") return null;
+
+  if (status === "pending" || status === "scanning") {
+    return (
+      <div className="mb-6 flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3">
+        <Loader2 className="size-4 animate-spin text-muted-foreground" />
+        <span className="text-sm text-muted-foreground">
+          {isOwner
+            ? "Scanning your plugin… it will appear publicly once the security agent finishes."
+            : "Plugin is being verified."}
+        </span>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="mb-6 flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3">
+        <ShieldAlert className="size-4 text-amber-500" />
+        <span className="text-sm text-amber-600 dark:text-amber-400">
+          Scan failed. An admin will re-run it shortly.
+        </span>
+      </div>
+    );
+  }
+
+  if (status === "flagged") {
+    const reasons = plugin.flag_reasons ?? [];
+    const live = plugin.active;
+    return (
+      <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/5 px-4 py-3">
+        <div className="flex items-start gap-2">
+          <ShieldAlert className="mt-0.5 size-4 text-red-500" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-600 dark:text-red-400">
+              {live
+                ? "Flagged by the security agent — under review."
+                : "Flagged by the security agent and hidden from the directory."}
+            </p>
+            {plugin.flag_summary && (
+              <p className="mt-1 text-sm text-red-600/90 dark:text-red-400/90">
+                {plugin.flag_summary}
+              </p>
+            )}
+            {reasons.length > 0 && (
+              <ul className="mt-2 space-y-0.5 text-xs text-red-600/80 dark:text-red-400/80">
+                {reasons.map((reason) => (
+                  <li key={reason}>• {reason}</li>
+                ))}
+              </ul>
+            )}
+            {isOwner && (
+              <p className="mt-2 text-xs text-red-600/80 dark:text-red-400/80">
+                <Link
+                  href={`/plugins/${plugin.slug}/edit`}
+                  className="underline underline-offset-2"
+                >
+                  Edit your plugin
+                </Link>{" "}
+                and resubmit to trigger another scan.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+type ComponentType =
+  | "rule"
+  | "mcp_server"
+  | "skill"
+  | "agent"
+  | "hook"
+  | "lsp_server"
+  | "command";
 
 const COMPONENT_LABELS: Record<ComponentType, string> = {
   rule: "Rules",
@@ -83,11 +188,7 @@ const COMPONENT_LABELS: Record<ComponentType, string> = {
   command: "Commands",
 };
 
-export function PluginDetailView({
-  plugin,
-}: {
-  plugin: PluginRow;
-}) {
+export function PluginDetailView({ plugin }: { plugin: PluginRow }) {
   const [isOwner, setIsOwner] = useState(false);
   const [installCount, setInstallCount] = useState(plugin.install_count);
 
@@ -108,8 +209,12 @@ export function PluginDetailView({
   }, [plugin.id, plugin.slug, trackInstall]);
 
   const components = plugin.plugin_components ?? [];
-  const componentTypes = [...new Set(components.map((c) => c.type))] as ComponentType[];
-  const [activeTab, setActiveTab] = useState<ComponentType>(componentTypes[0] ?? "rule");
+  const componentTypes = [
+    ...new Set(components.map((c) => c.type)),
+  ] as ComponentType[];
+  const [activeTab, setActiveTab] = useState<ComponentType>(
+    componentTypes[0] ?? "rule",
+  );
 
   const rules = components.filter((c) => c.type === "rule");
   const mcps = components.filter((c) => c.type === "mcp_server");
@@ -122,18 +227,14 @@ export function PluginDetailView({
   return (
     <div className="min-h-screen px-4 pt-24 md:pt-32">
       <div className="page-shell max-w-4xl px-0 py-8">
-        {!plugin.active && (
-          <div className="mb-6 flex items-center gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/5 px-4 py-3">
-            <span className="text-sm text-yellow-600 dark:text-yellow-400">
-              Under review — this plugin is pending approval.
-            </span>
-          </div>
-        )}
+        <ScanStatusBanner plugin={plugin} isOwner={isOwner} />
         <div className="mb-6 flex items-center gap-4">
           <PluginLogo logo={plugin.logo} name={plugin.name} size={40} />
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-semibold tracking-tight">{plugin.name}</h1>
+              <h1 className="text-3xl font-semibold tracking-tight">
+                {plugin.name}
+              </h1>
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground">
                   <Download className="size-3.5" />
@@ -251,9 +352,15 @@ export function PluginDetailView({
           <McpSection mcps={mcps} onInstall={handleInstall} />
         )}
 
-        {activeTab !== "rule" && activeTab !== "mcp_server" && activeComponents.length > 0 && (
-          <GenericComponentSection components={activeComponents} type={activeTab} onInstall={handleInstall} />
-        )}
+        {activeTab !== "rule" &&
+          activeTab !== "mcp_server" &&
+          activeComponents.length > 0 && (
+            <GenericComponentSection
+              components={activeComponents}
+              type={activeTab}
+              onInstall={handleInstall}
+            />
+          )}
       </div>
     </div>
   );
@@ -285,9 +392,7 @@ function RulesSection({
                 <button
                   type="button"
                   className="flex items-center gap-2 min-w-0 text-left"
-                  onClick={() =>
-                    setExpandedRule(isExpanded ? null : rule.slug)
-                  }
+                  onClick={() => setExpandedRule(isExpanded ? null : rule.slug)}
                 >
                   <ChevronDown
                     className={cn(
@@ -355,7 +460,10 @@ function resolveMcpConfig(
   if (servers && typeof servers === "object") {
     const keys = Object.keys(servers);
     if (keys.length > 0) {
-      return { name: keys[0], config: servers[keys[0]] as Record<string, unknown> };
+      return {
+        name: keys[0],
+        config: servers[keys[0]] as Record<string, unknown>,
+      };
     }
   }
 
@@ -479,7 +587,9 @@ function getStoredRunner(): PackageRunner {
   return "npx";
 }
 
-function isComponentInstallable(c: NonNullable<PluginRow["plugin_components"]>[number]): boolean {
+function isComponentInstallable(
+  c: NonNullable<PluginRow["plugin_components"]>[number],
+): boolean {
   if (c.content) return true;
   if (c.type === "mcp_server") {
     const meta = c.metadata as Record<string, unknown>;
@@ -561,7 +671,12 @@ function CliInstallCommand({
               className="flex h-full items-center gap-1.5 border-r border-border px-3 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {runner}
-              <ChevronDown className={cn("size-3 transition-transform", runnerOpen && "rotate-180")} />
+              <ChevronDown
+                className={cn(
+                  "size-3 transition-transform",
+                  runnerOpen && "rotate-180",
+                )}
+              />
             </button>
             {runnerOpen && (
               <div className="absolute left-0 top-full z-10 mt-1 min-w-[120px] rounded-md border border-border bg-popover py-1 shadow-md">
@@ -572,7 +687,9 @@ function CliInstallCommand({
                     onClick={() => handleSelectRunner(r)}
                     className={cn(
                       "flex w-full items-center px-3 py-1.5 text-left text-xs transition-colors hover:bg-accent",
-                      r === runner ? "text-foreground font-medium" : "text-muted-foreground",
+                      r === runner
+                        ? "text-foreground font-medium"
+                        : "text-muted-foreground",
                     )}
                   >
                     {r}
@@ -609,7 +726,12 @@ function CliInstallCommand({
                 onClick={() => setListExpanded((v) => !v)}
                 className="text-muted-foreground transition-colors hover:text-foreground"
               >
-                <ChevronDown className={cn("size-3.5 transition-transform", listExpanded && "rotate-180")} />
+                <ChevronDown
+                  className={cn(
+                    "size-3.5 transition-transform",
+                    listExpanded && "rotate-180",
+                  )}
+                />
               </button>
             )}
           </div>
@@ -637,7 +759,8 @@ function CliInstallCommand({
             <div className="h-px bg-border my-1" />
             {installable.map((comp) => {
               const checked = selected.has(comp.slug);
-              const typeLabel = COMPONENT_LABELS[comp.type as ComponentType] ?? comp.type;
+              const typeLabel =
+                COMPONENT_LABELS[comp.type as ComponentType] ?? comp.type;
               return (
                 <button
                   key={comp.slug}
@@ -662,7 +785,12 @@ function CliInstallCommand({
                   >
                     {typeLabel}
                   </span>
-                  <span className={cn("truncate", checked ? "text-foreground" : "text-muted-foreground")}>
+                  <span
+                    className={cn(
+                      "truncate",
+                      checked ? "text-foreground" : "text-muted-foreground",
+                    )}
+                  >
                     {comp.name}
                   </span>
                 </button>
@@ -700,8 +828,8 @@ function GenericComponentSection({
             <CardContent className="p-4 space-y-2">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-sm font-medium">{comp.name}</h3>
-                {comp.content && (
-                  type === "command" ? (
+                {comp.content &&
+                  (type === "command" ? (
                     <a
                       href={buildCommandDeepLink(comp.slug, comp.content)}
                       className="shrink-0 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
@@ -711,11 +839,12 @@ function GenericComponentSection({
                     </a>
                   ) : (
                     <CopyButton text={comp.content} onCopy={onInstall} />
-                  )
-                )}
+                  ))}
               </div>
               {comp.description && (
-                <p className="text-xs leading-5 text-muted-foreground">{comp.description}</p>
+                <p className="text-xs leading-5 text-muted-foreground">
+                  {comp.description}
+                </p>
               )}
               {comp.content && (
                 <div className="max-h-64 overflow-y-auto rounded-lg border border-border bg-editor p-4 font-mono text-xs leading-6 text-muted-foreground">

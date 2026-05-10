@@ -1,5 +1,6 @@
-import { resolve, dirname } from "path";
-import { fileURLToPath } from "url";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { withWorkflow } from "workflow/next";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -8,6 +9,7 @@ const nextConfig = {
   turbopack: {
     root: resolve(__dirname, "../.."),
   },
+  serverExternalPackages: ["@cursor/sdk"],
   redirects: async () => {
     return [
       {
@@ -108,4 +110,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withWorkflow(nextConfig);

@@ -1,8 +1,11 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/admin-client";
 import { revalidatePath } from "next/cache";
+import { start } from "workflow/api";
 import { z } from "zod";
+import { pluginScanRatelimit } from "@/lib/rate-limit";
+import { createClient } from "@/utils/supabase/admin-client";
+import { scanPluginWorkflow } from "@/workflows/scan-plugin";
 import { ActionError, authActionClient } from "./safe-action";
 
 const componentSchema = z.object({
@@ -69,7 +72,16 @@ export const updatePluginAction = authActionClient
       }
 
       if (existing.owner_id !== userId) {
-        throw new ActionError("You do not have permission to edit this plugin.");
+        throw new ActionError(
+          "You do not have permission to edit this plugin.",
+        );
+      }
+
+      const { success } = await pluginScanRatelimit.limit(userId);
+      if (!success) {
+        throw new ActionError(
+          "Too many plugin updates in the last hour. Please try again later.",
+        );
       }
 
       const { error: updateError } = await supabase
@@ -133,6 +145,12 @@ export const updatePluginAction = authActionClient
         throw new ActionError(
           `Failed to save plugin components: ${compError.message}`,
         );
+      }
+
+      try {
+        await start(scanPluginWorkflow, [id]);
+      } catch (workflowError) {
+        console.error("Failed to enqueue scan workflow", workflowError);
       }
 
       revalidatePath("/plugins");
