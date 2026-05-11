@@ -4,7 +4,6 @@ import { format } from "date-fns";
 import { CompanyContent } from "./company-content";
 import { CompanyHeader } from "./company-header";
 import { CompanyHero } from "./company-hero";
-import { CompanyJobs } from "./company-jobs";
 
 export async function Company({
   slug,
@@ -51,8 +50,6 @@ export async function Company({
         website={data?.website}
         social_x_link={data?.social_x_link}
       />
-
-      <CompanyJobs slug={data?.slug} />
 
       <div className="mt-10 flex items-center justify-between border-t border-border pt-6 text-sm text-muted-foreground">
         <span>Joined Cursor Directory</span>

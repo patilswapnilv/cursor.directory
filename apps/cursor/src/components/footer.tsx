@@ -10,17 +10,13 @@ const columns = [
     title: "Explore",
     links: [
       { href: "/plugins", label: "Plugins" },
-      { href: "/plugins?tag=mcp", label: "MCP Servers" },
-      { href: "/plugins?tag=rules", label: "Rules" },
-      { href: "/events", label: "Events" },
-      { href: "/jobs", label: "Jobs" },
+      { href: "/plugins/new", label: "Submit a Plugin" },
     ],
   },
   {
     title: "Community",
     links: [
       { href: "/members", label: "Members" },
-      { href: "/board", label: "Board" },
       { href: "/companies", label: "Companies" },
       { href: "/about", label: "About" },
     ],
@@ -54,12 +50,6 @@ const columns = [
     title: "Contribute",
     links: [
       { href: "/plugins/new", label: "Submit a Plugin" },
-      {
-        href: "https://anysphere.typeform.com/to/aqRbfe1R",
-        label: "Host an Event",
-        external: true,
-      },
-      { href: "/jobs/new", label: "Post a Job" },
       {
         href: "https://github.com/pontusab/cursor.directory",
         label: "GitHub",

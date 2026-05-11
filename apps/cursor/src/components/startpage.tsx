@@ -6,42 +6,87 @@ import { useQueryState } from "nuqs";
 import { useEffect, useMemo, useState } from "react";
 import type { PluginCardData } from "@/components/plugins/plugin-card";
 import { PluginCard } from "@/components/plugins/plugin-card";
-import type { ForumPost as ForumPostType } from "@/data/queries";
-import { BoardPost } from "./board/board-post";
-import { EventCard } from "./events/event-card";
-import { ForumPost } from "./forum/forum-post";
 import { GlobalSearchInput } from "./global-search-input";
 import { HeroTitle } from "./hero-title";
-import { type Job, JobsFeatured } from "./jobs/jobs-featured";
 import { MembersCard } from "./members/members-card";
 
-function matchesSearch(term: string, ...fields: (string | undefined | null)[]) {
-  const lower = term.toLowerCase();
-  return fields.some((f) => f?.toLowerCase().includes(lower));
+function ArrowIcon() {
+  return (
+    <svg
+      width="12"
+      height="13"
+      viewBox="0 0 12 13"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <mask
+        id="mask0_106_981"
+        maskUnits="userSpaceOnUse"
+        x="0"
+        y="0"
+        width="12"
+        height="13"
+      >
+        <rect y="0.5" width="12" height="12" fill="#D9D9D9" />
+      </mask>
+      <g mask="url(#mask0_106_981)">
+        <path
+          d="M3.2 9.5L2.5 8.8L7.3 4H3V3H9V9H8V4.7L3.2 9.5Z"
+          fill="currentColor"
+        />
+      </g>
+    </svg>
+  );
 }
 
-import type { Event } from "@/lib/luma";
+function SectionHeader({
+  title,
+  href,
+  ctaLabel = "View all",
+}: {
+  title: string;
+  href: string;
+  ctaLabel?: string;
+}) {
+  return (
+    <div className="mb-5 flex items-center justify-between">
+      <h3 className="section-eyebrow">{title}</h3>
+      <Link
+        href={href}
+        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <span>{ctaLabel}</span>
+        <ArrowIcon />
+      </Link>
+    </div>
+  );
+}
+
+function PluginGrid({ plugins }: { plugins: PluginCardData[] }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {plugins.map((plugin) => (
+        <PluginCard key={plugin.slug} plugin={plugin} />
+      ))}
+    </div>
+  );
+}
 
 export function Startpage({
   popularPlugins,
   allPlugins,
   recentPlugins,
-  upcomingEvents,
-  jobs,
+  starredPlugins,
   totalUsers,
   members,
-  popularPosts,
-  forumPosts,
 }: {
   popularPlugins: PluginCardData[];
   allPlugins: PluginCardData[];
   recentPlugins: PluginCardData[];
-  upcomingEvents: Event[];
-  jobs?: Job[] | null;
+  starredPlugins: PluginCardData[];
   totalUsers: number;
   members: unknown[] | null;
-  popularPosts: unknown[] | null;
-  forumPosts: ForumPostType[];
 }) {
   const [search] = useQueryState("q", { defaultValue: "" });
 
@@ -69,13 +114,6 @@ export function Startpage({
     return pluginFuse.search(search).map((r) => r.item);
   }, [search, isSearching, pluginFuse]);
 
-  const filteredJobs = useMemo(() => {
-    if (!isSearching) return jobs;
-    return (jobs ?? []).filter((j) =>
-      matchesSearch(search, j.title, j.company?.name),
-    );
-  }, [search, isSearching, jobs]);
-
   const [searchedMembers, setSearchedMembers] = useState<any[] | null>(null);
 
   useEffect(() => {
@@ -102,24 +140,10 @@ export function Startpage({
 
   const filteredMembers = isSearching ? searchedMembers : members;
 
-  const filteredEvents = useMemo(() => {
-    if (!isSearching) return upcomingEvents;
-    return upcomingEvents.filter((e) =>
-      matchesSearch(
-        search,
-        e.name,
-        e.geo_address_json?.city,
-        e.geo_address_json?.country,
-      ),
-    );
-  }, [search, isSearching, upcomingEvents]);
-
-  const filteredPosts = useMemo(() => {
-    if (!isSearching) return popularPosts;
-    return (popularPosts ?? []).filter((p: any) =>
-      matchesSearch(search, p.title, p.content),
-    );
-  }, [search, isSearching, popularPosts]);
+  const alphabeticalPlugins = useMemo(
+    () => allPlugins.slice(0, 24),
+    [allPlugins],
+  );
 
   return (
     <div className="page-shell pb-24 pt-28 md:pt-36">
@@ -133,177 +157,36 @@ export function Startpage({
 
           {isSearching && filteredPlugins.length > 0 && (
             <div className="mb-14">
-              <div className="mb-5 flex items-center justify-between">
-                <h3 className="section-eyebrow">Plugins</h3>
-                <Link
-                  href={`/plugins?q=${encodeURIComponent(search)}`}
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  <span>See all results</span>
-                  <svg
-                    width="12"
-                    height="13"
-                    viewBox="0 0 12 13"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <mask
-                      id="mask0_106_981"
-                      maskUnits="userSpaceOnUse"
-                      x="0"
-                      y="0"
-                      width="12"
-                      height="13"
-                    >
-                      <rect y="0.5" width="12" height="12" fill="#D9D9D9" />
-                    </mask>
-                    <g mask="url(#mask0_106_981)">
-                      <path
-                        d="M3.2 9.5L2.5 8.8L7.3 4H3V3H9V9H8V4.7L3.2 9.5Z"
-                        fill="currentColor"
-                      />
-                    </g>
-                  </svg>
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {filteredPlugins.slice(0, 12).map((plugin) => (
-                  <PluginCard key={plugin.slug} plugin={plugin} />
-                ))}
-              </div>
+              <SectionHeader
+                title="Plugins"
+                href={`/plugins?q=${encodeURIComponent(search)}`}
+                ctaLabel="See all results"
+              />
+              <PluginGrid plugins={filteredPlugins.slice(0, 12)} />
             </div>
           )}
 
           {popularPlugins.length > 0 && !isSearching && (
             <div className="mb-14">
-              <div className="mb-5 flex items-center justify-between">
-                <h3 className="section-eyebrow">Popular Plugins</h3>
-                <Link
-                  href="/plugins?tag=popular"
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  <span>View all</span>
-                  <svg
-                    width="12"
-                    height="13"
-                    viewBox="0 0 12 13"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <mask
-                      id="mask0_106_981"
-                      maskUnits="userSpaceOnUse"
-                      x="0"
-                      y="0"
-                      width="12"
-                      height="13"
-                    >
-                      <rect y="0.5" width="12" height="12" fill="#D9D9D9" />
-                    </mask>
-                    <g mask="url(#mask0_106_981)">
-                      <path
-                        d="M3.2 9.5L2.5 8.8L7.3 4H3V3H9V9H8V4.7L3.2 9.5Z"
-                        fill="currentColor"
-                      />
-                    </g>
-                  </svg>
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {popularPlugins.map((plugin) => (
-                  <PluginCard key={plugin.slug} plugin={plugin} />
-                ))}
-              </div>
+              <SectionHeader
+                title="Popular Plugins"
+                href="/plugins"
+              />
+              <PluginGrid plugins={popularPlugins} />
             </div>
           )}
 
-          {filteredEvents.length > 0 && (
+          {recentPlugins.length > 0 && !isSearching && (
             <div className="mb-14">
-              <div className="mb-5 flex items-center justify-between">
-                <h3 className="section-eyebrow">
-                  {isSearching ? "Events" : "Upcoming Events"}
-                </h3>
-                <Link
-                  href={
-                    isSearching
-                      ? `/events?q=${encodeURIComponent(search)}`
-                      : "/events"
-                  }
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  <span>{isSearching ? "See all results" : "View all"}</span>
-                  <svg
-                    width="12"
-                    height="13"
-                    viewBox="0 0 12 13"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <mask
-                      id="mask0_106_981"
-                      maskUnits="userSpaceOnUse"
-                      x="0"
-                      y="0"
-                      width="12"
-                      height="13"
-                    >
-                      <rect y="0.5" width="12" height="12" fill="#D9D9D9" />
-                    </mask>
-                    <g mask="url(#mask0_106_981)">
-                      <path
-                        d="M3.2 9.5L2.5 8.8L7.3 4H3V3H9V9H8V4.7L3.2 9.5Z"
-                        fill="currentColor"
-                      />
-                    </g>
-                  </svg>
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {filteredEvents.slice(0, isSearching ? 8 : 4).map((event) => (
-                  <EventCard key={event.api_id} data={event} />
-                ))}
-              </div>
+              <SectionHeader title="Recently Added" href="/plugins" />
+              <PluginGrid plugins={recentPlugins} />
             </div>
           )}
 
-          {filteredJobs && filteredJobs.length > 0 && (
+          {starredPlugins.length > 0 && !isSearching && (
             <div className="mb-14">
-              <div className="mb-5 flex items-center justify-between">
-                <h3 className="section-eyebrow">
-                  {isSearching ? "Jobs" : "Featured jobs"}
-                </h3>
-                <Link
-                  href="/jobs"
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  <span>View all</span>
-                  <svg
-                    width="12"
-                    height="13"
-                    viewBox="0 0 12 13"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <mask
-                      id="mask0_106_981"
-                      maskUnits="userSpaceOnUse"
-                      x="0"
-                      y="0"
-                      width="12"
-                      height="13"
-                    >
-                      <rect y="0.5" width="12" height="12" fill="#D9D9D9" />
-                    </mask>
-                    <g mask="url(#mask0_106_981)">
-                      <path
-                        d="M3.2 9.5L2.5 8.8L7.3 4H3V3H9V9H8V4.7L3.2 9.5Z"
-                        fill="currentColor"
-                      />
-                    </g>
-                  </svg>
-                </Link>
-              </div>
-              <JobsFeatured data={filteredJobs} hidePagination={true} />
+              <SectionHeader title="Most Starred" href="/plugins" />
+              <PluginGrid plugins={starredPlugins} />
             </div>
           )}
 
@@ -322,216 +205,30 @@ export function Startpage({
                   className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                 >
                   <span>{isSearching ? "See all results" : "View all"}</span>
-                  <svg
-                    width="12"
-                    height="13"
-                    viewBox="0 0 12 13"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <mask
-                      id="mask0_106_981"
-                      maskUnits="userSpaceOnUse"
-                      x="0"
-                      y="0"
-                      width="12"
-                      height="13"
-                    >
-                      <rect y="0.5" width="12" height="12" fill="#D9D9D9" />
-                    </mask>
-                    <g mask="url(#mask0_106_981)">
-                      <path
-                        d="M3.2 9.5L2.5 8.8L7.3 4H3V3H9V9H8V4.7L3.2 9.5Z"
-                        fill="currentColor"
-                      />
-                    </g>
-                  </svg>
+                  <ArrowIcon />
                 </Link>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {filteredMembers.slice(0, isSearching ? 8 : 4).map((member) => (
-                  <MembersCard key={member.id} member={member} gray />
-                ))}
+                {filteredMembers
+                  .slice(0, 8)
+                  .map((member: any) => (
+                    <MembersCard key={member.id} member={member} gray />
+                  ))}
               </div>
             </div>
           )}
 
-          {filteredPosts && filteredPosts.length > 0 && (
+          {alphabeticalPlugins.length > 0 && !isSearching && (
             <div className="mb-14">
-              <div className="mb-5 flex items-center justify-between">
-                <Link href="/board">
-                  <h3 className="section-eyebrow">Trending in Cursor</h3>
-                </Link>
-                <Link
-                  href="/board"
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  <span>View all</span>
-                  <svg
-                    width="12"
-                    height="13"
-                    viewBox="0 0 12 13"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <mask
-                      id="mask0_106_981"
-                      maskUnits="userSpaceOnUse"
-                      x="0"
-                      y="0"
-                      width="12"
-                      height="13"
-                    >
-                      <rect y="0.5" width="12" height="12" fill="#D9D9D9" />
-                    </mask>
-                    <g mask="url(#mask0_106_981)">
-                      <path
-                        d="M3.2 9.5L2.5 8.8L7.3 4H3V3H9V9H8V4.7L3.2 9.5Z"
-                        fill="currentColor"
-                      />
-                    </g>
-                  </svg>
-                </Link>
-              </div>
-              <div className="space-y-10">
-                {filteredPosts.slice(0, 3).map((post) => (
-                  // @ts-expect-error
-                  <BoardPost key={post.post_id} {...post} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {forumPosts.length > 0 && !isSearching && (
-            <div className="mb-14">
-              <div className="mb-5 flex items-center justify-between">
-                <h3 className="section-eyebrow">From the Forum</h3>
-                <a
-                  href="https://forum.cursor.com?utm_source=cursor.directory&utm_medium=startpage"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  <span>View all</span>
-                  <svg
-                    width="12"
-                    height="13"
-                    viewBox="0 0 12 13"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <mask
-                      id="mask0_106_981"
-                      maskUnits="userSpaceOnUse"
-                      x="0"
-                      y="0"
-                      width="12"
-                      height="13"
-                    >
-                      <rect y="0.5" width="12" height="12" fill="#D9D9D9" />
-                    </mask>
-                    <g mask="url(#mask0_106_981)">
-                      <path
-                        d="M3.2 9.5L2.5 8.8L7.3 4H3V3H9V9H8V4.7L3.2 9.5Z"
-                        fill="currentColor"
-                      />
-                    </g>
-                  </svg>
-                </a>
-              </div>
-              <div className="flex flex-wrap gap-2 mb-5">
-                {[
-                  {
-                    label: "Discussions",
-                    href: "https://forum.cursor.com/c/general/4",
-                  },
-                  {
-                    label: "Guides",
-                    href: "https://forum.cursor.com/c/guides/20",
-                  },
-                  {
-                    label: "Showcase",
-                    href: "https://forum.cursor.com/c/showcase/9",
-                  },
-                  {
-                    label: "Ideas",
-                    href: "https://forum.cursor.com/c/ideas/22",
-                  },
-                  {
-                    label: "Announcements",
-                    href: "https://forum.cursor.com/c/announcements/11",
-                  },
-                ].map((cat) => (
-                  <a
-                    key={cat.label}
-                    href={`${cat.href}?utm_source=cursor.directory&utm_medium=startpage`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-mono text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                  >
-                    {cat.label}
-                  </a>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {forumPosts.slice(0, 8).map((post) => (
-                  <ForumPost key={post.id} post={post} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {recentPlugins.length > 0 && !isSearching && (
-            <div className="mb-14">
-              <div className="mb-5 flex items-center justify-between">
-                <h3 className="section-eyebrow">Recent Plugins</h3>
-                <Link
-                  href="/plugins"
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  <span>View all</span>
-                  <svg
-                    width="12"
-                    height="13"
-                    viewBox="0 0 12 13"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <mask
-                      id="mask0_106_981"
-                      maskUnits="userSpaceOnUse"
-                      x="0"
-                      y="0"
-                      width="12"
-                      height="13"
-                    >
-                      <rect y="0.5" width="12" height="12" fill="#D9D9D9" />
-                    </mask>
-                    <g mask="url(#mask0_106_981)">
-                      <path
-                        d="M3.2 9.5L2.5 8.8L7.3 4H3V3H9V9H8V4.7L3.2 9.5Z"
-                        fill="currentColor"
-                      />
-                    </g>
-                  </svg>
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {recentPlugins.slice(0, 16).map((plugin) => (
-                  <PluginCard key={plugin.slug} plugin={plugin} />
-                ))}
-              </div>
+              <SectionHeader title="Browse All Plugins" href="/plugins" />
+              <PluginGrid plugins={alphabeticalPlugins} />
             </div>
           )}
 
           {isSearching &&
             filteredPlugins.length === 0 &&
-            filteredEvents.length === 0 &&
-            (!filteredJobs || filteredJobs.length === 0) &&
-            (!filteredMembers || filteredMembers.length === 0) &&
-            (!filteredPosts || filteredPosts.length === 0) && (
+            (!filteredMembers || filteredMembers.length === 0) && (
               <div className="flex flex-col items-center mt-16">
                 <p className="text-sm text-muted-foreground">
                   No results found for &quot;{search}&quot;
