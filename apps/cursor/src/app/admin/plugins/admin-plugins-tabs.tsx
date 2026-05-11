@@ -10,11 +10,13 @@ import { VerificationRequestList } from "./verification-request-list";
 
 type TabKey = "flagged" | "stuck" | "pending" | "verification";
 
+// Order = urgency. The query keys are kept stable (`stuck`, `pending`,
+// `verification`) so existing bookmarks don't break — only the labels change.
 const TABS: ReadonlyArray<{ key: TabKey; label: string }> = [
   { key: "flagged", label: "Flagged" },
-  { key: "stuck", label: "Stuck" },
-  { key: "pending", label: "All inactive" },
-  { key: "verification", label: "Verification" },
+  { key: "stuck", label: "Scan issues" },
+  { key: "verification", label: "Verification requests" },
+  { key: "pending", label: "Hidden" },
 ];
 
 export function AdminPluginsTabs({

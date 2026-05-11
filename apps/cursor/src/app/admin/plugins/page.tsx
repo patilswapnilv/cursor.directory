@@ -40,8 +40,9 @@ export default async function AdminPluginsPage() {
         <div className="mb-10">
           <h1 className="marketing-page-title mb-3">Review Plugins</h1>
           <p className="marketing-copy text-muted-foreground">
-            Auto-publish runs every submission through the security scanner.
-            Anything the agent flags shows up here for human review.
+            Plugin moderation queue. Review submissions the security scanner
+            flagged, fix scans that didn&apos;t complete, approve verification
+            requests, and browse hidden plugins.
           </p>
         </div>
 
