@@ -46,12 +46,20 @@ export class GitHubParseError extends Error {
   }
 }
 
+// Cap component slugs so the resulting filenames stay under typical
+// filesystem name limits (255 bytes). Vercel writes per-slug prerender
+// configs (e.g. `<slug>.prerender-config.json`), so a very long slug breaks
+// the build with ENAMETOOLONG. 80 chars leaves ample headroom for suffixes.
+const MAX_SLUG_LENGTH = 80;
+
 function slugify(value: string) {
   return value
     .toLowerCase()
     .replace(/['".]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/^-+|-+$/g, "")
+    .slice(0, MAX_SLUG_LENGTH)
+    .replace(/-+$/g, "");
 }
 
 function parseFrontmatter(input: string): {
