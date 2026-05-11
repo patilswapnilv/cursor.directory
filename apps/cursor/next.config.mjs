@@ -40,6 +40,36 @@ const nextConfig = {
         destination: "/plugins",
         permanent: true,
       },
+      {
+        source: "/jobs",
+        destination: "https://cursor.com/careers",
+        permanent: true,
+      },
+      {
+        source: "/jobs/:path*",
+        destination: "https://cursor.com/careers",
+        permanent: true,
+      },
+      {
+        source: "/events",
+        destination: "https://cursor.com/community",
+        permanent: true,
+      },
+      {
+        source: "/events/:path*",
+        destination: "https://cursor.com/community",
+        permanent: true,
+      },
+      {
+        source: "/board",
+        destination: "https://forum.cursor.com",
+        permanent: true,
+      },
+      {
+        source: "/board/:path*",
+        destination: "https://forum.cursor.com",
+        permanent: true,
+      },
     ];
   },
   images: {
