@@ -136,6 +136,62 @@ function authHeaders(): Record<string, string> {
     : {};
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Fetch with bounded retry on GitHub rate-limit (429 / 403 + retry-after).
+ *
+ * `maxWaitMs` caps the total time we'll spend sleeping across retries so this
+ * remains safe to call from server actions (which have request timeouts).
+ * Bulk scripts can pass a larger budget.
+ */
+async function fetchWithRateLimit(
+  url: string,
+  init: RequestInit & { maxWaitMs?: number } = {},
+): Promise<Response> {
+  const maxWaitMs = init.maxWaitMs ?? 30_000;
+  const maxAttempts = 4;
+  let totalWait = 0;
+  let lastRes: Response | null = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const res = await fetch(url, init);
+    lastRes = res;
+
+    if (res.status !== 429 && res.status !== 403) return res;
+
+    // Distinguish "rate-limited" 403 from "forbidden" 403 by checking the
+    // X-RateLimit-Remaining header. A real auth/permission 403 has remaining > 0.
+    const remaining = Number(res.headers.get("x-ratelimit-remaining") ?? "");
+    if (res.status === 403 && Number.isFinite(remaining) && remaining > 0) {
+      return res;
+    }
+
+    const retryAfter = Number(res.headers.get("retry-after") ?? "");
+    const reset = Number(res.headers.get("x-ratelimit-reset") ?? "0") * 1000;
+    let waitMs = Number.isFinite(retryAfter) && retryAfter > 0
+      ? retryAfter * 1000
+      : Math.max(reset - Date.now(), 1000);
+    waitMs = Math.min(waitMs, maxWaitMs - totalWait);
+
+    if (waitMs <= 0 || attempt === maxAttempts) return res;
+
+    totalWait += waitMs;
+    await sleep(waitMs);
+  }
+
+  return lastRes as Response;
+}
+
+/**
+ * Caller-controlled retry budget for GitHub API rate-limits.
+ *
+ * Server actions should pass a small value (e.g. 3000) so a transient 429 from
+ * GitHub doesn't push them past the Vercel function timeout. The bulk seed
+ * script can pass a larger budget (e.g. 30000) to ride out longer pauses.
+ */
+export type FetchOptions = { maxWaitMs?: number };
+
 async function fetchGitHubFile(
   owner: string,
   repo: string,
@@ -154,15 +210,17 @@ async function fetchGitHubFile(
 async function fetchGitHubTree(
   owner: string,
   repo: string,
+  opts: FetchOptions = {},
 ): Promise<{ path: string; type: string }[]> {
   const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/HEAD?recursive=1`;
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithRateLimit(url, {
       cache: "no-store",
       headers: {
         Accept: "application/vnd.github.v3+json",
         ...authHeaders(),
       },
+      maxWaitMs: opts.maxWaitMs,
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -187,15 +245,20 @@ export type GitHubRepoMeta = {
 export async function fetchGitHubRepoMeta(
   owner: string,
   repo: string,
+  opts: FetchOptions = {},
 ): Promise<GitHubRepoMeta | null> {
   try {
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-      cache: "no-store",
-      headers: {
-        Accept: "application/vnd.github.v3+json",
-        ...authHeaders(),
+    const res = await fetchWithRateLimit(
+      `https://api.github.com/repos/${owner}/${repo}`,
+      {
+        cache: "no-store",
+        headers: {
+          Accept: "application/vnd.github.v3+json",
+          ...authHeaders(),
+        },
+        maxWaitMs: opts.maxWaitMs,
       },
-    });
+    );
     if (!res.ok) return null;
     const data = await res.json();
     return {
@@ -213,7 +276,15 @@ export async function fetchGitHubRepoMeta(
 
 export async function parseGitHubPlugin(
   url: string,
-  options: { repoMeta?: GitHubRepoMeta | null } = {},
+  options: {
+    repoMeta?: GitHubRepoMeta | null;
+    /**
+     * Caller-controlled rate-limit retry budget for the underlying GitHub API
+     * calls. Server actions should pass a small value (e.g. 3000) to stay
+     * under their function timeout; bulk scripts can pass 30000 (the default).
+     */
+    maxWaitMs?: number;
+  } = {},
 ): Promise<ParsedPlugin> {
   const parsed = parseGitHubUrl(url);
   if (!parsed) {
@@ -224,8 +295,9 @@ export async function parseGitHubPlugin(
   }
 
   const { owner, repo } = parsed;
+  const fetchOpts: FetchOptions = { maxWaitMs: options.maxWaitMs };
 
-  const tree = await fetchGitHubTree(owner, repo);
+  const tree = await fetchGitHubTree(owner, repo, fetchOpts);
   if (tree.length === 0) {
     throw new GitHubParseError(
       "Could not read repository. Make sure the repo exists, is public, and the URL is correct.",
@@ -252,14 +324,35 @@ export async function parseGitHubPlugin(
     }
   }
 
+  // Discover sub-plugin dirs. Two patterns are supported:
+  //   1. Marketplace manifest lists `plugins[].source` (relative dirs).
+  //   2. Any `<dir>/.cursor-plugin/plugin.json` in the tree.
+  const subPluginDirs = new Set<string>();
+
+  if (Array.isArray(manifest.plugins)) {
+    for (const entry of manifest.plugins as Array<unknown>) {
+      if (entry && typeof entry === "object") {
+        const source = (entry as Record<string, unknown>).source;
+        if (typeof source === "string" && source && !source.includes("..")) {
+          subPluginDirs.add(`${source.replace(/^\/+|\/+$/g, "")}/`);
+        }
+      }
+    }
+  }
+
+  for (const f of tree) {
+    if (f.type !== "blob") continue;
+    const m = f.path.match(/^(.+)\/\.cursor-plugin\/plugin\.json$/);
+    if (m) subPluginDirs.add(`${m[1]}/`);
+  }
+
   if (!manifest.name) {
-    const pluginManifestFiles = tree.filter(
-      (f) =>
-        f.type === "blob" &&
-        /^plugins\/[^/]+\/.cursor-plugin\/plugin\.json$/.test(f.path),
-    );
-    for (const pmf of pluginManifestFiles) {
-      const content = await fetchGitHubFile(owner, repo, pmf.path);
+    for (const dir of subPluginDirs) {
+      const content = await fetchGitHubFile(
+        owner,
+        repo,
+        `${dir}.cursor-plugin/plugin.json`,
+      );
       if (!content) continue;
       try {
         const sub = JSON.parse(content);
@@ -280,15 +373,7 @@ export async function parseGitHubPlugin(
 
   const components: ParsedComponent[] = [];
 
-  const prefixes = [""];
-  const pluginDirs = tree
-    .filter(
-      (f) =>
-        f.type === "blob" &&
-        /^plugins\/[^/]+\/.cursor-plugin\/plugin\.json$/.test(f.path),
-    )
-    .map((f) => `${f.path.replace("/.cursor-plugin/plugin.json", "")}/`);
-  if (pluginDirs.length > 0) prefixes.push(...pluginDirs);
+  const prefixes = ["", ...subPluginDirs];
 
   for (const prefix of prefixes) {
     const ruleFiles = tree.filter(
@@ -505,7 +590,7 @@ export async function parseGitHubPlugin(
   const repoMeta =
     options.repoMeta !== undefined
       ? options.repoMeta
-      : await fetchGitHubRepoMeta(owner, repo);
+      : await fetchGitHubRepoMeta(owner, repo, fetchOpts);
 
   return {
     name: (manifest.name as string) || repo,

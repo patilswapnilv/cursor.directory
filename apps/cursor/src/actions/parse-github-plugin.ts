@@ -13,7 +13,10 @@ export const parseGitHubPluginAction = authActionClient
   )
   .action(async ({ parsedInput: { url } }) => {
     try {
-      return await parseGitHubPlugin(url);
+      // Cap GitHub rate-limit retry to 3s so a transient 429 doesn't push the
+      // user-facing submission past the Vercel function timeout. The bulk seed
+      // script doesn't impose this cap.
+      return await parseGitHubPlugin(url, { maxWaitMs: 3000 });
     } catch (err) {
       if (err instanceof GitHubParseError) {
         throw new ActionError(err.message);
