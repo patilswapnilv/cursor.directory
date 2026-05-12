@@ -5,8 +5,8 @@
     "": {
       "name": "directories",
       "devDependencies": {
-        "@biomejs/biome": "^2.4.14",
-        "@tailwindcss/postcss": "^4.2.4",
+        "@biomejs/biome": "^2.4.15",
+        "@tailwindcss/postcss": "^4.3.0",
         "postgres": "^3.4.9",
       },
     },
