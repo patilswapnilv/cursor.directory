@@ -1,10 +1,9 @@
 "use client";
 
-import { formatNumber } from "@/utils/format";
 import Link from "next/link";
+import { formatNumber } from "@/utils/format";
 
-const linkClass =
-  "border-b border-dashed border-input text-foreground";
+const linkClass = "border-b border-dashed border-input text-foreground";
 
 export function HeroTitle({ totalUsers }: { totalUsers: number }) {
   return (

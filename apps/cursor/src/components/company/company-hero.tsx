@@ -1,10 +1,10 @@
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { type ChangeEvent, useRef, useState } from "react";
 import { toast } from "sonner";
+import { createClient } from "@/utils/supabase/client";
 
 export function CompanyHero({
   companyId,

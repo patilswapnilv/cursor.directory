@@ -1,9 +1,9 @@
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
 import { PlusIcon } from "lucide-react";
 import Image from "next/image";
 import { type ChangeEvent, type DragEvent, useRef, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 
 interface UploadLogoProps {
   onUpload?: (url: string) => void;

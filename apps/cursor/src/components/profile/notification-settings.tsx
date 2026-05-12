@@ -1,9 +1,9 @@
 "use client";
 
-import { updateSettingsAction } from "@/actions/update-settings";
-import { Switch } from "@/components/ui/switch";
 import { useOptimisticAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
+import { updateSettingsAction } from "@/actions/update-settings";
+import { Switch } from "@/components/ui/switch";
 
 interface NotificationSettingsProps {
   data: {

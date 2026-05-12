@@ -1,7 +1,6 @@
 import { Img, Section } from "@react-email/components";
 
-const LOGO_LOCKUP_URL =
-  "https://cursor.directory/logo-lockup.svg";
+const LOGO_LOCKUP_URL = "https://cursor.directory/logo-lockup.svg";
 
 export function Logo() {
   return (

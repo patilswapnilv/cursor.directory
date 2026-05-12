@@ -1,7 +1,6 @@
 "use client";
 
-import { useQueryStates } from "nuqs";
-import { parseAsBoolean } from "nuqs";
+import { parseAsBoolean, useQueryStates } from "nuqs";
 import { Button } from "../ui/button";
 
 export function AddCompanyButton({ redirect }: { redirect?: boolean }) {

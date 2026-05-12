@@ -1,5 +1,7 @@
 "use client";
 
+import { parseAsBoolean, useQueryStates } from "nuqs";
+import { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -9,8 +11,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createClient } from "@/utils/supabase/client";
-import { parseAsBoolean, useQueryStates } from "nuqs";
-import { useEffect, useState } from "react";
 import { AddCompanyButton } from "./add-company-button";
 
 type Company = {

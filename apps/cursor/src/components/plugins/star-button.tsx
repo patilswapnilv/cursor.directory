@@ -1,11 +1,11 @@
 "use client";
 
-import { starPluginAction } from "@/actions/star-plugin";
-import { cn } from "@/lib/utils";
-import { createClient } from "@/utils/supabase/client";
 import { Star } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useRef, useState } from "react";
+import { starPluginAction } from "@/actions/star-plugin";
+import { cn } from "@/lib/utils";
+import { createClient } from "@/utils/supabase/client";
 import { SignInModal } from "../modals/sign-in-modal";
 import { Button } from "../ui/button";
 
@@ -91,9 +91,7 @@ export function StarButton({
         )}
         onClick={handleClick}
       >
-        <Star
-          className={cn("size-3.5", starred && "fill-yellow-500")}
-        />
+        <Star className={cn("size-3.5", starred && "fill-yellow-500")} />
       </Button>
 
       <SignInModal

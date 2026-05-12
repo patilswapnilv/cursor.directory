@@ -168,10 +168,7 @@ export function Startpage({
 
           {popularPlugins.length > 0 && !isSearching && (
             <div className="mb-14">
-              <SectionHeader
-                title="Popular Plugins"
-                href="/plugins"
-              />
+              <SectionHeader title="Popular Plugins" href="/plugins" />
               <PluginGrid plugins={popularPlugins} />
             </div>
           )}
@@ -210,11 +207,9 @@ export function Startpage({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {filteredMembers
-                  .slice(0, 8)
-                  .map((member: any) => (
-                    <MembersCard key={member.id} member={member} gray />
-                  ))}
+                {filteredMembers.slice(0, 8).map((member: any) => (
+                  <MembersCard key={member.id} member={member} gray />
+                ))}
               </div>
             </div>
           )}

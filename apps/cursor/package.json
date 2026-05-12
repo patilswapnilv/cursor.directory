@@ -8,11 +8,14 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "seed:extract": "bun run --env-file=.env src/scripts/extract-from-github.ts",
+    "seed:insert": "bun run --env-file=.env src/scripts/insert-from-jsonl.ts",
     "email:dev": "email dev --port 3002 --dir src/emails/templates",
     "email:build": "email build",
     "email:export": "email export"
   },
   "dependencies": {
+    "@cursor/sdk": "^1.0.12",
     "@hookform/resolvers": "^5.2.2",
     "@openpanel/nextjs": "^1.5.1",
     "@radix-ui/react-avatar": "^1.1.11",
@@ -39,6 +42,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
+    "framer-motion": "^12.38.0",
     "fuse.js": "^7.3.0",
     "lucide-react": "^1.14.0",
     "motion": "^12.38.0",
@@ -55,6 +59,7 @@
     "slugify": "^1.6.9",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
+    "workflow": "^4.2.4",
     "zod": "^4.4.3"
   },
   "devDependencies": {

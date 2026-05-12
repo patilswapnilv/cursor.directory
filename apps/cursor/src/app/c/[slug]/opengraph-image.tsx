@@ -1,5 +1,5 @@
 import { getCompanyProfile } from "@/data/queries";
-import { OG, OGLayout, createOGResponse } from "@/lib/og";
+import { createOGResponse, OG, OGLayout } from "@/lib/og";
 
 export const alt = "Company Profile";
 export const size = { width: OG.width, height: OG.height };

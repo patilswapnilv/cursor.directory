@@ -4,8 +4,8 @@ import { useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
 import { SearchInput } from "../search-input";
 import { Button } from "../ui/button";
-import { CompanyCard } from "./company-card";
 import type { Company } from "./company-card";
+import { CompanyCard } from "./company-card";
 
 export function CompanyList({ data }: { data?: Company[] | null }) {
   const [companies, setCompanies] = useState<Company[]>(data ?? []);

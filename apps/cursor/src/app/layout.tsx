@@ -1,4 +1,8 @@
 import "./globals.css";
+import { OpenPanelComponent } from "@openpanel/nextjs";
+import type { Metadata } from "next";
+import { ThemeProvider } from "next-themes";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { JoinCTA } from "@/components/join-cta";
@@ -6,10 +10,6 @@ import { GlobalModals } from "@/components/modals/global-modals";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
-import { OpenPanelComponent } from "@openpanel/nextjs";
-import type { Metadata } from "next";
-import { ThemeProvider } from "next-themes";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { cursorGothic } from "@/styles/fonts";
 
 export const metadata: Metadata = {

@@ -1,13 +1,13 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { createClient } from "@/utils/supabase/client";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { cn } from "@/lib/utils";
+import { createClient } from "@/utils/supabase/client";
 import { navigationLinks } from "./header";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -77,7 +77,7 @@ export function MobileMenu() {
             onClick={() => setIsOpen(!isOpen)}
           >
             <AvatarImage src={user?.image} className="rounded-none" />
-              <AvatarFallback className="rounded-md bg-muted text-xs text-foreground">
+            <AvatarFallback className="rounded-md bg-muted text-xs text-foreground">
               {user?.name?.charAt(0)}
             </AvatarFallback>
           </Avatar>

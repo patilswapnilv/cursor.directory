@@ -1,5 +1,5 @@
-import { createClient } from "@/utils/supabase/admin-client";
 import { type NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/utils/supabase/admin-client";
 
 const PAGE_SIZE = 90;
 const MAX_OFFSET = 10000;
@@ -56,13 +56,17 @@ export async function GET(request: NextRequest) {
     is_ambassador: row.is_ambassador ?? false,
   }));
 
-  return new NextResponse(JSON.stringify({ data: safeData, hasMore: safeData.length === PAGE_SIZE }), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-      "CDN-Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-      "Vercel-CDN-Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+  return new NextResponse(
+    JSON.stringify({ data: safeData, hasMore: safeData.length === PAGE_SIZE }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+        "CDN-Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+        "Vercel-CDN-Cache-Control":
+          "public, s-maxage=300, stale-while-revalidate=600",
+      },
     },
-  });
+  );
 }

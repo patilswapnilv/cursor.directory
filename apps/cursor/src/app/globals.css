@@ -135,8 +135,8 @@
     --border-focus: var(--focus);
 
     --cursor-box-shadow-sm: 0 2px 8px 0 var(--shadow-secondary);
-    --cursor-box-shadow-base: 0 0 4px 0 var(--shadow-secondary),
-      0 8px 24px -2px var(--shadow-secondary);
+    --cursor-box-shadow-base:
+      0 0 4px 0 var(--shadow-secondary), 0 8px 24px -2px var(--shadow-secondary);
 
     --background: var(--bg-chrome);
     --foreground: var(--text-primary);

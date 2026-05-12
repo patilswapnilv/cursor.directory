@@ -1,8 +1,8 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { GoogleIcon } from "@/components/icons/google-icon";
 import { createClient } from "@/utils/supabase/client";
-import { useSearchParams } from "next/navigation";
 import { Button } from "./ui/button";
 
 export function GoogleSignin({ redirectTo }: { redirectTo?: string }) {

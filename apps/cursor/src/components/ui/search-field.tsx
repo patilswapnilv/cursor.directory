@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { Search, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type SearchFieldProps = {
   value: string;
@@ -47,7 +47,9 @@ export function SearchField({
         placeholder={placeholder}
         className={cn(
           "h-full flex-1 bg-transparent px-3 text-foreground placeholder:text-text-quaternary focus:outline-none",
-          isHero ? "text-[15px] tracking-[0.005em]" : "text-sm tracking-[0.005em]",
+          isHero
+            ? "text-[15px] tracking-[0.005em]"
+            : "text-sm tracking-[0.005em]",
           inputClassName,
         )}
       />

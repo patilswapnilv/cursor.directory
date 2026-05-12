@@ -28,20 +28,14 @@ function toPluginCard(plugin: PluginRow): PluginCardData {
   };
 }
 
-export async function ProfileStarredPlugins({
-  userId,
-}: {
-  userId: string;
-}) {
+export async function ProfileStarredPlugins({ userId }: { userId: string }) {
   const { data } = await getStarredPlugins(userId);
   const plugins = (data ?? []).map(toPluginCard);
 
   if (!plugins.length) {
     return (
       <div className="surface-card mt-6 flex h-full flex-col items-center justify-center rounded-lg py-12 text-center">
-        <p className="text-sm text-muted-foreground">
-          No starred plugins yet
-        </p>
+        <p className="text-sm text-muted-foreground">No starred plugins yet</p>
       </div>
     );
   }

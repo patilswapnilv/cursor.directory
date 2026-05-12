@@ -16,3 +16,12 @@ export const installGlobalRatelimit = new Ratelimit({
   limiter: Ratelimit.slidingWindow(20, "1 h"),
   prefix: "ratelimit:install:global",
 });
+
+// Per user: bound how many plugin submissions/edits can trigger a security
+// scan in an hour. Cursor SDK calls cost real money and time; this prevents
+// a single account from exhausting the budget by spamming submits.
+export const pluginScanRatelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "1 h"),
+  prefix: "ratelimit:plugin:scan",
+});

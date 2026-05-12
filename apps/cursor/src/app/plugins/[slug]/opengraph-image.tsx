@@ -1,5 +1,11 @@
 import { getPluginBySlug } from "@/data/queries";
-import { OG, OGLayout, CursorIcon, createOGResponse, formatCount } from "@/lib/og";
+import {
+  CursorIcon,
+  createOGResponse,
+  formatCount,
+  OG,
+  OGLayout,
+} from "@/lib/og";
 
 export const alt = "Plugin";
 export const size = { width: OG.width, height: OG.height };
@@ -140,7 +146,9 @@ export default async function Image({
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            <span style={{ fontWeight: 700 }}>{formatCount(data.install_count)}</span>
+            <span style={{ fontWeight: 700 }}>
+              {formatCount(data.install_count)}
+            </span>
           </div>
 
           {componentSummary && (

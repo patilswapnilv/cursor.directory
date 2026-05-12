@@ -1,14 +1,14 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { z } from "zod";
 import {
   installGlobalRatelimit,
   installPerPluginRatelimit,
 } from "@/lib/rate-limit";
 import { createClient as createAdminClient } from "@/utils/supabase/admin-client";
-import { headers } from "next/headers";
-import { revalidatePath } from "next/cache";
-import { actionClient, ActionError } from "./safe-action";
-import { z } from "zod";
+import { ActionError, actionClient } from "./safe-action";
 
 export const trackInstallAction = actionClient
   .metadata({

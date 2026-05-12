@@ -1,8 +1,9 @@
-import { cn, formatCount } from "@/lib/utils";
-import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn, formatCount } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { PluginIconFallback } from "./plugin-icon";
+import { VerifiedBadge } from "./verified-badge";
 
 export type PluginCardData = {
   name: string;
@@ -14,6 +15,7 @@ export type PluginCardData = {
   mcpCount?: number;
   keywords?: string[];
   installCount?: number;
+  verified?: boolean;
   href: string;
 };
 
@@ -29,7 +31,6 @@ function isValidImageUrl(url: string | null | undefined): url is string {
   }
 }
 
-
 export function PluginCard({ plugin }: { plugin: PluginCardData }) {
   return (
     <Link href={plugin.href}>
@@ -41,7 +42,10 @@ export function PluginCard({ plugin }: { plugin: PluginCardData }) {
                 <AvatarImage
                   src={plugin.logo}
                   alt={plugin.name}
-                  className={cn("object-cover", isSvgLogo(plugin.logo) && "invert")}
+                  className={cn(
+                    "object-cover",
+                    isSvgLogo(plugin.logo) && "invert",
+                  )}
                 />
                 <AvatarFallback className="rounded-[4px] bg-muted text-xs text-foreground">
                   {plugin.name.charAt(0).toUpperCase()}
@@ -50,7 +54,10 @@ export function PluginCard({ plugin }: { plugin: PluginCardData }) {
             ) : (
               <PluginIconFallback size={36} />
             )}
-            <h3 className="truncate text-sm font-medium tracking-[0.005em] text-foreground">{plugin.name}</h3>
+            <h3 className="flex min-w-0 items-center gap-1.5 truncate text-sm font-medium tracking-[0.005em] text-foreground">
+              <span className="truncate">{plugin.name}</span>
+              {plugin.verified && <VerifiedBadge size="sm" />}
+            </h3>
           </div>
 
           <p className="flex-1 line-clamp-2 text-[13px] leading-5 text-muted-foreground">
@@ -71,7 +78,8 @@ export function PluginCard({ plugin }: { plugin: PluginCardData }) {
             ) : null}
             {plugin.installCount ? (
               <span className="ml-auto rounded-[4px] border border-border bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
-                {formatCount(plugin.installCount)} {plugin.installCount === 1 ? "install" : "installs"}
+                {formatCount(plugin.installCount)}{" "}
+                {plugin.installCount === 1 ? "install" : "installs"}
               </span>
             ) : null}
           </div>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
-import { cn } from "@/lib/utils";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { cn } from "@/lib/utils";
+import { type Company, CompanyCard } from "../company/company-card";
 import { SearchInput } from "../search-input";
 import { Button } from "../ui/button";
 import {
@@ -14,7 +15,6 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Skeleton } from "../ui/skeleton";
-import { CompanyCard, type Company } from "../company/company-card";
 import { MembersCard } from "./members-card";
 
 const PAGE_SIZE = 90;
@@ -93,18 +93,21 @@ export function MembersTabs({
     offsetRef.current = 0;
     loadingRef.current = true;
 
-    const debounce = setTimeout(() => {
-      fetchMembersPage(0, sort, search, isAmbassadors).then(
-        ({ data, hasMore }) => {
-          if (cancelled) return;
-          setMembers(data);
-          offsetRef.current = data.length;
-          setHasMoreMembers(hasMore);
-          loadingRef.current = false;
-          setLoading(false);
-        },
-      );
-    }, search ? 300 : 0);
+    const debounce = setTimeout(
+      () => {
+        fetchMembersPage(0, sort, search, isAmbassadors).then(
+          ({ data, hasMore }) => {
+            if (cancelled) return;
+            setMembers(data);
+            offsetRef.current = data.length;
+            setHasMoreMembers(hasMore);
+            loadingRef.current = false;
+            setLoading(false);
+          },
+        );
+      },
+      search ? 300 : 0,
+    );
 
     return () => {
       cancelled = true;
@@ -231,7 +234,10 @@ export function MembersTabs({
       {loading && visibleItems.length === 0 ? (
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-md border border-border p-3">
+            <div
+              key={i}
+              className="flex items-center gap-3 rounded-md border border-border p-3"
+            >
               <Skeleton className="size-10 rounded-[6px]" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-24" />

@@ -1,11 +1,11 @@
 "use server";
 
-import PluginApprovedEmail from "@/emails/templates/plugin-approved";
-import { resend } from "@/lib/resend";
-import { createClient } from "@/utils/supabase/admin-client";
 import { waitUntil } from "@vercel/functions";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import PluginApprovedEmail from "@/emails/templates/plugin-approved";
+import { resend } from "@/lib/resend";
+import { createClient } from "@/utils/supabase/admin-client";
 import { ActionError, adminActionClient } from "./safe-action";
 
 export const approvePluginAction = adminActionClient

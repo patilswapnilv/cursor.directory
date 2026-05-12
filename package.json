@@ -6,5 +6,11 @@
     "@biomejs/biome": "^2.4.14",
     "@tailwindcss/postcss": "^4.2.4",
     "postgres": "^3.4.9"
+  },
+  "overrides": {
+    "zod": "4.4.3"
+  },
+  "resolutions": {
+    "zod": "4.4.3"
   }
 }

@@ -1,8 +1,8 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { createClient } from "@/utils/supabase/server";
 import { authActionClient } from "./safe-action";
 
 export const toggleMCPListingAction = authActionClient

@@ -1,11 +1,11 @@
 "use client";
 
-import { subscribeAction } from "@/actions/subscribe-action";
-import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { subscribeAction } from "@/actions/subscribe-action";
+import { cn } from "@/lib/utils";
 
 function SubmitButton() {
   const { pending } = useFormStatus();

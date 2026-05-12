@@ -1,5 +1,5 @@
 import { getUserProfile } from "@/data/queries";
-import { OG, OGLayout, createOGResponse } from "@/lib/og";
+import { createOGResponse, OG, OGLayout } from "@/lib/og";
 
 export const alt = "User Profile";
 export const size = { width: OG.width, height: OG.height };
@@ -85,7 +85,9 @@ export default async function Image({
                 textOverflow: "ellipsis",
               }}
             >
-              {data.bio.length > 120 ? `${data.bio.slice(0, 120)}...` : data.bio}
+              {data.bio.length > 120
+                ? `${data.bio.slice(0, 120)}...`
+                : data.bio}
             </div>
           )}
 

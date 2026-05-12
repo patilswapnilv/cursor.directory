@@ -1,14 +1,17 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { Check, Share } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export function ShareButton({
   slug,
   small,
-}: { slug: string; small?: boolean }) {
+}: {
+  slug: string;
+  small?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {

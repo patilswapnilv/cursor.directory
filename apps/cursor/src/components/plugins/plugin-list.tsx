@@ -1,10 +1,10 @@
 "use client";
 
-import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
-import { cn } from "@/lib/utils";
 import Fuse from "fuse.js";
 import { useQueryState } from "nuqs";
 import { useCallback, useMemo, useState } from "react";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { cn } from "@/lib/utils";
 import { SearchInput } from "../search-input";
 import { Button } from "../ui/button";
 import {
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { type PluginCardData, PluginCard } from "./plugin-card";
+import { PluginCard, type PluginCardData } from "./plugin-card";
 
 const ITEMS_PER_PAGE = 36;
 
@@ -76,14 +76,19 @@ export function PluginList({
     }
 
     if (sort !== "recent") {
-      result = [...result].sort((a, b) => (b.installCount ?? 0) - (a.installCount ?? 0));
+      result = [...result].sort(
+        (a, b) => (b.installCount ?? 0) - (a.installCount ?? 0),
+      );
     }
 
     return result;
   }, [plugins, search, selectedTag, sort, fuse]);
 
   const loadMore = useCallback(
-    () => setVisibleCount((prev) => Math.min(prev + ITEMS_PER_PAGE, filtered.length)),
+    () =>
+      setVisibleCount((prev) =>
+        Math.min(prev + ITEMS_PER_PAGE, filtered.length),
+      ),
     [filtered.length],
   );
 
@@ -117,7 +122,13 @@ export function PluginList({
           <Button
             key={tab.label}
             variant={
-              tab.key === null ? (!selectedTag ? "secondary" : "ghost") : selectedTag === tab.key ? "secondary" : "ghost"
+              tab.key === null
+                ? !selectedTag
+                  ? "secondary"
+                  : "ghost"
+                : selectedTag === tab.key
+                  ? "secondary"
+                  : "ghost"
             }
             className={cn(
               "h-8 rounded-full px-4",

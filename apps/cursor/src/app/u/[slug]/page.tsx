@@ -1,7 +1,7 @@
+import { Suspense } from "react";
 import { Profile } from "@/components/profile";
 import { ProfileSkeleton } from "@/components/profile/profile-skeleton";
 import { getUserProfile } from "@/data/queries";
-import { Suspense } from "react";
 
 type Params = Promise<{ slug: string }>;
 

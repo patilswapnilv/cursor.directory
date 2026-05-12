@@ -1,6 +1,6 @@
-import { createClient } from "@/utils/supabase/admin-client";
 import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/utils/supabase/admin-client";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -94,10 +94,9 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient();
 
-    const { data, error } = await supabase.rpc(
-      "set_ambassadors_by_emails",
-      { target_emails: emails },
-    );
+    const { data, error } = await supabase.rpc("set_ambassadors_by_emails", {
+      target_emails: emails,
+    });
 
     if (error) {
       throw new Error(`Supabase RPC failed: ${error.message}`);

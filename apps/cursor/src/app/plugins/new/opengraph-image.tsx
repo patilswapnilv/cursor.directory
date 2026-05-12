@@ -1,5 +1,4 @@
-import { OG } from "@/lib/og";
-import { createListingOG } from "@/lib/og";
+import { createListingOG, OG } from "@/lib/og";
 
 export const alt = "Submit a Plugin";
 export const size = { width: OG.width, height: OG.height };

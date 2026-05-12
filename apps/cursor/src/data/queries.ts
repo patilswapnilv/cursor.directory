@@ -78,7 +78,9 @@ export async function getUserCompanies(userId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("companies")
-    .select("id, name, slug, image, location, bio, website, social_x_link, hero, public, owner_id, created_at")
+    .select(
+      "id, name, slug, image, location, bio, website, social_x_link, hero, public, owner_id, created_at",
+    )
     .eq("owner_id", userId);
 
   return { data, error };
@@ -119,7 +121,6 @@ export async function getCompanies() {
 
   return { data: all, error: null };
 }
-
 
 export async function getFeaturedMCPs({
   onlyPremium,
@@ -253,6 +254,30 @@ export type PluginComponent = {
   created_at: string;
 };
 
+export type ScanStatus =
+  | "pending"
+  | "scanning"
+  | "safe"
+  | "flagged"
+  | "error"
+  | "unscanned";
+export type FlagSeverity = "low" | "medium" | "high";
+export type FlagCategory =
+  | "malicious_code"
+  | "prompt_injection"
+  | "spam"
+  | "nsfw"
+  | "impersonation"
+  | "low_quality";
+
+export type ScanVerdict = {
+  verdict: "safe" | "suspicious" | "malicious";
+  severity: FlagSeverity;
+  categories: FlagCategory[];
+  reasons: string[];
+  summary: string;
+};
+
 export type PluginRow = {
   id: string;
   name: string;
@@ -275,6 +300,21 @@ export type PluginRow = {
   star_count: number;
   created_at: string;
   updated_at: string;
+  scan_status: ScanStatus;
+  scan_verdict: ScanVerdict | null;
+  flag_reasons: string[];
+  flag_severity: FlagSeverity | null;
+  flag_summary: string | null;
+  flagged_at: string | null;
+  last_scanned_at: string | null;
+  scan_run_id: string | null;
+  permanently_blocked: boolean;
+  discovery_source: string | null;
+  github_repo_id: number | null;
+  verified: boolean;
+  verified_at: string | null;
+  verified_by: string | null;
+  verification_requested_at: string | null;
   plugin_components?: PluginComponent[];
 };
 
@@ -336,27 +376,20 @@ export async function getPluginBySlug(slug: string) {
   return { data: data as PluginRow | null, error };
 }
 
-export async function getPendingPlugins({
-  since,
-}: { since?: string } = {}) {
+export async function getPendingPlugins() {
   const supabase = await createClient();
   const PAGE_SIZE = 100;
   let allData: PluginRow[] = [];
   let from = 0;
 
   while (true) {
-    let query = supabase
+    const { data, error } = await supabase
       .from("plugins")
       .select("*, plugin_components(*)")
       .eq("active", false)
       .order("created_at", { ascending: false })
       .range(from, from + PAGE_SIZE - 1);
 
-    if (since) {
-      query = query.gte("created_at", since);
-    }
-
-    const { data, error } = await query;
     if (error) return { data: allData.length ? allData : null, error };
     if (!data || data.length === 0) break;
 
@@ -366,6 +399,60 @@ export async function getPendingPlugins({
   }
 
   return { data: allData as PluginRow[], error: null };
+}
+
+export async function getFlaggedPlugins() {
+  const supabase = await createClient();
+  const severityRank = { high: 0, medium: 1, low: 2 } as const;
+
+  const { data, error } = await supabase
+    .from("plugins")
+    .select("*, plugin_components(*)")
+    .eq("scan_status", "flagged")
+    .order("flagged_at", { ascending: false, nullsFirst: false })
+    .limit(500);
+
+  if (error) return { data: null as PluginRow[] | null, error };
+
+  const sorted = (data as PluginRow[] | null)?.slice().sort((a, b) => {
+    const aRank = a.flag_severity ? severityRank[a.flag_severity] : 3;
+    const bRank = b.flag_severity ? severityRank[b.flag_severity] : 3;
+    if (aRank !== bRank) return aRank - bRank;
+    const aTime = a.flagged_at ? new Date(a.flagged_at).getTime() : 0;
+    const bTime = b.flagged_at ? new Date(b.flagged_at).getTime() : 0;
+    return bTime - aTime;
+  });
+
+  return { data: sorted ?? null, error: null };
+}
+
+export async function getPendingVerificationRequests() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("plugins")
+    .select("*, plugin_components(*)")
+    .not("verification_requested_at", "is", null)
+    .eq("verified", false)
+    .order("verification_requested_at", { ascending: false, nullsFirst: false })
+    .limit(500);
+
+  return { data: data as PluginRow[] | null, error };
+}
+
+export async function getStuckScans() {
+  const supabase = await createClient();
+  const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+
+  const { data, error } = await supabase
+    .from("plugins")
+    .select("*, plugin_components(*)")
+    .or(
+      `scan_status.eq.error,and(scan_status.in.(pending,scanning),created_at.lt.${fifteenMinutesAgo})`,
+    )
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  return { data: data as PluginRow[] | null, error };
 }
 
 export async function getStarredPlugins(userId: string) {

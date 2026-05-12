@@ -1,12 +1,12 @@
 "use server";
 
+import { waitUntil } from "@vercel/functions";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import FollowerEmail from "@/emails/templates/follower";
 import { resend } from "@/lib/resend";
 import { createClient as createAdminClient } from "@/utils/supabase/admin-client";
 import { createClient } from "@/utils/supabase/server";
-import { waitUntil } from "@vercel/functions";
-import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { authActionClient } from "./safe-action";
 
 export const toggleFollowAction = authActionClient
@@ -57,13 +57,13 @@ export const toggleFollowAction = authActionClient
               resend.emails.send({
                 from: "Cursor Directory <hello@transactional.cursor.directory>",
                 to: userData.email!,
-                //   @ts-ignore
+                //   @ts-expect-error
                 subject: `${data.follower.name} is now following you on Cursor Directory`,
                 react: FollowerEmail({
                   name: userData.name!,
-                  // @ts-ignore
+                  // @ts-expect-error
                   followerName: data.follower.name!,
-                  // @ts-ignore
+                  // @ts-expect-error
                   followerSlug: data.follower.slug!,
                   followingSlug: slug,
                 }),

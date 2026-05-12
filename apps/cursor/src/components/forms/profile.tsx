@@ -1,5 +1,9 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useAction } from "next-safe-action/hooks";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { editProfileAction } from "@/actions/edit-profile";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,10 +18,6 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useAction } from "next-safe-action/hooks";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 const formSchema = z.object({
   name: z
@@ -261,7 +261,12 @@ export function ProfileForm({ data }: { data: ProfileData }) {
           </div>
         </ScrollArea>
 
-        <Button type="submit" size="lg" className="w-full" disabled={isExecuting}>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          disabled={isExecuting}
+        >
           {isExecuting ? "Saving..." : "Save Profile"}
         </Button>
       </form>

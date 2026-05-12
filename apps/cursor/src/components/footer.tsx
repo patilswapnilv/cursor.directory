@@ -1,8 +1,8 @@
 "use client";
 
 import { Monitor, Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 const columns = [
@@ -88,8 +88,7 @@ function ThemeToggle() {
     setMounted(true);
   }, []);
 
-  const isActive = (value: string) =>
-    mounted && theme === value;
+  const isActive = (value: string) => mounted && theme === value;
 
   return (
     <div className="flex items-center gap-1 rounded-full border border-border p-1">

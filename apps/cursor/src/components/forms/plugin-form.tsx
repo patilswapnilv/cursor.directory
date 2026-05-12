@@ -1,7 +1,16 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle, Check, Loader2, Plus, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 import { createPluginAction } from "@/actions/create-plugin";
 import { parseGitHubPluginAction } from "@/actions/parse-github-plugin";
+import { GithubIcon } from "@/components/icons/github-icon";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -20,21 +29,6 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { GithubIcon } from "@/components/icons/github-icon";
-import {
-  AlertCircle,
-  Check,
-  Loader2,
-  Plus,
-  Trash2,
-} from "lucide-react";
-import { useAction } from "next-safe-action/hooks";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
 import UploadLogo from "../upload-logo";
 
 const COMPONENT_TYPES = [
@@ -125,7 +119,13 @@ export function PluginForm() {
   const [manualHomepage, setManualHomepage] = useState("");
   const [manualKeywords, setManualKeywords] = useState("");
   const [manualComponents, setManualComponents] = useState<ManualComponent[]>([
-    { id: crypto.randomUUID(), type: "rule", name: "", description: "", content: "" },
+    {
+      id: crypto.randomUUID(),
+      type: "rule",
+      name: "",
+      description: "",
+      content: "",
+    },
   ]);
 
   const form = useForm<z.infer<typeof autoFormSchema>>({
@@ -154,9 +154,7 @@ export function PluginForm() {
         }
       },
       onError: ({ error }) => {
-        setParseError(
-          error.serverError ?? "Failed to parse repository",
-        );
+        setParseError(error.serverError ?? "Failed to parse repository");
         setParsed(null);
       },
     },
@@ -167,7 +165,7 @@ export function PluginForm() {
     {
       onSuccess: ({ data }) => {
         toast.success(
-          "Plugin submitted! We'll review it and get back to you shortly.",
+          "Submitted! Scanning your plugin now — it will appear shortly.",
         );
         router.push(data?.slug ? `/plugins/${data.slug}` : "/plugins");
       },
@@ -218,7 +216,11 @@ export function PluginForm() {
     setPublishError(null);
 
     const validComponents = manualComponents.filter((c) => c.name.trim());
-    if (!manualName.trim() || !manualDescription.trim() || validComponents.length === 0) {
+    if (
+      !manualName.trim() ||
+      !manualDescription.trim() ||
+      validComponents.length === 0
+    ) {
       setPublishError(
         "Please fill in the plugin name, description, and at least one component with a name.",
       );
@@ -249,7 +251,13 @@ export function PluginForm() {
   const addManualComponent = () => {
     setManualComponents((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), type: "rule", name: "", description: "", content: "" },
+      {
+        id: crypto.randomUUID(),
+        type: "rule",
+        name: "",
+        description: "",
+        content: "",
+      },
     ]);
   };
 
@@ -270,7 +278,13 @@ export function PluginForm() {
   const addAutoComponent = () => {
     setEditedComponents((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), type: "rule", name: "", description: "", content: "" },
+      {
+        id: crypto.randomUUID(),
+        type: "rule",
+        name: "",
+        description: "",
+        content: "",
+      },
     ]);
   };
 
@@ -371,7 +385,9 @@ export function PluginForm() {
                   <div>
                     <label className="mb-1.5 block text-sm font-medium">
                       Logo
-                      <span className="ml-1 font-normal text-muted-foreground">(optional)</span>
+                      <span className="ml-1 font-normal text-muted-foreground">
+                        (optional)
+                      </span>
                     </label>
                     <UploadLogo
                       prefix="plugins"
@@ -488,7 +504,11 @@ export function PluginForm() {
                           <Input
                             value={comp.name}
                             onChange={(e) =>
-                              updateAutoComponent(comp.id, "name", e.target.value)
+                              updateAutoComponent(
+                                comp.id,
+                                "name",
+                                e.target.value,
+                              )
                             }
                             placeholder="my-rule"
                             className="border-border placeholder:text-[#878787]"
@@ -498,7 +518,9 @@ export function PluginForm() {
                       <div>
                         <label className="mb-1.5 block text-sm font-medium">
                           Description
-                          <span className="ml-1 font-normal text-muted-foreground">(optional)</span>
+                          <span className="ml-1 font-normal text-muted-foreground">
+                            (optional)
+                          </span>
                         </label>
                         <Input
                           value={comp.description}
@@ -561,8 +583,8 @@ export function PluginForm() {
 
             {!parsed && !parseError && (
               <p className="text-center text-xs text-muted-foreground pt-2">
-                We&apos;ll scan for rules, MCP servers, skills, agents, and
-                more following the{" "}
+                We&apos;ll scan for rules, MCP servers, skills, agents, and more
+                following the{" "}
                 <a
                   href="https://open-plugins.com"
                   target="_blank"
@@ -583,7 +605,9 @@ export function PluginForm() {
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
                   Logo
-                  <span className="ml-1 font-normal text-muted-foreground">(optional)</span>
+                  <span className="ml-1 font-normal text-muted-foreground">
+                    (optional)
+                  </span>
                 </label>
                 <UploadLogo
                   prefix="plugins"
@@ -592,9 +616,7 @@ export function PluginForm() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  Name
-                </label>
+                <label className="mb-1.5 block text-sm font-medium">Name</label>
                 <Input
                   value={manualName}
                   onChange={(e) => setManualName(e.target.value)}
@@ -616,7 +638,9 @@ export function PluginForm() {
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
                   Repository URL
-                  <span className="ml-1 font-normal text-muted-foreground">(optional)</span>
+                  <span className="ml-1 font-normal text-muted-foreground">
+                    (optional)
+                  </span>
                 </label>
                 <Input
                   value={manualRepository}
@@ -628,7 +652,9 @@ export function PluginForm() {
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
                   Homepage
-                  <span className="ml-1 font-normal text-muted-foreground">(optional)</span>
+                  <span className="ml-1 font-normal text-muted-foreground">
+                    (optional)
+                  </span>
                 </label>
                 <Input
                   value={manualHomepage}
@@ -640,7 +666,9 @@ export function PluginForm() {
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
                   Keywords
-                  <span className="ml-1 font-normal text-muted-foreground">(optional, comma-separated)</span>
+                  <span className="ml-1 font-normal text-muted-foreground">
+                    (optional, comma-separated)
+                  </span>
                 </label>
                 <Input
                   value={manualKeywords}
@@ -723,7 +751,9 @@ export function PluginForm() {
                   <div>
                     <label className="mb-1.5 block text-sm font-medium">
                       Description
-                      <span className="ml-1 font-normal text-muted-foreground">(optional)</span>
+                      <span className="ml-1 font-normal text-muted-foreground">
+                        (optional)
+                      </span>
                     </label>
                     <Input
                       value={comp.description}

@@ -1,14 +1,17 @@
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 import { Button } from "../ui/button";
 
 export function MCPsEditButton({
   ownerId,
   slug,
-}: { ownerId: string; slug: string }) {
+}: {
+  ownerId: string;
+  slug: string;
+}) {
   const supabase = createClient();
   const [userId, setUserId] = useState<string | null>(null);
 

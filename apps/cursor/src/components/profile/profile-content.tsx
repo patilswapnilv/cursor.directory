@@ -27,9 +27,7 @@ export function ProfileContent({
       {work && (
         <div className="md:col-span-4">
           <p className="section-eyebrow">Work</p>
-          <p className="mt-3 text-sm leading-7 text-muted-foreground">
-            {work}
-          </p>
+          <p className="mt-3 text-sm leading-7 text-muted-foreground">{work}</p>
         </div>
       )}
 

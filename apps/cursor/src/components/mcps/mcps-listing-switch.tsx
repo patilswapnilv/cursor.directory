@@ -1,9 +1,9 @@
 "use client";
 
-import { toggleMCPListingAction } from "@/actions/toggle-mcp-listing";
-import { Switch } from "@/components/ui/switch";
 import { useOptimisticAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
+import { toggleMCPListingAction } from "@/actions/toggle-mcp-listing";
+import { Switch } from "@/components/ui/switch";
 
 interface MCPListingSwitchProps {
   id: string;

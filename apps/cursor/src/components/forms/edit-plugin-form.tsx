@@ -1,5 +1,9 @@
 "use client";
 
+import { AlertCircle, Loader2, Plus, Trash2 } from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
+import { toast } from "sonner";
 import { updatePluginAction } from "@/actions/update-plugin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,10 +16,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { PluginRow } from "@/data/queries";
-import { AlertCircle, Loader2, Plus, Trash2 } from "lucide-react";
-import { useAction } from "next-safe-action/hooks";
-import { useState } from "react";
-import { toast } from "sonner";
 import UploadLogo from "../upload-logo";
 
 const COMPONENT_TYPES = [
@@ -115,11 +115,7 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
     setError(null);
 
     const validComponents = components.filter((c) => c.name.trim());
-    if (
-      !name.trim() ||
-      !description.trim() ||
-      validComponents.length === 0
-    ) {
+    if (!name.trim() || !description.trim() || validComponents.length === 0) {
       setError(
         "Please fill in the plugin name, description, and at least one component with a name.",
       );
@@ -159,13 +155,11 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
         <div>
           <label className="mb-1.5 block text-sm font-medium">
             Logo
-            <span className="ml-1 font-normal text-muted-foreground">(optional)</span>
+            <span className="ml-1 font-normal text-muted-foreground">
+              (optional)
+            </span>
           </label>
-          <UploadLogo
-            prefix="plugins"
-            onUpload={setLogo}
-            image={logo}
-          />
+          <UploadLogo prefix="plugins" onUpload={setLogo} image={logo} />
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium">Name</label>

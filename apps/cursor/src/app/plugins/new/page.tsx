@@ -1,7 +1,7 @@
-import { PluginForm } from "@/components/forms/plugin-form";
-import { getSession } from "@/utils/supabase/auth";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { PluginForm } from "@/components/forms/plugin-form";
+import { getSession } from "@/utils/supabase/auth";
 
 export const metadata: Metadata = {
   title: "Submit a Plugin | Cursor Directory",

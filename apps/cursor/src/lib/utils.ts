@@ -64,6 +64,3 @@ export function getCountryName(value: string | null | undefined): string {
 
   return trimmed;
 }
-
-
- 

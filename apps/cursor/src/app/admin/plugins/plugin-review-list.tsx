@@ -1,16 +1,16 @@
 "use client";
 
+import { Check, ExternalLink, Loader2, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
+import { toast } from "sonner";
 import {
   approvePluginAction,
   declinePluginAction,
 } from "@/actions/review-plugin";
 import { Button } from "@/components/ui/button";
 import type { PluginRow } from "@/data/queries";
-import { Check, ExternalLink, Loader2, Trash2 } from "lucide-react";
-import Link from "next/link";
-import { useAction } from "next-safe-action/hooks";
-import { useState } from "react";
-import { toast } from "sonner";
 
 function PluginReviewCard({ plugin }: { plugin: PluginRow }) {
   const [dismissed, setDismissed] = useState(false);
@@ -78,7 +78,8 @@ function PluginReviewCard({ plugin }: { plugin: PluginRow }) {
               </a>
             )}
             <span>
-              {componentCount} {componentCount === 1 ? "component" : "components"}
+              {componentCount}{" "}
+              {componentCount === 1 ? "component" : "components"}
             </span>
             {componentTypes.length > 0 && (
               <span className="text-text-tertiary">

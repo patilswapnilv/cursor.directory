@@ -1,9 +1,9 @@
-import WelcomeEmail from "@/emails/templates/welcome";
-import { resend } from "@/lib/resend";
-import { createClient } from "@/utils/supabase/server";
 import { waitUntil } from "@vercel/functions";
 import { differenceInSeconds } from "date-fns";
 import { NextResponse } from "next/server";
+import WelcomeEmail from "@/emails/templates/welcome";
+import { resend } from "@/lib/resend";
+import { createClient } from "@/utils/supabase/server";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);

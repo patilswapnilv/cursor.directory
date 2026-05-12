@@ -1,6 +1,6 @@
 import { readFile } from "fs/promises";
-import { join } from "path";
 import { ImageResponse } from "next/og";
+import { join } from "path";
 import type { ReactElement } from "react";
 
 export { formatCount } from "@/lib/utils";
@@ -22,9 +22,7 @@ export async function loadFonts() {
     readFile(
       join(process.cwd(), "public/assets/fonts/CursorGothic-Regular.ttf"),
     ),
-    readFile(
-      join(process.cwd(), "public/assets/fonts/CursorGothic-Bold.ttf"),
-    ),
+    readFile(join(process.cwd(), "public/assets/fonts/CursorGothic-Bold.ttf")),
   ]);
   return [
     { name: "CursorGothic", data: regular, weight: 400 as const },

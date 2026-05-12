@@ -1,5 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useAction } from "next-safe-action/hooks";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 import { updateMCPListingAction } from "@/actions/update-mcp-listing";
 import { CompanySelect } from "@/components/company/company-select";
 import {
@@ -12,11 +17,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useAction } from "next-safe-action/hooks";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
 import { Button } from "../ui/button";
 import UploadLogo from "../upload-logo";
 
@@ -132,7 +132,7 @@ export function EditMCPForm({ data }: { data: MCPData }) {
               </FormItem>
             )}
           />
-                    <FormField
+          <FormField
             control={form.control}
             name="config"
             render={({ field }) => (
