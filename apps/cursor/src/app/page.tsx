@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import type { LeaderboardItem } from "@/components/plugins/plugin-leaderboard";
 import { Startpage } from "@/components/startpage";
-import { getPlugins, getTotalUsers } from "@/data/queries";
+import {
+  getPluginInstallVelocity,
+  getPlugins,
+  getTotalUsers,
+} from "@/data/queries";
 
 export const metadata: Metadata = {
   title: "Cursor Directory - Plugins for Cursor",
@@ -18,10 +22,14 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = "force-static";
-export const revalidate = 86400;
+// Velocity data refreshes daily via the snapshot cron. Revalidating
+// the homepage every hour keeps the leaderboard close to live install
+// activity without sacrificing the static cache benefit.
+export const revalidate = 3600;
 
 function toLeaderboardItem(
   p: NonNullable<Awaited<ReturnType<typeof getPlugins>>["data"]>[number],
+  installs30d: number,
 ): LeaderboardItem {
   return {
     name: p.name,
@@ -32,19 +40,32 @@ function toLeaderboardItem(
     authorUrl: p.author_url,
     verified: p.verified,
     installCount: p.install_count,
+    installs30d,
     starCount: p.star_count,
     createdAt: p.created_at,
+    updatedAt: p.updated_at,
+    permanentlyBlocked: p.permanently_blocked,
+    flagSeverity: p.flag_severity,
+    scanStatus: p.scan_status,
     href: `/plugins/${p.slug}`,
   };
 }
 
 export default async function Page() {
-  const [{ data: totalUsers }, { data: allPluginsData }] = await Promise.all([
+  const [
+    { data: totalUsers },
+    { data: allPluginsData },
+    { data: velocityMap },
+  ] = await Promise.all([
     getTotalUsers(),
     getPlugins({ fetchAll: true }),
+    getPluginInstallVelocity(30),
   ]);
 
-  const leaderboardItems = (allPluginsData ?? []).map(toLeaderboardItem);
+  const velocity = velocityMap ?? new Map<string, number>();
+  const leaderboardItems = (allPluginsData ?? []).map((p) =>
+    toLeaderboardItem(p, velocity.get(p.id) ?? 0),
+  );
 
   return (
     <div className="min-h-screen w-full">

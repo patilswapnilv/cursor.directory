@@ -21,7 +21,7 @@ export function HeroTitle({ totalUsers }: { totalUsers: number }) {
         <Link href="/members" className={linkClass}>
           {formatNumber(totalUsers)}+ developers
         </Link>
-        , ranked by installs.
+        , ranked by what&rsquo;s trending.
       </p>
     </div>
   );

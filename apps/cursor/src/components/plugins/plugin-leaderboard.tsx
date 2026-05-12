@@ -16,18 +16,77 @@ export type LeaderboardItem = {
   authorUrl?: string | null;
   verified?: boolean;
   installCount: number;
+  installs30d?: number;
   starCount: number;
   createdAt: string;
+  updatedAt?: string;
+  permanentlyBlocked?: boolean;
+  flagSeverity?: "low" | "medium" | "high" | null;
+  scanStatus?:
+    | "pending"
+    | "scanning"
+    | "safe"
+    | "flagged"
+    | "error"
+    | "unscanned";
   href: string;
 };
 
-type LeaderboardSort = "installs" | "recent" | "stars";
+type LeaderboardSort = "trending" | "installs" | "recent";
 
 const TABS: { id: LeaderboardSort; label: string }[] = [
-  { id: "installs", label: "All Time" },
-  { id: "recent", label: "Recent" },
-  { id: "stars", label: "Most Starred" },
+  { id: "trending", label: "Trending" },
+  { id: "installs", label: "Top" },
+  { id: "recent", label: "New" },
 ];
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// Hides plugins that should never appear on the public leaderboard,
+// regardless of how many installs they have.
+function isExcluded(item: LeaderboardItem): boolean {
+  if (item.permanentlyBlocked) return true;
+  if (item.flagSeverity === "high") return true;
+  if (item.scanStatus === "flagged") return true;
+  return false;
+}
+
+// Estimated 30-day install count for plugins where we don't yet have a
+// real velocity signal. Assumes a uniform install rate over the
+// plugin's lifetime — an imperfect proxy (real install curves spike
+// at launch and taper), but defensible as an *estimate* and clearly
+// marked in the UI with a `~` prefix to distinguish from measured
+// velocity.
+function syntheticVelocity(item: LeaderboardItem): number {
+  const lifetime = Math.max(0, item.installCount);
+  if (lifetime === 0) return 0;
+  const ageDays = Math.max(
+    1,
+    (Date.now() - new Date(item.createdAt).getTime()) / DAY_MS,
+  );
+  return Math.round(lifetime * Math.min(1, 30 / ageDays));
+}
+
+// Trending = installs in the last 30 days, real or estimated.
+//   1. Real velocity wins always (bumped into a range no synthetic
+//      value can reach via the 1e9 multiplier).
+//   2. Synthetic velocity ranks the long tail so Trending stays
+//      populated before snapshots accumulate. Lifetime breaks ties.
+//   3. Plugins with no installs at all are filtered out.
+//
+// Real velocity is sourced from the daily snapshot pipeline
+// (`snapshot_plugin_installs()` scheduled via Supabase Cron / pg_cron,
+// exposed by `plugin_install_velocity`). For plugins younger than the
+// window, the SQL function returns their full install_count — every
+// install they have happened inside the window by definition.
+function trendingScore(item: LeaderboardItem): number {
+  const realVelocity = Math.max(0, item.installs30d ?? 0);
+  const lifetime = Math.max(0, item.installCount);
+  if (realVelocity > 0) {
+    return realVelocity * 1_000_000_000 + lifetime;
+  }
+  return syntheticVelocity(item) * 1_000 + lifetime;
+}
 
 const isSvgLogo = (url: string) => url.endsWith(".svg");
 
@@ -43,10 +102,10 @@ function isValidImageUrl(url: string | null | undefined): url is string {
 
 function metricFor(item: LeaderboardItem, sort: LeaderboardSort): number {
   switch (sort) {
+    case "trending":
+      return trendingScore(item);
     case "installs":
       return item.installCount;
-    case "stars":
-      return item.starCount;
     case "recent":
       return new Date(item.createdAt).getTime();
   }
@@ -81,7 +140,18 @@ function buildRows(
   sort: LeaderboardSort,
   groupByAuthor: boolean,
 ): Row[] {
-  const sorted = [...items].sort(
+  const safeItems = items.filter((i) => !isExcluded(i));
+  // Trending requires *some* signal: either real recent installs, or
+  // at least a positive lifetime install_count (so we can compute a
+  // synthetic per-month estimate from the install rate). Plugins with
+  // zero installs ever are not "trending".
+  const candidates =
+    sort === "trending"
+      ? safeItems.filter(
+          (i) => (i.installs30d ?? 0) > 0 || i.installCount > 0,
+        )
+      : safeItems;
+  const sorted = [...candidates].sort(
     (a, b) => metricFor(b, sort) - metricFor(a, sort),
   );
 
@@ -175,11 +245,6 @@ function ItemRow({
               {item.name}
             </span>
             {item.verified ? <VerifiedBadge size="sm" /> : null}
-            {item.author ? (
-              <span className="hidden truncate text-xs text-muted-foreground md:inline">
-                · {item.author}
-              </span>
-            ) : null}
           </div>
           {item.description ? (
             <p className="max-w-[60ch] truncate text-xs text-muted-foreground">
@@ -231,7 +296,7 @@ function MoreRow({
 
 export function PluginLeaderboard({
   items,
-  initialSort = "installs",
+  initialSort = "trending",
   groupByAuthor = false,
   maxItems = 500,
   chunkSize = 50,
@@ -314,7 +379,7 @@ export function PluginLeaderboard({
           const display =
             sort === "recent"
               ? formatRelativeDate(row.item.createdAt)
-              : formatCount(metricFor(row.item, sort));
+              : formatCount(row.item.installCount);
           return (
             <ItemRow
               key={row.item.slug}
