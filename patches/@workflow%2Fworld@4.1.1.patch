@@ -1,0 +1,80 @@
+diff --git a/dist/runs.js b/dist/runs.js
+index 2332f9442c6c2db70882889b99880d91f79c1790..a41bfafa4adc9b1d9927006ad1dbf122f6a72da6 100644
+--- a/dist/runs.js
++++ b/dist/runs.js
+@@ -59,28 +59,28 @@ export const WorkflowRunSchema = z.discriminatedUnion('status', [
+     // Non-final states
+     WorkflowRunBaseSchema.extend({
+         status: z.enum(['pending', 'running']),
+-        output: z.undefined(),
+-        error: z.undefined(),
+-        completedAt: z.undefined(),
++        output: z.undefined().optional(),
++        error: z.undefined().optional(),
++        completedAt: z.undefined().optional(),
+     }),
+     // Cancelled state
+     WorkflowRunBaseSchema.extend({
+         status: z.literal('cancelled'),
+-        output: z.undefined(),
+-        error: z.undefined(),
++        output: z.undefined().optional(),
++        error: z.undefined().optional(),
+         completedAt: z.coerce.date(),
+     }),
+     // Completed state - output can be v1 or v2 format
+     WorkflowRunBaseSchema.extend({
+         status: z.literal('completed'),
+         output: SerializedDataSchema,
+-        error: z.undefined(),
++        error: z.undefined().optional(),
+         completedAt: z.coerce.date(),
+     }),
+     // Failed state
+     WorkflowRunBaseSchema.extend({
+         status: z.literal('failed'),
+-        output: z.undefined(),
++        output: z.undefined().optional(),
+         error: StructuredErrorSchema,
+         completedAt: z.coerce.date(),
+     }),
+diff --git a/src/runs.ts b/src/runs.ts
+index c9fa9d147cd61c3b8ef722566a910d4173ea3ec9..9205e225f13f0ff29fc03a2cadce70d7f17adc88 100644
+--- a/src/runs.ts
++++ b/src/runs.ts
+@@ -66,28 +66,28 @@ export const WorkflowRunSchema = z.discriminatedUnion('status', [
+   // Non-final states
+   WorkflowRunBaseSchema.extend({
+     status: z.enum(['pending', 'running']),
+-    output: z.undefined(),
+-    error: z.undefined(),
+-    completedAt: z.undefined(),
++    output: z.undefined().optional(),
++    error: z.undefined().optional(),
++    completedAt: z.undefined().optional(),
+   }),
+   // Cancelled state
+   WorkflowRunBaseSchema.extend({
+     status: z.literal('cancelled'),
+-    output: z.undefined(),
+-    error: z.undefined(),
++    output: z.undefined().optional(),
++    error: z.undefined().optional(),
+     completedAt: z.coerce.date(),
+   }),
+   // Completed state - output can be v1 or v2 format
+   WorkflowRunBaseSchema.extend({
+     status: z.literal('completed'),
+     output: SerializedDataSchema,
+-    error: z.undefined(),
++    error: z.undefined().optional(),
+     completedAt: z.coerce.date(),
+   }),
+   // Failed state
+   WorkflowRunBaseSchema.extend({
+     status: z.literal('failed'),
+-    output: z.undefined(),
++    output: z.undefined().optional(),
+     error: StructuredErrorSchema,
+     completedAt: z.coerce.date(),
+   }),

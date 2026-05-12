@@ -1,3 +1,8 @@
+import { execFile } from "node:child_process";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { promisify } from "node:util";
 import { Agent, CursorAgentError, type RunResult } from "@cursor/sdk";
 import { FatalError } from "workflow";
 import { z } from "zod";
@@ -8,6 +13,8 @@ import type {
   ScanVerdict,
 } from "@/data/queries";
 import { createClient } from "@/utils/supabase/admin-client";
+
+const execFileAsync = promisify(execFile);
 
 type ComponentRow = Pick<
   PluginComponent,
@@ -148,6 +155,39 @@ async function applyBlockedShortCircuit(pluginId: string) {
     .eq("id", pluginId);
 }
 
+// Cap how much of the repo we materialize on the function's tmpfs. Plugins
+// are typically rules/.md/.json — kilobytes — but we share /tmp with other
+// step executions and have a hard ~500MB limit on Vercel.
+const CLONE_TIMEOUT_MS = 60_000;
+const CLONE_MAX_BUFFER = 4 * 1024 * 1024;
+
+async function cloneRepo(
+  owner: string,
+  repo: string,
+): Promise<{ cwd: string; cleanup: () => Promise<void> }> {
+  const cwd = await mkdtemp(path.join(tmpdir(), "plugin-scan-"));
+  const cleanup = () =>
+    rm(cwd, { recursive: true, force: true }).catch(() => {});
+  try {
+    await execFileAsync(
+      "git",
+      [
+        "clone",
+        "--depth=1",
+        "--single-branch",
+        "--filter=blob:limit=10m",
+        `https://github.com/${owner}/${repo}.git`,
+        cwd,
+      ],
+      { timeout: CLONE_TIMEOUT_MS, maxBuffer: CLONE_MAX_BUFFER },
+    );
+    return { cwd, cleanup };
+  } catch (err) {
+    await cleanup();
+    throw err;
+  }
+}
+
 async function runSecurityAgent(plugin: ScanInput): Promise<AgentVerdict> {
   "use step";
 
@@ -161,45 +201,70 @@ async function runSecurityAgent(plugin: ScanInput): Promise<AgentVerdict> {
   const repoMatch = plugin.repository
     ? parseGitHubUrl(plugin.repository)
     : null;
-  const cloudOptions = repoMatch
-    ? {
-        repos: [
-          {
-            url: `https://github.com/${repoMatch.owner}/${repoMatch.repo}`,
-            startingRef: "main" as const,
-          },
-        ],
-      }
-    : {};
 
-  const prompt = buildPrompt(plugin, { hasRepo: Boolean(repoMatch) });
-
-  let result: RunResult;
+  // The agent runs in `local` mode against a scratch dir on the function's
+  // filesystem: either a fresh clone of the user's public repo, or an empty
+  // dir when no repo URL was supplied. This deliberately avoids the cloud
+  // runtime's GitHub-App-scoped repo permissions, which would require every
+  // plugin submitter to install Cursor's GitHub App on their repo — not a
+  // workable UX for a public marketplace.
+  let cwd: string;
+  let cleanup: () => Promise<void>;
+  let hasRepo = false;
   try {
-    result = await Agent.prompt(prompt, {
-      apiKey,
-      model: { id: "composer-2" },
-      cloud: cloudOptions,
-      name: `scan:${plugin.slug}`,
-    });
-  } catch (err) {
-    if (err instanceof CursorAgentError && err.isRetryable) {
-      // Step retries handle this for us.
-      throw err;
+    if (repoMatch) {
+      const cloned = await cloneRepo(repoMatch.owner, repoMatch.repo);
+      cwd = cloned.cwd;
+      cleanup = cloned.cleanup;
+      hasRepo = true;
+    } else {
+      cwd = await mkdtemp(path.join(tmpdir(), "plugin-scan-no-repo-"));
+      cleanup = () =>
+        rm(cwd, { recursive: true, force: true }).catch(() => {});
     }
-    throw new FatalError(
-      `Cursor SDK startup failed: ${err instanceof Error ? err.message : String(err)}`,
-    );
+  } catch (err) {
+    return {
+      verdict: "suspicious",
+      severity: "low",
+      categories: [],
+      reasons: ["repository_clone_failed"],
+      summary: `Could not clone ${plugin.repository}: ${err instanceof Error ? err.message : String(err)}. Manual review required.`,
+      runId: null,
+    };
   }
 
-  if (result.status !== "finished") {
-    throw new FatalError(
-      `Scan run ${result.id} ended with status=${result.status}`,
-    );
-  }
+  try {
+    const prompt = buildPrompt(plugin, { hasRepo });
 
-  const verdict = parseVerdict(result.result ?? "");
-  return { ...verdict, runId: result.id };
+    let result: RunResult;
+    try {
+      result = await Agent.prompt(prompt, {
+        apiKey,
+        model: { id: "composer-2" },
+        local: { cwd },
+        name: `scan:${plugin.slug}`,
+      });
+    } catch (err) {
+      if (err instanceof CursorAgentError && err.isRetryable) {
+        // Step retries handle this for us.
+        throw err;
+      }
+      throw new FatalError(
+        `Cursor SDK startup failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+
+    if (result.status !== "finished") {
+      throw new FatalError(
+        `Scan run ${result.id} ended with status=${result.status}`,
+      );
+    }
+
+    const verdict = parseVerdict(result.result ?? "");
+    return { ...verdict, runId: result.id };
+  } finally {
+    await cleanup();
+  }
 }
 
 function buildPrompt(plugin: ScanInput, opts: { hasRepo: boolean }) {
