@@ -8,7 +8,7 @@ export function GlobalSearchInput() {
   const [search, setSearch] = useQueryState("q", { defaultValue: "" });
   const router = useRouter();
 
-  const placeholder = "Search plugins, MCP servers, events, members...";
+  const placeholder = "Search plugins...";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
