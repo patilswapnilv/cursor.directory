@@ -9,18 +9,19 @@ export function HeroTitle({ totalUsers }: { totalUsers: number }) {
   return (
     <div className="mb-14 text-center">
       <h1 className="marketing-hero-title mx-auto mb-5 max-w-[980px] text-balance text-foreground">
-        Explore what the community is building
+        Extend Cursor with community plugins.
       </h1>
 
       <p className="marketing-copy mx-auto max-w-[760px] text-balance">
+        Discover and install{" "}
         <Link href="/plugins" className={linkClass}>
-          Plugins
+          plugins
         </Link>{" "}
-        and{" "}
+        from{" "}
         <Link href="/members" className={linkClass}>
           {formatNumber(totalUsers)}+ developers
-        </Link>{" "}
-        building with Cursor.
+        </Link>
+        , ranked by what&rsquo;s trending.
       </p>
     </div>
   );

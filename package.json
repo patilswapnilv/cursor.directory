@@ -12,5 +12,8 @@
   },
   "resolutions": {
     "zod": "4.4.3"
+  },
+  "patchedDependencies": {
+    "@workflow/world@4.1.1": "patches/@workflow%2Fworld@4.1.1.patch"
   }
 }

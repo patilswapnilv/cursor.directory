@@ -137,15 +137,15 @@ function ScanStatusBanner({
           <div className="flex-1">
             <p className="text-sm font-medium text-red-600 dark:text-red-400">
               {live
-                ? "Flagged by the security agent — under review."
-                : "Flagged by the security agent and hidden from the directory."}
+                ? "Flagged by the security agent — pending manual review."
+                : "Flagged by the security agent. Hidden from the directory pending manual review."}
             </p>
-            {plugin.flag_summary && (
+            {isOwner && plugin.flag_summary && (
               <p className="mt-1 text-sm text-red-600/90 dark:text-red-400/90">
                 {plugin.flag_summary}
               </p>
             )}
-            {reasons.length > 0 && (
+            {isOwner && reasons.length > 0 && (
               <ul className="mt-2 space-y-0.5 text-xs text-red-600/80 dark:text-red-400/80">
                 {reasons.map((reason) => (
                   <li key={reason}>• {reason}</li>

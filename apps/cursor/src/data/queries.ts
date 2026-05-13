@@ -365,6 +365,31 @@ export async function getPlugins({
   return { data: data as PluginRow[] | null, error };
 }
 
+// Returns a Map<plugin_id, installs in last `windowDays` days>, derived
+// from `plugin_install_snapshots` via the `plugin_install_velocity` SQL
+// function. Plugins with no snapshot history yet (or no fresh installs)
+// will simply be absent from the map; callers should default to 0.
+export async function getPluginInstallVelocity(windowDays = 30): Promise<{
+  data: Map<string, number> | null;
+  error: unknown;
+}> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("plugin_install_velocity", {
+    window_days: windowDays,
+  });
+
+  if (error) return { data: null, error };
+
+  const map = new Map<string, number>();
+  for (const row of (data ?? []) as {
+    plugin_id: string;
+    installs_window: number;
+  }[]) {
+    map.set(row.plugin_id, row.installs_window);
+  }
+  return { data: map, error: null };
+}
+
 export async function getPluginBySlug(slug: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
