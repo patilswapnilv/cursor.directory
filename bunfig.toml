@@ -1,0 +1,12 @@
+[install]
+# Mitigate npm supply-chain attacks (axios compromise, Shai-Hulud worm, etc.)
+# by refusing to install package versions that are less than 7 days old.
+# Most malicious releases are detected and yanked from the registry within
+# hours to a few days, so a delay buys the community time to flag bad publishes
+# before they land in our lockfile.
+#
+# Refs:
+#   https://github.com/oven-sh/bun/issues/22679
+#   https://bun.com/docs/cli/install#minimum-release-age
+minimumReleaseAge = 604800
+minimumReleaseAgeExcludes = ["next", "@types/bun", "typescript"]
