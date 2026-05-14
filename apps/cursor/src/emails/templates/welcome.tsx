@@ -45,7 +45,7 @@ export default function WelcomeEmail({ name = "there" }: { name: string }) {
               <Text className="text-sm leading-7 mb-1">
                 <span className="text-base">◇ </span>
                 <Link
-                  href="https://cursor.directory/plugins"
+                  href="https://cursor.directory"
                   className="underline text-black"
                 >
                   Plugins
