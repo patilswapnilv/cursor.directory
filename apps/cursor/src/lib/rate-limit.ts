@@ -41,39 +41,50 @@ function getIpFromHeaders(h: Headers): string {
   );
 }
 
-async function check(
-  rateLimitId: string,
-  rateLimitKey?: string,
-): Promise<LimitResult> {
+async function check({
+  rateLimitId,
+  rateLimitKey,
+}: {
+  rateLimitId: string;
+  rateLimitKey?: string;
+}): Promise<LimitResult> {
   const requestHeaders = await getRequestHeaders();
-  const { rateLimited } = await checkRateLimit(rateLimitId, {
+  const { rateLimited, error } = await checkRateLimit(rateLimitId, {
     headers: requestHeaders,
     rateLimitKey,
     firewallHostForDevelopment,
   });
+
+  // We deliberately fail open on misconfiguration: a missing dashboard rule
+  // shouldn't lock out every user (worse than no rate limit). But silent
+  // fail-open is dangerous, so surface it loudly so it's caught in
+  // production logs / alerting instead of going unnoticed.
+  if (error === "not-found") {
+    console.error(
+      `[rate-limit] Vercel Firewall rule '${rateLimitId}' is not configured. Rate limiting is DISABLED for this rule until the rule is created in the Firewall dashboard.`,
+    );
+  }
+
   return { success: !rateLimited };
 }
 
 export async function installPerPluginLimit(
   pluginId: string,
 ): Promise<LimitResult> {
-  const requestHeaders = await getRequestHeaders();
-  const ip = getIpFromHeaders(requestHeaders);
-  const { rateLimited } = await checkRateLimit(
-    RATE_LIMIT_IDS.installPerPlugin,
-    {
-      headers: requestHeaders,
-      rateLimitKey: `${ip}:${pluginId}`,
-      firewallHostForDevelopment,
-    },
-  );
-  return { success: !rateLimited };
+  const ip = getIpFromHeaders(await getRequestHeaders());
+  return check({
+    rateLimitId: RATE_LIMIT_IDS.installPerPlugin,
+    rateLimitKey: `${ip}:${pluginId}`,
+  });
 }
 
 export async function installGlobalLimit(): Promise<LimitResult> {
-  return check(RATE_LIMIT_IDS.installGlobal);
+  return check({ rateLimitId: RATE_LIMIT_IDS.installGlobal });
 }
 
 export async function pluginScanLimit(userId: string): Promise<LimitResult> {
-  return check(RATE_LIMIT_IDS.pluginScan, userId);
+  return check({
+    rateLimitId: RATE_LIMIT_IDS.pluginScan,
+    rateLimitKey: userId,
+  });
 }
