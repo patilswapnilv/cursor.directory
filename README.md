@@ -11,8 +11,6 @@ The community hub for Cursor — plugins, MCP servers, events, jobs, and thousan
 ```
 ├── apps/
 │   └── cursor/          # Next.js app
-├── packages/
-│   └── email/           # Email templates (React Email)
 ├── supabase/
 │   └── migrations/      # Database migrations
 └── package.json         # Bun workspace config
@@ -55,7 +53,6 @@ Fill in the required values:
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase Publishable key (`sb_publishable_...`, replaces the legacy anon key) |
 | `SUPABASE_SECRET_KEY` | Yes | Supabase Secret key (`sb_secret_...`, replaces the legacy service role key) |
-| `RESEND_API_KEY` | No | Resend API key (emails) |
 | `NEXT_PUBLIC_APP_URL` | No | Defaults to `http://localhost:3000` |
 
 4. **Run the database migrations**
@@ -119,7 +116,6 @@ Community events are powered by [Luma](https://lu.ma):
 - **Database**: [Supabase](https://supabase.com) (PostgreSQL)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com)
 - **UI**: [Radix UI](https://radix-ui.com) + [shadcn/ui](https://ui.shadcn.com)
-- **Email**: [React Email](https://react.email) + [Resend](https://resend.com)
 - **Search**: [Fuse.js](https://fusejs.io) (client-side fuzzy search)
 - **URL State**: [nuqs](https://nuqs.47ng.com)
 - **Events**: [Luma API](https://docs.lu.ma)
