@@ -30,8 +30,8 @@ All data lives in the database — there is no local data in the repo.
 1. **Clone the repo**
 
 ```bash
-git clone https://github.com/pontusab/cursor.directory.git
-cd cursor.directory
+git clone https://github.com/cursor/community-plugins.git
+cd community-plugins
 ```
 
 2. **Install dependencies**
