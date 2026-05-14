@@ -1,5 +1,5 @@
 import "./globals.css";
-import { OpenPanelComponent } from "@openpanel/nextjs";
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
@@ -86,13 +86,8 @@ export default async function RootLayout({
             <GlobalModals />
           </NuqsAdapter>
         </ThemeProvider>
+        <Analytics />
       </body>
-
-      <OpenPanelComponent
-        clientId={process.env.NEXT_PUBLIC_OPENPANEL_CLIENT_ID!}
-        trackScreenViews
-        disabled={process.env.NODE_ENV === "development"}
-      />
     </html>
   );
 }

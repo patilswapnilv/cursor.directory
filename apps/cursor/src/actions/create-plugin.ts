@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { InsertPluginError, insertPlugin } from "@/lib/plugins/insert";
-import { pluginScanRatelimit } from "@/lib/rate-limit";
+import { pluginScanLimit } from "@/lib/rate-limit";
 import { ActionError, authActionClient } from "./safe-action";
 
 const componentSchema = z.object({
@@ -55,7 +55,7 @@ export const createPluginAction = authActionClient
       },
       ctx: { userId },
     }) => {
-      const { success } = await pluginScanRatelimit.limit(userId);
+      const { success } = await pluginScanLimit(userId);
       if (!success) {
         throw new ActionError(
           "Too many plugin submissions in the last hour. Please try again later.",
