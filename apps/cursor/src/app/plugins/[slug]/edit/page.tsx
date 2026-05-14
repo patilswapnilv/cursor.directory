@@ -19,7 +19,7 @@ export default async function Page({ params }: { params: Params }) {
   const { data: plugin } = await getPluginBySlug(slug);
 
   if (!plugin) {
-    redirect("/plugins");
+    redirect("/");
   }
 
   if (!session) {
@@ -35,7 +35,7 @@ export default async function Page({ params }: { params: Params }) {
   }
 
   if (plugin.owner_id !== session.user.id) {
-    redirect("/plugins");
+    redirect("/");
   }
 
   return (

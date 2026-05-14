@@ -8,16 +8,28 @@ import { MobileMenu } from "./mobile-menu";
 import { UserMenu } from "./user-menu";
 
 export const navigationLinks = [
-  { href: "/plugins", label: "Plugins" },
-  { href: "/members", label: "Members" },
-  { href: "/companies", label: "Companies" },
+  {
+    href: "/",
+    label: "Plugins",
+    match: (p: string) => p === "/" || p.startsWith("/plugins"),
+  },
+  {
+    href: "/members",
+    label: "Members",
+    match: (p: string) => p === "/members" || p.startsWith("/members/"),
+  },
+  {
+    href: "/companies",
+    label: "Companies",
+    match: (p: string) => p === "/companies" || p.startsWith("/companies/"),
+  },
 ] as const;
 
 export function Header() {
   const pathname = usePathname();
 
-  const isActiveLink = (href: string) =>
-    pathname === href || pathname.startsWith(`${href}/`);
+  const isActiveLink = (link: (typeof navigationLinks)[number]) =>
+    link.match(pathname);
 
   return (
     <div className="relative z-30 flex items-center justify-between">
@@ -40,7 +52,7 @@ export function Header() {
                 href={link.href}
                 className={cn(
                   "chrome-label rounded-full px-3.5 py-2 font-medium transition-colors",
-                  isActiveLink(link.href)
+                  isActiveLink(link)
                     ? "text-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
@@ -49,9 +61,11 @@ export function Header() {
               </Link>
             ))}
 
-            <Suspense fallback={null}>
-              <UserMenu />
-            </Suspense>
+            <div className="flex min-w-[88px] items-center justify-end">
+              <Suspense fallback={null}>
+                <UserMenu />
+              </Suspense>
+            </div>
           </div>
         </div>
       </div>

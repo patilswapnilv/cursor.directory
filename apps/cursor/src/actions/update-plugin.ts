@@ -153,7 +153,7 @@ export const updatePluginAction = authActionClient
         console.error("Failed to enqueue scan workflow", workflowError);
       }
 
-      revalidatePath("/plugins");
+      revalidatePath("/");
       revalidatePath(`/plugins/${existing.slug}`);
 
       return { slug: existing.slug };

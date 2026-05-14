@@ -314,7 +314,7 @@ export function PluginDetailView({ plugin }: { plugin: PluginRow }) {
             {plugin.keywords.map((kw) => (
               <Link
                 key={kw}
-                href={`/plugins?q=${encodeURIComponent(kw)}`}
+                href={`/?q=${encodeURIComponent(kw)}`}
                 className="rounded-md border border-border bg-muted px-2 py-1 text-xs font-mono text-muted-foreground transition-colors hover:text-foreground"
               >
                 {kw}

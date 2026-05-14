@@ -17,8 +17,7 @@ export default function WelcomeEmail({ name = "there" }: { name: string }) {
     <Html>
       <Head />
       <Preview>
-        Welcome to Cursor Directory — plugins, MCP servers, and resources for
-        Cursor
+        Welcome to Cursor Directory — plugins for the Cursor community
       </Preview>
       <Tailwind>
         <Body
@@ -36,7 +35,7 @@ export default function WelcomeEmail({ name = "there" }: { name: string }) {
 
               <Text className="text-sm leading-7 mb-4">
                 Welcome to Cursor Directory — the place to find and share
-                plugins, MCP servers, rules, and other good stuff for Cursor.
+                plugins and other good stuff for the Cursor community.
               </Text>
 
               <Text className="text-sm leading-7 mb-2">
@@ -55,7 +54,7 @@ export default function WelcomeEmail({ name = "there" }: { name: string }) {
                 click
               </Text>
 
-              <Text className="text-sm leading-7 mb-1">
+              <Text className="text-sm leading-7 mb-4">
                 <span className="text-base">◇ </span>
                 <Link
                   href="https://cursor.directory/plugins/new"
@@ -63,18 +62,7 @@ export default function WelcomeEmail({ name = "there" }: { name: string }) {
                 >
                   Submit a Plugin
                 </Link>{" "}
-                — Got something cool? Share it
-              </Text>
-
-              <Text className="text-sm leading-7 mb-4">
-                <span className="text-base">◇ </span>
-                <Link
-                  href="https://cursor.directory/members"
-                  className="underline text-black"
-                >
-                  Members
-                </Link>{" "}
-                — Developers and companies in the community
+                — Got something cool? Share it with the community
               </Text>
 
               <Text className="text-sm leading-7 mb-6">

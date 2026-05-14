@@ -53,7 +53,7 @@ export function Startpage({
           </div>
 
           {visibleItems.length > 0 ? (
-            <div className="mb-14">
+            <div className="mx-auto mb-14 w-full max-w-[880px]">
               <PluginLeaderboard items={visibleItems} />
             </div>
           ) : (
@@ -62,10 +62,10 @@ export function Startpage({
                 No plugins found for &quot;{search}&quot;
               </p>
               <Link
-                href={`/plugins?q=${encodeURIComponent(search)}`}
+                href="/plugins/new"
                 className="mt-2 border-b border-dashed border-input text-sm text-muted-foreground hover:text-foreground"
               >
-                Search all plugins
+                Submit a plugin
               </Link>
             </div>
           )}

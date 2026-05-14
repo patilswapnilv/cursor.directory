@@ -42,6 +42,6 @@ export const trackInstallAction = actionClient
       plugin_id_input: pluginId,
     });
 
-    revalidatePath("/plugins");
+    revalidatePath("/");
     revalidatePath(`/plugins/${slug}`);
   });

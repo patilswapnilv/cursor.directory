@@ -44,6 +44,6 @@ export const starPluginAction = authActionClient
       await admin.rpc("increment_star_count", { plugin_id_input: pluginId });
     }
 
-    revalidatePath("/plugins");
+    revalidatePath("/");
     revalidatePath(`/plugins/${slug}`);
   });
