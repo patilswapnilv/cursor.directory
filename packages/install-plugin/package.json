@@ -6,13 +6,21 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pontusab/directories"
+    "url": "https://github.com/cursor/community-plugins"
   },
-  "keywords": ["cursor", "plugin", "cli", "install", "cursor-directory"],
+  "keywords": [
+    "cursor",
+    "plugin",
+    "cli",
+    "install",
+    "cursor-directory"
+  ],
   "bin": {
     "install-plugin": "./dist/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">=18"
   },

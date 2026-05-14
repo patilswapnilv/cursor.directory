@@ -18,7 +18,6 @@ const columns = [
     links: [
       { href: "/members", label: "Members" },
       { href: "/companies", label: "Companies" },
-      { href: "/about", label: "About" },
     ],
   },
   {
@@ -51,7 +50,7 @@ const columns = [
     links: [
       { href: "/plugins/new", label: "Submit a Plugin" },
       {
-        href: "https://github.com/pontusab/cursor.directory",
+        href: "https://github.com/cursor/community-plugins",
         label: "GitHub",
         external: true,
       },
@@ -70,7 +69,7 @@ const socials = [
     ),
   },
   {
-    href: "https://github.com/pontusab/cursor.directory",
+    href: "https://github.com/cursor/community-plugins",
     label: "GitHub",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
