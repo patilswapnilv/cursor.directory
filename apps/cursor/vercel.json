@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/sync-ambassadors",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/recover-stuck-scans",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

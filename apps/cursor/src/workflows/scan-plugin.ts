@@ -84,8 +84,18 @@ export async function scanPluginWorkflow(pluginId: string) {
   }
 
   await markScanning(pluginId);
-  const verdict = await runSecurityAgent(loaded.plugin);
-  await applyVerdict(pluginId, loaded.prevActive, verdict);
+  try {
+    const verdict = await runSecurityAgent(loaded.plugin);
+    await applyVerdict(pluginId, loaded.prevActive, verdict);
+  } catch (err) {
+    // Compensation: without this the row stays at scan_status='scanning'
+    // forever (no scan_run_id, no flag), which is invisible to admins
+    // until the 15-min staleness threshold in getStuckScans() trips.
+    // Surfacing as 'error' lets the admin re-scan or delete it.
+    const message = err instanceof Error ? err.message : String(err);
+    await markScanFailed(pluginId, message);
+    throw err;
+  }
 }
 
 async function loadPlugin(pluginId: string): Promise<LoadResult | null> {
@@ -135,6 +145,19 @@ async function markScanning(pluginId: string) {
   await supabase
     .from("plugins")
     .update({ scan_status: "scanning" })
+    .eq("id", pluginId);
+}
+
+async function markScanFailed(pluginId: string, errorMessage: string) {
+  "use step";
+  const supabase = await createClient();
+  await supabase
+    .from("plugins")
+    .update({
+      scan_status: "error",
+      flag_summary: errorMessage.slice(0, 500),
+      last_scanned_at: new Date().toISOString(),
+    })
     .eq("id", pluginId);
 }
 
