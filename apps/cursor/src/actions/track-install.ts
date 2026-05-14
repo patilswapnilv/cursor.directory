@@ -1,12 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { z } from "zod";
-import {
-  installGlobalRatelimit,
-  installPerPluginRatelimit,
-} from "@/lib/rate-limit";
+import { installGlobalLimit, installPerPluginLimit } from "@/lib/rate-limit";
 import { createClient as createAdminClient } from "@/utils/supabase/admin-client";
 import { ActionError, actionClient } from "./safe-action";
 
@@ -21,15 +17,9 @@ export const trackInstallAction = actionClient
     }),
   )
   .action(async ({ parsedInput: { pluginId, slug } }) => {
-    const headersList = await headers();
-    const ip =
-      headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-      headersList.get("x-real-ip") ??
-      "unknown";
-
     const [global, perPlugin] = await Promise.all([
-      installGlobalRatelimit.limit(ip),
-      installPerPluginRatelimit.limit(`${ip}:${pluginId}`),
+      installGlobalLimit(),
+      installPerPluginLimit(pluginId),
     ]);
 
     if (!global.success || !perPlugin.success) {

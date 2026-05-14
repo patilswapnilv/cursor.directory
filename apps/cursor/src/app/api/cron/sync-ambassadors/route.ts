@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
+import { requireCronAuth } from "@/lib/cron-auth";
 import { createClient } from "@/utils/supabase/admin-client";
 
 export const dynamic = "force-dynamic";
@@ -81,13 +82,8 @@ async function fetchAmbassadorEmails(): Promise<string[]> {
 }
 
 export async function GET(request: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const header = request.headers.get("authorization");
-    if (header !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-  }
+  const unauthorized = requireCronAuth(request);
+  if (unauthorized) return unauthorized;
 
   try {
     const emails = await fetchAmbassadorEmails();

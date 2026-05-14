@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { start } from "workflow/api";
 import { z } from "zod";
-import { pluginScanRatelimit } from "@/lib/rate-limit";
+import { pluginScanLimit } from "@/lib/rate-limit";
 import { createClient } from "@/utils/supabase/admin-client";
 import { scanPluginWorkflow } from "@/workflows/scan-plugin";
 import { ActionError, authActionClient } from "./safe-action";
@@ -77,7 +77,7 @@ export const updatePluginAction = authActionClient
         );
       }
 
-      const { success } = await pluginScanRatelimit.limit(userId);
+      const { success } = await pluginScanLimit(userId);
       if (!success) {
         throw new ActionError(
           "Too many plugin updates in the last hour. Please try again later.",

@@ -1,11 +1,7 @@
 "use server";
 
-import { waitUntil } from "@vercel/functions";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import FollowerEmail from "@/emails/templates/follower";
-import { resend } from "@/lib/resend";
-import { createClient as createAdminClient } from "@/utils/supabase/admin-client";
 import { createClient } from "@/utils/supabase/server";
 import { authActionClient } from "./safe-action";
 
@@ -26,52 +22,17 @@ export const toggleFollowAction = authActionClient
       ctx: { userId: currentUserId },
     }) => {
       const supabase = await createClient();
-      const adminClient = await createAdminClient();
 
       if (action === "follow") {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from("followers")
-          .insert({ follower_id: currentUserId, following_id: userId })
-          .select("follower:follower_id(name, slug)")
-          .single();
+          .insert({ follower_id: currentUserId, following_id: userId });
 
         if (error) {
           throw new Error(error.message);
         }
 
         revalidatePath(`/u/${slug}`);
-
-        if (data.follower) {
-          const { data: userData } = await adminClient
-            .from("users")
-            .select("email, name, follow_email")
-            .eq("id", userId)
-            .single();
-
-          if (!userData) {
-            throw new Error("User not found");
-          }
-
-          if (userData.follow_email) {
-            waitUntil(
-              resend.emails.send({
-                from: "Cursor Directory <hello@transactional.cursor.directory>",
-                to: userData.email!,
-                //   @ts-expect-error
-                subject: `${data.follower.name} is now following you on Cursor Directory`,
-                react: FollowerEmail({
-                  name: userData.name!,
-                  // @ts-expect-error
-                  followerName: data.follower.name!,
-                  // @ts-expect-error
-                  followerSlug: data.follower.slug!,
-                  followingSlug: slug,
-                }),
-              }),
-            );
-          }
-        }
-
         return;
       }
 
@@ -84,7 +45,5 @@ export const toggleFollowAction = authActionClient
       }
 
       revalidatePath(`/u/${slug}`);
-
-      return;
     },
   );

@@ -1,27 +1,90 @@
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+import "server-only";
 
-const redis = Redis.fromEnv();
+import { checkRateLimit } from "@vercel/firewall";
+import { headers } from "next/headers";
 
-// Per IP + plugin: max 3 installs per 24h for the same plugin
-export const installPerPluginRatelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(3, "24 h"),
-  prefix: "ratelimit:install:plugin",
-});
+/**
+ * Rate limits live in the Vercel Firewall dashboard. Each `rateLimitId` below
+ * must have a matching `@vercel/firewall` rule configured with the window and
+ * threshold listed in the comment. Code only owns the *key shape* — the limit
+ * itself is changed in the dashboard.
+ *
+ * Required dashboard rules:
+ *   install-per-plugin   3 requests / 24h   (key: `${ip}:${pluginId}`)
+ *   install-global       20 requests / 1h   (key: ip, default)
+ *   plugin-scan          5 requests / 1h    (key: userId)
+ *
+ * In non-production, `checkRateLimit` is a no-op unless
+ * `NEXT_PUBLIC_VERCEL_FIREWALL_HOST_FOR_DEVELOPMENT` is set to a deployed host
+ * (e.g. your preview URL).
+ */
+const RATE_LIMIT_IDS = {
+  installPerPlugin: "install-per-plugin",
+  installGlobal: "install-global",
+  pluginScan: "plugin-scan",
+} as const;
 
-// Per IP globally: max 20 installs per hour across all plugins
-export const installGlobalRatelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(20, "1 h"),
-  prefix: "ratelimit:install:global",
-});
+const firewallHostForDevelopment =
+  process.env.NEXT_PUBLIC_VERCEL_FIREWALL_HOST_FOR_DEVELOPMENT;
 
-// Per user: bound how many plugin submissions/edits can trigger a security
-// scan in an hour. Cursor SDK calls cost real money and time; this prevents
-// a single account from exhausting the budget by spamming submits.
-export const pluginScanRatelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(5, "1 h"),
-  prefix: "ratelimit:plugin:scan",
-});
+type LimitResult = { success: boolean };
+
+async function getRequestHeaders(): Promise<Headers> {
+  return new Headers(await headers());
+}
+
+function getIpFromHeaders(h: Headers): string {
+  return (
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    h.get("x-real-ip") ??
+    "unknown"
+  );
+}
+
+async function check({
+  rateLimitId,
+  rateLimitKey,
+}: {
+  rateLimitId: string;
+  rateLimitKey?: string;
+}): Promise<LimitResult> {
+  const requestHeaders = await getRequestHeaders();
+  const { rateLimited, error } = await checkRateLimit(rateLimitId, {
+    headers: requestHeaders,
+    rateLimitKey,
+    firewallHostForDevelopment,
+  });
+
+  // We deliberately fail open on misconfiguration: a missing dashboard rule
+  // shouldn't lock out every user (worse than no rate limit). But silent
+  // fail-open is dangerous, so surface it loudly so it's caught in
+  // production logs / alerting instead of going unnoticed.
+  if (error === "not-found") {
+    console.error(
+      `[rate-limit] Vercel Firewall rule '${rateLimitId}' is not configured. Rate limiting is DISABLED for this rule until the rule is created in the Firewall dashboard.`,
+    );
+  }
+
+  return { success: !rateLimited };
+}
+
+export async function installPerPluginLimit(
+  pluginId: string,
+): Promise<LimitResult> {
+  const ip = getIpFromHeaders(await getRequestHeaders());
+  return check({
+    rateLimitId: RATE_LIMIT_IDS.installPerPlugin,
+    rateLimitKey: `${ip}:${pluginId}`,
+  });
+}
+
+export async function installGlobalLimit(): Promise<LimitResult> {
+  return check({ rateLimitId: RATE_LIMIT_IDS.installGlobal });
+}
+
+export async function pluginScanLimit(userId: string): Promise<LimitResult> {
+  return check({
+    rateLimitId: RATE_LIMIT_IDS.pluginScan,
+    rateLimitKey: userId,
+  });
+}
