@@ -272,7 +272,7 @@ function MoreRow({
   totalMetric: number;
   sort: LeaderboardSort;
 }) {
-  const href = `/plugins?q=${encodeURIComponent(author)}`;
+  const href = `/?q=${encodeURIComponent(author)}`;
   return (
     <Link
       href={href}
@@ -298,7 +298,7 @@ export function PluginLeaderboard({
   items,
   initialSort = "trending",
   groupByAuthor = false,
-  maxItems = 500,
+  maxItems = Number.POSITIVE_INFINITY,
   chunkSize = 50,
 }: {
   items: LeaderboardItem[];
@@ -403,16 +403,7 @@ export function PluginLeaderboard({
           className="h-10"
           aria-hidden
         />
-      ) : (
-        <div className="mt-6 flex justify-start">
-          <Link
-            href="/plugins"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Browse all plugins
-          </Link>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }

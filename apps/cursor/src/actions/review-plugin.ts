@@ -53,7 +53,7 @@ export const approvePluginAction = adminActionClient
     }
 
     revalidatePath("/admin/plugins");
-    revalidatePath("/plugins");
+    revalidatePath("/");
 
     if (plugin?.slug) {
       revalidatePath(`/plugins/${plugin.slug}`);
@@ -78,7 +78,7 @@ export const declinePluginAction = adminActionClient
     }
 
     revalidatePath("/admin/plugins");
-    revalidatePath("/plugins");
+    revalidatePath("/");
 
     return { success: true };
   });

@@ -167,7 +167,7 @@ export function PluginForm() {
         toast.success(
           "Submitted! Scanning your plugin now — it will appear shortly.",
         );
-        router.push(data?.slug ? `/plugins/${data.slug}` : "/plugins");
+        router.push(data?.slug ? `/plugins/${data.slug}` : "/");
       },
       onError: ({ error }) => {
         setPublishError(

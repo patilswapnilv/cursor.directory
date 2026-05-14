@@ -37,7 +37,7 @@ export const approveFlaggedPluginAction = adminActionClient
     }
 
     revalidatePath("/admin/plugins");
-    revalidatePath("/plugins");
+    revalidatePath("/");
     revalidatePath(`/plugins/${plugin.slug}`);
     return { success: true };
   });
@@ -66,7 +66,7 @@ export const confirmFlagAction = adminActionClient
     }
 
     revalidatePath("/admin/plugins");
-    revalidatePath("/plugins");
+    revalidatePath("/");
     revalidatePath(`/plugins/${plugin.slug}`);
     return { success: true };
   });

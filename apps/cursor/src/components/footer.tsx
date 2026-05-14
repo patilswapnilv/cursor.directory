@@ -9,7 +9,7 @@ const columns = [
   {
     title: "Explore",
     links: [
-      { href: "/plugins", label: "Plugins" },
+      { href: "/", label: "Plugins" },
       { href: "/plugins/new", label: "Submit a Plugin" },
     ],
   },

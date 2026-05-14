@@ -1,4 +1,4 @@
-import { Column, Img, Link, Row, Section, Text } from "@react-email/components";
+import { Img, Link, Section, Text } from "@react-email/components";
 
 export function Footer() {
   return (
@@ -8,7 +8,7 @@ export function Footer() {
           <tr>
             <td style={{ paddingRight: 12 }}>
               <Link
-                href="https://x.com/cursordirectory"
+                href="https://x.com/cursor_ai"
                 className="text-black no-underline"
               >
                 <Img
@@ -21,7 +21,7 @@ export function Footer() {
             </td>
             <td>
               <Link
-                href="https://github.com/leerob/directories"
+                href="https://github.com/cursor/community-plugins"
                 className="text-black no-underline"
               >
                 <Img

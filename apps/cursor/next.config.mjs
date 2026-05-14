@@ -13,13 +13,18 @@ const nextConfig = {
   redirects: async () => {
     return [
       {
+        source: "/plugins",
+        destination: "/",
+        permanent: true,
+      },
+      {
         source: "/popular",
-        destination: "/plugins",
+        destination: "/",
         permanent: true,
       },
       {
         source: "/rules",
-        destination: "/plugins",
+        destination: "/",
         permanent: true,
       },
       {
@@ -29,17 +34,17 @@ const nextConfig = {
       },
       {
         source: "/mcp",
-        destination: "/plugins",
+        destination: "/",
         permanent: true,
       },
       {
         source: "/official/:path*",
-        destination: "/plugins",
+        destination: "/",
         permanent: true,
       },
       {
         source: "/generate",
-        destination: "/plugins",
+        destination: "/",
         permanent: true,
       },
       {

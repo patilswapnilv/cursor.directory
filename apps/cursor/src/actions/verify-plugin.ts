@@ -33,7 +33,7 @@ export const setPluginVerifiedAction = adminActionClient
     }
 
     revalidatePath("/admin/plugins");
-    revalidatePath("/plugins");
+    revalidatePath("/");
     revalidatePath(`/plugins/${data.slug}`);
     return { success: true };
   });

@@ -13,7 +13,7 @@ export function GlobalSearchInput() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (search.trim()) {
-      router.push(`/plugins?q=${encodeURIComponent(search.trim())}`);
+      router.push(`/?q=${encodeURIComponent(search.trim())}`);
     }
   };
 

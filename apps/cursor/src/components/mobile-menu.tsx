@@ -106,7 +106,7 @@ export function MobileMenu() {
                   onClick={() => setIsOpen(false)}
                   className={cn(
                     "block rounded-md py-5 text-sm font-medium",
-                    pathname === link.href
+                    link.match(pathname)
                       ? "text-primary"
                       : "text-muted-foreground",
                   )}

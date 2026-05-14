@@ -13,11 +13,7 @@ export function HeroTitle({ totalUsers }: { totalUsers: number }) {
       </h1>
 
       <p className="marketing-copy mx-auto max-w-[760px] text-balance">
-        Discover and install{" "}
-        <Link href="/plugins" className={linkClass}>
-          plugins
-        </Link>{" "}
-        from{" "}
+        Discover and install plugins from{" "}
         <Link href="/members" className={linkClass}>
           {formatNumber(totalUsers)}+ developers
         </Link>

@@ -88,7 +88,7 @@ export const createPluginAction = authActionClient
         throw err;
       }
 
-      revalidatePath("/plugins");
+      revalidatePath("/");
 
       return { slug: result.slug };
     },

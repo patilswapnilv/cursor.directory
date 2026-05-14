@@ -72,20 +72,60 @@ function parseGitHubUrl(url: string): { owner: string; repo: string } | null {
   return { owner: match[1], repo: match[2] };
 }
 
+// Tagged logger so scan-related lines are greppable in the dev terminal
+// and in Vercel function logs. Keep messages structured; the second arg
+// is dumped as JSON so we don't have to invent a format per call site.
+function logInfo(tag: string, msg: string, meta?: Record<string, unknown>) {
+  console.log(
+    `[scan:${tag}] ${msg}${meta ? ` ${JSON.stringify(meta)}` : ""}`,
+  );
+}
+
+function logError(tag: string, msg: string, err: unknown) {
+  const detail =
+    err instanceof Error
+      ? { name: err.name, message: err.message, stack: err.stack }
+      : { value: String(err) };
+  console.error(`[scan:${tag}] ${msg}`, detail);
+}
+
 export async function scanPluginWorkflow(pluginId: string) {
   "use workflow";
 
+  logInfo(pluginId, "workflow start");
+
   const loaded = await loadPlugin(pluginId);
-  if (!loaded) return;
+  if (!loaded) {
+    logInfo(pluginId, "loadPlugin returned null; nothing to scan");
+    return;
+  }
+
+  const tag = loaded.plugin.slug;
 
   if (loaded.permanentlyBlocked) {
+    logInfo(tag, "permanently blocked; short-circuiting");
     await applyBlockedShortCircuit(pluginId);
     return;
   }
 
   await markScanning(pluginId);
-  const verdict = await runSecurityAgent(loaded.plugin);
-  await applyVerdict(pluginId, loaded.prevActive, verdict);
+  try {
+    const verdict = await runSecurityAgent(loaded.plugin);
+    await applyVerdict(pluginId, loaded.prevActive, verdict);
+    logInfo(tag, "workflow complete", {
+      verdict: verdict.verdict,
+      severity: verdict.severity,
+    });
+  } catch (err) {
+    // Compensation: without this the row stays at scan_status='scanning'
+    // forever (no scan_run_id, no flag), which is invisible to admins
+    // until the 15-min staleness threshold in getStuckScans() trips.
+    // Surfacing as 'error' lets the admin re-scan or delete it.
+    const message = err instanceof Error ? err.message : String(err);
+    logError(tag, "workflow failed; marking scan_status=error", err);
+    await markScanFailed(pluginId, message);
+    throw err;
+  }
 }
 
 async function loadPlugin(pluginId: string): Promise<LoadResult | null> {
@@ -138,6 +178,19 @@ async function markScanning(pluginId: string) {
     .eq("id", pluginId);
 }
 
+async function markScanFailed(pluginId: string, errorMessage: string) {
+  "use step";
+  const supabase = await createClient();
+  await supabase
+    .from("plugins")
+    .update({
+      scan_status: "error",
+      flag_summary: errorMessage.slice(0, 500),
+      last_scanned_at: new Date().toISOString(),
+    })
+    .eq("id", pluginId);
+}
+
 async function applyBlockedShortCircuit(pluginId: string) {
   "use step";
   const supabase = await createClient();
@@ -164,10 +217,13 @@ const CLONE_MAX_BUFFER = 4 * 1024 * 1024;
 async function cloneRepo(
   owner: string,
   repo: string,
+  tag: string,
 ): Promise<{ cwd: string; cleanup: () => Promise<void> }> {
   const cwd = await mkdtemp(path.join(tmpdir(), "plugin-scan-"));
   const cleanup = () =>
     rm(cwd, { recursive: true, force: true }).catch(() => {});
+  const startedAt = Date.now();
+  logInfo(tag, "git clone start", { owner, repo, cwd });
   try {
     await execFileAsync(
       "git",
@@ -181,8 +237,12 @@ async function cloneRepo(
       ],
       { timeout: CLONE_TIMEOUT_MS, maxBuffer: CLONE_MAX_BUFFER },
     );
+    logInfo(tag, "git clone complete", {
+      durationMs: Date.now() - startedAt,
+    });
     return { cwd, cleanup };
   } catch (err) {
+    logError(tag, "git clone failed", err);
     await cleanup();
     throw err;
   }
@@ -190,6 +250,12 @@ async function cloneRepo(
 
 async function runSecurityAgent(plugin: ScanInput): Promise<AgentVerdict> {
   "use step";
+
+  const tag = plugin.slug;
+  logInfo(tag, "runSecurityAgent start", {
+    components: plugin.components.length,
+    repository: plugin.repository,
+  });
 
   const apiKey = process.env.CURSOR_API_KEY;
   if (!apiKey) {
@@ -213,7 +279,7 @@ async function runSecurityAgent(plugin: ScanInput): Promise<AgentVerdict> {
   let hasRepo = false;
   try {
     if (repoMatch) {
-      const cloned = await cloneRepo(repoMatch.owner, repoMatch.repo);
+      const cloned = await cloneRepo(repoMatch.owner, repoMatch.repo, tag);
       cwd = cloned.cwd;
       cleanup = cloned.cleanup;
       hasRepo = true;
@@ -221,8 +287,10 @@ async function runSecurityAgent(plugin: ScanInput): Promise<AgentVerdict> {
       cwd = await mkdtemp(path.join(tmpdir(), "plugin-scan-no-repo-"));
       cleanup = () =>
         rm(cwd, { recursive: true, force: true }).catch(() => {});
+      logInfo(tag, "no repo URL; using empty cwd", { cwd });
     }
   } catch (err) {
+    logError(tag, "clone setup failed; returning suspicious verdict", err);
     return {
       verdict: "suspicious",
       severity: "low",
@@ -235,7 +303,14 @@ async function runSecurityAgent(plugin: ScanInput): Promise<AgentVerdict> {
 
   try {
     const prompt = buildPrompt(plugin, { hasRepo });
+    logInfo(tag, "Agent.prompt start", {
+      cwd,
+      hasRepo,
+      promptChars: prompt.length,
+      model: "composer-2",
+    });
 
+    const agentStartedAt = Date.now();
     let result: RunResult;
     try {
       result = await Agent.prompt(prompt, {
@@ -247,12 +322,21 @@ async function runSecurityAgent(plugin: ScanInput): Promise<AgentVerdict> {
     } catch (err) {
       if (err instanceof CursorAgentError && err.isRetryable) {
         // Step retries handle this for us.
+        logError(tag, "Agent.prompt retryable error; will retry", err);
         throw err;
       }
+      logError(tag, "Agent.prompt non-retryable error", err);
       throw new FatalError(
         `Cursor SDK startup failed: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
+
+    logInfo(tag, "Agent.prompt finished", {
+      runId: result.id,
+      status: result.status,
+      durationMs: result.durationMs ?? Date.now() - agentStartedAt,
+      resultChars: result.result?.length ?? 0,
+    });
 
     if (result.status !== "finished") {
       throw new FatalError(
@@ -261,6 +345,11 @@ async function runSecurityAgent(plugin: ScanInput): Promise<AgentVerdict> {
     }
 
     const verdict = parseVerdict(result.result ?? "");
+    logInfo(tag, "verdict parsed", {
+      verdict: verdict.verdict,
+      severity: verdict.severity,
+      categories: verdict.categories,
+    });
     return { ...verdict, runId: result.id };
   } finally {
     await cleanup();
