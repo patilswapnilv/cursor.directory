@@ -1,6 +1,6 @@
 # Cursor Directory
 
-The community hub for Cursor — plugins, MCP servers, events, jobs, and thousands of developers building together.
+The directory of plugins from the Cursor community.
 
 **[cursor.directory](https://cursor.directory)**
 
@@ -93,20 +93,6 @@ Auto-detected components:
 
 See the [Open Plugins specification](https://open-plugins.com/plugin-builders/specification) and [plugin template](https://github.com/cursor/plugin-template) for details.
 
-### Host an Event
-
-Community events are powered by [Luma](https://lu.ma):
-
-1. Go to [cursor.directory/events](https://cursor.directory/events)
-2. Click **Host an event**
-3. Fill out the form — your event will appear on the site automatically
-
-### Post a Job
-
-1. Sign in at [cursor.directory](https://cursor.directory)
-2. Navigate to **Jobs → Post a job**
-3. Fill in the details and submit
-
 ---
 
 ## Tech Stack
@@ -118,6 +104,5 @@ Community events are powered by [Luma](https://lu.ma):
 - **UI**: [Radix UI](https://radix-ui.com) + [shadcn/ui](https://ui.shadcn.com)
 - **Search**: [Fuse.js](https://fusejs.io) (client-side fuzzy search)
 - **URL State**: [nuqs](https://nuqs.47ng.com)
-- **Events**: [Luma API](https://docs.lu.ma)
 - **Linting**: [Biome](https://biomejs.dev)
 
