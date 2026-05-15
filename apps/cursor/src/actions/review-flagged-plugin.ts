@@ -1,10 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { start } from "workflow/api";
 import { z } from "zod";
+import { enqueuePluginScan, kickDrainAfterResponse } from "@/lib/plugins/queue";
 import { createClient } from "@/utils/supabase/admin-client";
-import { scanPluginWorkflow } from "@/workflows/scan-plugin";
 import { ActionError, adminActionClient } from "./safe-action";
 
 const pluginIdSchema = z.object({ pluginId: z.string().uuid() });
@@ -89,7 +88,8 @@ export const rescanPluginAction = adminActionClient
     }
 
     try {
-      await start(scanPluginWorkflow, [pluginId]);
+      await enqueuePluginScan(pluginId);
+      kickDrainAfterResponse();
     } catch (err) {
       throw new ActionError(
         `Failed to enqueue scan: ${err instanceof Error ? err.message : String(err)}`,
