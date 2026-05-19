@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/utils/supabase/server";
-import { authActionClient } from "./safe-action";
+import { ActionError, authActionClient } from "./safe-action";
 
 export const upsertCompanyAction = authActionClient
   .metadata({
@@ -41,46 +41,47 @@ export const upsertCompanyAction = authActionClient
     }) => {
       const supabase = await createClient();
 
+      // Only treat the request as an edit when a row with the provided id
+      // already exists. The form always generates a client-side nanoid for new
+      // companies, so the presence of `id` alone does not imply an edit.
       if (id) {
         const { data: existing } = await supabase
           .from("companies")
-          .select("id")
+          .select("id, owner_id")
           .eq("id", id)
-          .eq("owner_id", userId)
-          .single();
+          .maybeSingle();
 
-        if (!existing) {
-          throw new Error("You don't have permission to edit this company");
+        if (existing && existing.owner_id !== userId) {
+          throw new ActionError(
+            "You don't have permission to edit this company",
+          );
         }
       }
 
-      await supabase.from("companies").upsert(
-        {
-          id: id ?? undefined,
-          name,
-          image,
-          location,
-          slug: slug ?? undefined,
-          bio,
-          website,
-          social_x_link,
-          public: is_public,
-          owner_id: userId,
-        },
-        {
-          onConflict: "slug",
-        },
-      );
-
       const { data, error } = await supabase
         .from("companies")
+        .upsert(
+          {
+            id: id ?? undefined,
+            name,
+            image,
+            location,
+            slug: slug ?? undefined,
+            bio,
+            website,
+            social_x_link,
+            public: is_public,
+            owner_id: userId,
+          },
+          {
+            onConflict: "id",
+          },
+        )
         .select("id, slug")
-        .eq("id", id)
-        .eq("owner_id", userId)
         .single();
 
       if (error) {
-        throw new Error(error.message);
+        throw new ActionError(error.message);
       }
 
       if (shouldRedirect) {
