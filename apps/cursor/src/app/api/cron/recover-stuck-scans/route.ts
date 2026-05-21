@@ -1,8 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { start } from "workflow/api";
 import { requireCronAuth } from "@/lib/cron-auth";
+import { enqueuePluginScan } from "@/lib/plugins/queue";
 import { createClient } from "@/utils/supabase/admin-client";
-import { scanPluginWorkflow } from "@/workflows/scan-plugin";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -12,8 +11,8 @@ export const maxDuration = 60;
 // and this cron see the same set of rows.
 const STALE_AFTER_MS = 15 * 60 * 1000;
 
-// Hard cap per cron tick. Each start() is cheap (it just enqueues the workflow)
-// but we don't want to flood the workflow service if a backlog builds up.
+// Hard cap per cron tick. Each enqueuePluginScan() is cheap (just a pgmq.send)
+// but we don't want to flood the queue if a backlog builds up.
 const MAX_RETRIES_PER_RUN = 25;
 
 export async function GET(request: NextRequest) {
@@ -36,10 +35,15 @@ export async function GET(request: NextRequest) {
       throw new Error(`Failed to query stuck plugins: ${error.message}`);
     }
 
-    const results: Array<{ id: string; slug: string; ok: boolean; error?: string }> = [];
+    const results: Array<{
+      id: string;
+      slug: string;
+      ok: boolean;
+      error?: string;
+    }> = [];
 
     for (const plugin of stuck ?? []) {
-      // Reset back to pending so the workflow's loadPlugin → markScanning
+      // Reset back to pending so the worker's loadPlugin → markScanning
       // transition is idempotent (the prevActive snapshot is recomputed).
       if (plugin.scan_status === "scanning") {
         await supabase
@@ -49,7 +53,7 @@ export async function GET(request: NextRequest) {
       }
 
       try {
-        await start(scanPluginWorkflow, [plugin.id]);
+        await enqueuePluginScan(plugin.id);
         results.push({ id: plugin.id, slug: plugin.slug, ok: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

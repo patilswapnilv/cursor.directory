@@ -100,9 +100,35 @@ See the [Open Plugins specification](https://open-plugins.com/plugin-builders/sp
 - **Framework**: [Next.js](https://nextjs.org) (App Router, Turbopack)
 - **Runtime**: [Bun](https://bun.sh)
 - **Database**: [Supabase](https://supabase.com) (PostgreSQL)
+- **Job Queue**: [Supabase Queues](https://supabase.com/docs/guides/queues) (`pgmq`) drained by a 1-min Vercel cron
 - **Styling**: [Tailwind CSS](https://tailwindcss.com)
 - **UI**: [Radix UI](https://radix-ui.com) + [shadcn/ui](https://ui.shadcn.com)
 - **Search**: [Fuse.js](https://fusejs.io) (client-side fuzzy search)
 - **URL State**: [nuqs](https://nuqs.47ng.com)
 - **Linting**: [Biome](https://biomejs.dev)
+
+## Plugin security scan
+
+Submitted plugins are auto-reviewed by a Cursor SDK agent (`composer-2`) running
+in `local` mode against a fresh clone of the plugin's repo plus its inline
+component content. The verdict (`safe` / `suspicious` / `malicious`) is written
+back to `plugins.scan_status` and surfaces in the admin queue.
+
+The scan is asynchronous and runs out of the request lifecycle:
+
+1. **Enqueue** — server actions and the recover-stuck-scans cron call
+   `enqueuePluginScan(pluginId)` which sends a message to the `plugin_scans`
+   pgmq queue.
+2. **Kick** — user-facing actions also fire `kickDrainAfterResponse()` so the
+   drain route is called via `next/server` `after()` immediately after the
+   response is flushed. Scans typically start within a few hundred ms.
+3. **Drain** — `/api/queue/plugin-scans/drain` reads one message
+   (`vt=900s`, `n=1`), runs `runPluginScan(pluginId)`, archives the message on
+   success, leaves it for VT-expiry on retryable error, or buries it after
+   `MAX_ATTEMPTS=5` deliveries.
+4. **Cron safety net** — Vercel cron hits the same drain route every minute so
+   any messages that missed their kick still get processed.
+
+The drain route uses `maxDuration = 800` (Vercel Pro+ Fluid Compute ceiling) and
+relies on `CURSOR_API_KEY` + `CRON_SECRET` from the env file.
 

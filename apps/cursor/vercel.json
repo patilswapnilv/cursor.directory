@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/recover-stuck-scans",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/queue/plugin-scans/drain",
+      "schedule": "* * * * *"
     }
   ]
 }

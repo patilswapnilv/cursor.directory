@@ -1,11 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { start } from "workflow/api";
 import { z } from "zod";
+import { enqueuePluginScan, kickDrainAfterResponse } from "@/lib/plugins/queue";
 import { pluginScanLimit } from "@/lib/rate-limit";
 import { createClient } from "@/utils/supabase/admin-client";
-import { scanPluginWorkflow } from "@/workflows/scan-plugin";
 import { ActionError, authActionClient } from "./safe-action";
 
 const componentSchema = z.object({
@@ -148,9 +147,10 @@ export const updatePluginAction = authActionClient
       }
 
       try {
-        await start(scanPluginWorkflow, [id]);
-      } catch (workflowError) {
-        console.error("Failed to enqueue scan workflow", workflowError);
+        await enqueuePluginScan(id);
+        kickDrainAfterResponse();
+      } catch (queueError) {
+        console.error("Failed to enqueue plugin scan", queueError);
       }
 
       revalidatePath("/");

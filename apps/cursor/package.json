@@ -48,7 +48,6 @@
     "slugify": "^1.6.9",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
-    "workflow": "^4.2.4",
     "zod": "^4.4.3"
   },
   "devDependencies": {
