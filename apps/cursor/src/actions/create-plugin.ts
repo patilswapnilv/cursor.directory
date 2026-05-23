@@ -37,6 +37,7 @@ export const createPluginAction = authActionClient
       repository: z.string().url().nullable().optional(),
       homepage: z.string().url().nullable().optional(),
       keywords: z.array(z.string()).optional(),
+      githubRepoId: z.number().int().positive().nullable().optional(),
       components: z
         .array(componentSchema)
         .min(1, "At least one component is required"),
@@ -51,6 +52,7 @@ export const createPluginAction = authActionClient
         repository,
         homepage,
         keywords,
+        githubRepoId,
         components,
       },
       ctx: { userId },
@@ -74,7 +76,12 @@ export const createPluginAction = authActionClient
             keywords,
             components,
           },
-          { ownerId: userId, source: "user", skipScan: false },
+          {
+            ownerId: userId,
+            source: "user",
+            skipScan: false,
+            githubRepoId: githubRepoId ?? null,
+          },
         );
       } catch (err) {
         if (err instanceof InsertPluginError) {

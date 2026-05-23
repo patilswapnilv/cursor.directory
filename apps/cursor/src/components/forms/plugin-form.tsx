@@ -72,6 +72,7 @@ type ParsedPlugin = {
   author_name?: string;
   author_url?: string;
   author_avatar?: string;
+  github_repo_id?: number;
   components: ParsedComponent[];
 };
 
@@ -201,6 +202,7 @@ export function PluginForm() {
       repository: parsed.repository,
       homepage: parsed.homepage ?? null,
       keywords: parsed.keywords,
+      githubRepoId: parsed.github_repo_id ?? null,
       components: validComponents.map((c) => ({
         type: c.type as any,
         name: c.name.trim(),

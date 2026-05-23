@@ -127,7 +127,7 @@ export const updatePluginAction = authActionClient
       const { data: existing, error: fetchError } = await supabase
         .from("plugins")
         .select(
-          "id, owner_id, slug, repository, active, plugin_components(type, name, slug, description, content, metadata, sort_order)",
+          "id, owner_id, slug, repository, github_repo_id, active, plugin_components(type, name, slug, description, content, metadata, sort_order)",
         )
         .eq("id", id)
         .single();
@@ -149,6 +149,13 @@ export const updatePluginAction = authActionClient
         );
       }
 
+      // Source URL is pinned to the parsed GitHub repo so an owner can't keep
+      // the verified-looking badge while swapping the install payload.
+      const repositoryLocked = existing.github_repo_id != null;
+      const effectiveRepository = repositoryLocked
+        ? (existing.repository ?? null)
+        : (repository ?? null);
+
       const prevComponents = (existing.plugin_components ??
         []) as ExistingComponent[];
 
@@ -156,7 +163,7 @@ export const updatePluginAction = authActionClient
         prevComponents,
         existing.repository ?? null,
         components,
-        repository ?? null,
+        effectiveRepository,
       );
 
       const shouldRescan = installChanged;
@@ -164,7 +171,7 @@ export const updatePluginAction = authActionClient
         name,
         description,
         logo: logo || null,
-        repository: repository || null,
+        repository: effectiveRepository,
         homepage: homepage || null,
         keywords: keywords || [],
       };
@@ -240,6 +247,7 @@ export const updatePluginAction = authActionClient
       return {
         slug: existing.slug,
         rescanQueued: shouldRescan,
+        repositoryLocked,
       };
     },
   );
