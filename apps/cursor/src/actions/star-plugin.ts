@@ -2,9 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createClient as createAdminClient } from "@/utils/supabase/admin-client";
 import { createClient } from "@/utils/supabase/server";
-import { authActionClient } from "./safe-action";
+import { ActionError, authActionClient } from "./safe-action";
 
 export const starPluginAction = authActionClient
   .metadata({
@@ -16,32 +15,17 @@ export const starPluginAction = authActionClient
       slug: z.string(),
     }),
   )
-  .action(async ({ parsedInput: { pluginId, slug }, ctx: { userId } }) => {
+  .action(async ({ parsedInput: { pluginId, slug } }) => {
+    // User-scoped client so `auth.uid()` inside the SECURITY DEFINER RPC
+    // authorizes against the caller, not the service role.
     const supabase = await createClient();
 
-    const { data: existing } = await supabase
-      .from("plugin_stars")
-      .select("plugin_id")
-      .eq("plugin_id", pluginId)
-      .eq("user_id", userId)
-      .maybeSingle();
+    const { error } = await supabase.rpc("toggle_plugin_star", {
+      plugin_id_input: pluginId,
+    });
 
-    const admin = await createAdminClient();
-
-    if (existing) {
-      await supabase
-        .from("plugin_stars")
-        .delete()
-        .eq("plugin_id", pluginId)
-        .eq("user_id", userId);
-
-      await admin.rpc("decrement_star_count", { plugin_id_input: pluginId });
-    } else {
-      await supabase
-        .from("plugin_stars")
-        .insert({ plugin_id: pluginId, user_id: userId });
-
-      await admin.rpc("increment_star_count", { plugin_id_input: pluginId });
+    if (error) {
+      throw new ActionError(`Failed to update star: ${error.message}`);
     }
 
     revalidatePath("/");
