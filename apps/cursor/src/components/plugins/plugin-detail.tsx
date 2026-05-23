@@ -236,6 +236,10 @@ export function PluginDetailView({ plugin }: { plugin: PluginRow }) {
     rules[0]?.slug ?? null,
   );
 
+  // Component content stays visible for inactive plugins so owners can review;
+  // only one-click install is hidden.
+  const installable = plugin.active === true;
+
   return (
     <div className="min-h-screen px-4 pt-24 md:pt-32">
       <div className="page-shell max-w-4xl px-0 py-8">
@@ -361,11 +365,16 @@ export function PluginDetailView({ plugin }: { plugin: PluginRow }) {
             expandedRule={expandedRule}
             setExpandedRule={setExpandedRule}
             onInstall={handleInstall}
+            installable={installable}
           />
         )}
 
         {activeTab === "mcp_server" && mcps.length > 0 && (
-          <McpSection mcps={mcps} onInstall={handleInstall} />
+          <McpSection
+            mcps={mcps}
+            onInstall={handleInstall}
+            installable={installable}
+          />
         )}
 
         {activeTab !== "rule" &&
@@ -375,6 +384,7 @@ export function PluginDetailView({ plugin }: { plugin: PluginRow }) {
               components={activeComponents}
               type={activeTab}
               onInstall={handleInstall}
+              installable={installable}
             />
           )}
       </div>
@@ -387,11 +397,13 @@ function RulesSection({
   expandedRule,
   setExpandedRule,
   onInstall,
+  installable,
 }: {
   rules: NonNullable<PluginRow["plugin_components"]>;
   expandedRule: string | null;
   setExpandedRule: (slug: string | null) => void;
   onInstall: () => void;
+  installable: boolean;
 }) {
   return (
     <div>
@@ -423,21 +435,23 @@ function RulesSection({
                     {rule.name}
                   </span>
                 </button>
-                {deepLinkUsable ? (
-                  <a
-                    href={deepLink}
-                    className="shrink-0 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
-                    onClick={onInstall}
-                  >
-                    Add to Cursor
-                  </a>
-                ) : (
-                  <CopyButton
-                    text={ruleContent}
-                    onCopy={onInstall}
-                    title="Rule too large to install via deeplink — copy and paste into Cursor"
-                  />
-                )}
+                {installable ? (
+                  deepLinkUsable ? (
+                    <a
+                      href={deepLink}
+                      className="shrink-0 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                      onClick={onInstall}
+                    >
+                      Add to Cursor
+                    </a>
+                  ) : (
+                    <CopyButton
+                      text={ruleContent}
+                      onCopy={onInstall}
+                      title="Rule too large to install via deeplink — copy and paste into Cursor"
+                    />
+                  )
+                ) : null}
               </div>
 
               {isExpanded && (
@@ -498,9 +512,11 @@ function resolveMcpConfig(
 function McpSection({
   mcps,
   onInstall,
+  installable,
 }: {
   mcps: NonNullable<PluginRow["plugin_components"]>;
   onInstall: () => void;
+  installable: boolean;
 }) {
   return (
     <div className="space-y-3">
@@ -546,9 +562,9 @@ function McpSection({
                   <ExternalLinkIcon />
                 </Link>
               )}
-              {installLink ? (
+              {installable && installLink ? (
                 <CursorDeepLink mcp_link={installLink} onInstall={onInstall} />
-              ) : mcp.content ? (
+              ) : installable && mcp.content ? (
                 <CopyButton text={mcp.content} onCopy={onInstall} />
               ) : null}
             </div>
@@ -845,10 +861,12 @@ function GenericComponentSection({
   components,
   type,
   onInstall,
+  installable,
 }: {
   components: NonNullable<PluginRow["plugin_components"]>;
   type: ComponentType;
   onInstall: () => void;
+  installable: boolean;
 }) {
   return (
     <div>
@@ -861,7 +879,8 @@ function GenericComponentSection({
             <CardContent className="p-4 space-y-2">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-sm font-medium">{comp.name}</h3>
-                {comp.content &&
+                {installable &&
+                  comp.content &&
                   (() => {
                     if (type !== "command") {
                       return (
