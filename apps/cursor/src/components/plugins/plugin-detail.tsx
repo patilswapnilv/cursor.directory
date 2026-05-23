@@ -235,6 +235,9 @@ export function PluginDetailView({ plugin }: { plugin: PluginRow }) {
   const [expandedRule, setExpandedRule] = useState<string | null>(
     rules[0]?.slug ?? null,
   );
+  const [expandedMcp, setExpandedMcp] = useState<string | null>(
+    mcps[0]?.slug ?? null,
+  );
 
   // Component content stays visible for inactive plugins so owners can review;
   // only one-click install is hidden.
@@ -374,6 +377,8 @@ export function PluginDetailView({ plugin }: { plugin: PluginRow }) {
             mcps={mcps}
             onInstall={handleInstall}
             installable={installable}
+            expandedMcp={expandedMcp}
+            setExpandedMcp={setExpandedMcp}
           />
         )}
 
@@ -513,10 +518,14 @@ function McpSection({
   mcps,
   onInstall,
   installable,
+  expandedMcp,
+  setExpandedMcp,
 }: {
   mcps: NonNullable<PluginRow["plugin_components"]>;
   onInstall: () => void;
   installable: boolean;
+  expandedMcp: string | null;
+  setExpandedMcp: (slug: string | null) => void;
 }) {
   return (
     <div className="space-y-3">
@@ -526,48 +535,90 @@ function McpSection({
         const mcpLink = meta?.mcp_link as string | undefined;
 
         let installLink = mcpLink ?? null;
-        if (!installLink) {
-          try {
-            const resolved = resolveMcpConfig(mcp.content, meta);
-            if (resolved) {
+        let configPreview: string | null = null;
+        try {
+          const resolved = resolveMcpConfig(mcp.content, meta);
+          if (resolved) {
+            const serialized = JSON.stringify(resolved.config, null, 2);
+            configPreview = serialized;
+            if (!installLink) {
               installLink = buildMCPInstallDeepLink(
                 resolved.name,
                 JSON.stringify(resolved.config),
               );
             }
-          } catch {
-            installLink = null;
           }
+        } catch {
+          installLink = installLink ?? null;
+        }
+        if (!configPreview && mcp.content) {
+          configPreview = mcp.content;
         }
 
+        const isExpanded = expandedMcp === mcp.slug;
+        const canExpand = Boolean(configPreview);
+
         return (
-          <div
-            key={mcp.slug}
-            className="flex items-center justify-between gap-4 rounded-lg border border-border p-4"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="shrink-0 rounded-md border border-border bg-muted px-2 py-1 text-xs font-mono text-muted-foreground">
-                MCP
-              </span>
-              <span className="truncate text-sm font-medium">{mcp.name}</span>
+          <div key={mcp.slug} className="rounded-lg border border-border">
+            <div className="flex items-center justify-between gap-4 p-4">
+              <button
+                type="button"
+                className="flex items-center gap-2 min-w-0 text-left disabled:cursor-default"
+                onClick={() =>
+                  canExpand && setExpandedMcp(isExpanded ? null : mcp.slug)
+                }
+                disabled={!canExpand}
+              >
+                {canExpand ? (
+                  <ChevronDown
+                    className={cn(
+                      "size-4 shrink-0 text-muted-foreground transition-transform",
+                      isExpanded && "rotate-180",
+                    )}
+                  />
+                ) : (
+                  <span className="size-4 shrink-0" />
+                )}
+                <span className="shrink-0 rounded-md border border-border bg-muted px-2 py-1 text-xs font-mono text-muted-foreground">
+                  MCP
+                </span>
+                <span className="truncate text-sm font-medium">{mcp.name}</span>
+              </button>
+              <div className="flex items-center gap-3 shrink-0">
+                {link && (
+                  <Link
+                    href={link}
+                    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                    target="_blank"
+                  >
+                    <span>Source</span>
+                    <ExternalLinkIcon />
+                  </Link>
+                )}
+                {installable && installLink ? (
+                  <CursorDeepLink
+                    mcp_link={installLink}
+                    onInstall={onInstall}
+                  />
+                ) : installable && mcp.content ? (
+                  <CopyButton text={mcp.content} onCopy={onInstall} />
+                ) : null}
+              </div>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
-              {link && (
-                <Link
-                  href={link}
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                  target="_blank"
-                >
-                  <span>Source</span>
-                  <ExternalLinkIcon />
-                </Link>
-              )}
-              {installable && installLink ? (
-                <CursorDeepLink mcp_link={installLink} onInstall={onInstall} />
-              ) : installable && mcp.content ? (
-                <CopyButton text={mcp.content} onCopy={onInstall} />
-              ) : null}
-            </div>
+
+            {isExpanded && configPreview && (
+              <div className="px-4 pb-4">
+                <p className="mb-2 text-[11px] uppercase tracking-wide text-muted-foreground/80">
+                  This config will be passed to Cursor on install. Inspect
+                  `command`, `args`, and `env` before continuing.
+                </p>
+                <div className="max-h-96 overflow-y-auto rounded-lg border border-border bg-editor p-4 font-mono text-xs leading-6 text-muted-foreground">
+                  <code className="block whitespace-pre-wrap">
+                    {configPreview}
+                  </code>
+                </div>
+              </div>
+            )}
           </div>
         );
       })}
