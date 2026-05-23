@@ -93,7 +93,9 @@ function toBase64(input: string): string {
 }
 
 function buildMCPInstallDeepLink(name: string, config: string) {
-  return `cursor://anysphere.cursor-deeplink/mcp/install?name=${encodeURIComponent(name)}&config=${toBase64(config)}`;
+  // `+` in a query string decodes to a space, so the base64 must be
+  // URL-encoded or Cursor base64-decodes garbage and throws "Not valid JSON".
+  return `cursor://anysphere.cursor-deeplink/mcp/install?name=${encodeURIComponent(name)}&config=${encodeURIComponent(toBase64(config))}`;
 }
 
 function ScanStatusBanner({
