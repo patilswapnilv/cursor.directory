@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { resolveGithubRepoIdFromRepository } from "@/lib/github-plugin/parse";
 import { InsertPluginError, insertPlugin } from "@/lib/plugins/insert";
 import { pluginScanLimit } from "@/lib/rate-limit";
 import { ActionError, authActionClient } from "./safe-action";
@@ -37,7 +38,6 @@ export const createPluginAction = authActionClient
       repository: z.string().url().nullable().optional(),
       homepage: z.string().url().nullable().optional(),
       keywords: z.array(z.string()).optional(),
-      githubRepoId: z.number().int().positive().nullable().optional(),
       components: z
         .array(componentSchema)
         .min(1, "At least one component is required"),
@@ -52,7 +52,6 @@ export const createPluginAction = authActionClient
         repository,
         homepage,
         keywords,
-        githubRepoId,
         components,
       },
       ctx: { userId },
@@ -63,6 +62,12 @@ export const createPluginAction = authActionClient
           "Too many plugin submissions in the last hour. Please try again later.",
         );
       }
+
+      // Never trust a client-supplied github_repo_id — resolve from the
+      // repository URL via GitHub so squatters cannot block idempotent imports.
+      const githubRepoId = await resolveGithubRepoIdFromRepository(repository, {
+        maxWaitMs: 3000,
+      });
 
       let result: { id: string; slug: string };
       try {
@@ -80,7 +85,7 @@ export const createPluginAction = authActionClient
             ownerId: userId,
             source: "user",
             skipScan: false,
-            githubRepoId: githubRepoId ?? null,
+            githubRepoId,
           },
         );
       } catch (err) {

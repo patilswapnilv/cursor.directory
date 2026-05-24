@@ -250,6 +250,21 @@ export type GitHubRepoMeta = {
   license_spdx: string | null;
 };
 
+/**
+ * Resolve GitHub's stable numeric repo id from a repository URL.
+ * Returns null for non-GitHub URLs or when the repo cannot be read.
+ */
+export async function resolveGithubRepoIdFromRepository(
+  repository: string | null | undefined,
+  opts: FetchOptions = {},
+): Promise<number | null> {
+  if (!repository) return null;
+  const parsed = parseGitHubUrl(repository);
+  if (!parsed) return null;
+  const meta = await fetchGitHubRepoMeta(parsed.owner, parsed.repo, opts);
+  return meta?.id ?? null;
+}
+
 export async function fetchGitHubRepoMeta(
   owner: string,
   repo: string,
