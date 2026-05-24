@@ -2,7 +2,7 @@
  * Parse a public GitHub repo into a Cursor plugin shape.
  *
  * Pure module — no `"use server"`, no auth context, no DB calls. Safe to call
- * from server actions, workflows, or one-shot scripts.
+ * from server actions, queue workers, or one-shot scripts.
  *
  * Optional `GITHUB_TOKEN` env var bumps the rate limit on the Repos / git tree
  * endpoints from 60 req/h (unauth) to 5,000 req/h (auth).

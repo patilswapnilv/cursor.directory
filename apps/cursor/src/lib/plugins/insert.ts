@@ -4,12 +4,11 @@
  * Wrapped by [`createPluginAction`](src/actions/create-plugin.ts) for the auth'd
  * user-submission path and by the seed scripts for bulk import. Server actions
  * stay responsible for auth, rate-limiting, and `revalidatePath` — this lib
- * only touches the database and (optionally) the scan workflow.
+ * only touches the database and (optionally) enqueues the security scan.
  */
 
-import { start } from "workflow/api";
+import { enqueuePluginScan, kickDrainAfterResponse } from "@/lib/plugins/queue";
 import { createClient } from "@/utils/supabase/admin-client";
-import { scanPluginWorkflow } from "@/workflows/scan-plugin";
 
 type ComponentInput = {
   type: string;
@@ -45,7 +44,7 @@ export type InsertPluginOptions = {
    * and skip the security scan. Used for the curated bulk seed.
    *
    * When false (default for user submissions): insert as `active=false,
-   * scan_status='pending'` and enqueue `scanPluginWorkflow`.
+   * scan_status='pending'` and enqueue the scan via `enqueuePluginScan`.
    */
   skipScan?: boolean;
 };
@@ -156,9 +155,13 @@ export async function insertPlugin(
 
   if (!skipScan) {
     try {
-      await start(scanPluginWorkflow, [plugin.id]);
-    } catch (workflowError) {
-      console.error("Failed to enqueue scan workflow", workflowError);
+      await enqueuePluginScan(plugin.id);
+      kickDrainAfterResponse();
+    } catch (queueError) {
+      // Don't fail the insert if the queue is unreachable — the
+      // recover-stuck-scans cron will re-enqueue any rows left at
+      // scan_status='pending' after 15 min.
+      console.error("Failed to enqueue plugin scan", queueError);
     }
   }
 
