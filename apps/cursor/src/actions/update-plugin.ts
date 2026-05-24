@@ -48,19 +48,21 @@ function componentKey(type: string, slug: string): string {
 }
 
 // Only fields that affect the install payload — cosmetic edits to name,
-// description, sort_order, or metadata must not trigger a rescan. The edit
-// form does not surface metadata (GitHub imports store MCP config there).
+// description, or sort_order must not trigger a rescan. MCP install links and
+// configs can live in metadata, so compare the metadata that will be saved.
 function fingerprintComponent(c: {
   type: string;
   slug?: string | null;
   name: string;
   content?: string | null;
+  metadata?: Record<string, unknown> | null;
 }): string {
   const slug = c.slug || slugify(c.name);
   return JSON.stringify({
     type: c.type,
     slug,
     content: c.content ?? "",
+    metadata: c.metadata ?? {},
   });
 }
 
@@ -95,7 +97,20 @@ function installRelevantChanged(
     .sort((a, b) => a.sort_order - b.sort_order)
     .map(fingerprintComponent)
     .sort();
-  const nextSorted = nextComponents.map(fingerprintComponent).sort();
+  const prevByKey = new Map(
+    prevComponents.map((c) => [
+      componentKey(c.type, c.slug || slugify(c.name)),
+      c,
+    ]),
+  );
+  const nextSorted = nextComponents
+    .map((component) =>
+      fingerprintComponent({
+        ...component,
+        metadata: resolveComponentMetadata(component, prevByKey),
+      }),
+    )
+    .sort();
 
   for (let i = 0; i < prevSorted.length; i++) {
     if (prevSorted[i] !== nextSorted[i]) return true;
