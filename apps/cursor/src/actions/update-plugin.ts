@@ -43,22 +43,38 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+function componentKey(type: string, slug: string): string {
+  return `${type}:${slug}`;
+}
+
 // Only fields that affect the install payload — cosmetic edits to name,
-// description, or sort_order must not trigger a rescan.
+// description, sort_order, or metadata must not trigger a rescan. The edit
+// form does not surface metadata (GitHub imports store MCP config there).
 function fingerprintComponent(c: {
   type: string;
   slug?: string | null;
   name: string;
   content?: string | null;
-  metadata?: Record<string, unknown> | null;
 }): string {
   const slug = c.slug || slugify(c.name);
   return JSON.stringify({
     type: c.type,
     slug,
     content: c.content ?? "",
-    metadata: c.metadata ?? {},
   });
+}
+
+function resolveComponentMetadata(
+  comp: ComponentInput,
+  prevByKey: Map<string, ExistingComponent>,
+): Record<string, unknown> {
+  const slug = comp.slug || slugify(comp.name);
+  const submitted = comp.metadata;
+  if (submitted && Object.keys(submitted).length > 0) {
+    return submitted;
+  }
+  const prev = prevByKey.get(componentKey(comp.type, slug));
+  return prev?.metadata ?? {};
 }
 
 function installRelevantChanged(
@@ -211,6 +227,13 @@ export const updatePluginAction = authActionClient
         );
       }
 
+      const prevByKey = new Map(
+        prevComponents.map((c) => [
+          componentKey(c.type, c.slug || slugify(c.name)),
+          c,
+        ]),
+      );
+
       const componentRows = components.map((comp, i) => ({
         plugin_id: id,
         type: comp.type,
@@ -218,7 +241,7 @@ export const updatePluginAction = authActionClient
         slug: comp.slug || slugify(comp.name),
         description: comp.description || null,
         content: comp.content || null,
-        metadata: comp.metadata || {},
+        metadata: resolveComponentMetadata(comp, prevByKey),
         sort_order: i,
       }));
 

@@ -142,7 +142,6 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
         slug: slugify(c.name),
         description: c.description.trim() || undefined,
         content: c.content.trim() || undefined,
-        metadata: {},
       })),
     });
   };
