@@ -273,7 +273,7 @@ export const updatePluginAction = authActionClient
         try {
           await enqueuePluginScan(id);
           kickDrainAfterResponse();
-        } catch (workflowError) {
+        } catch (queueError) {
           console.error("Failed to enqueue plugin scan", queueError);
         }
       }
