@@ -172,13 +172,6 @@ export const updatePluginAction = authActionClient
         );
       }
 
-      const { success } = await pluginScanLimit(userId);
-      if (!success) {
-        throw new ActionError(
-          "Too many plugin updates in the last hour. Please try again later.",
-        );
-      }
-
       // Source URL is pinned to the parsed GitHub repo so an owner can't keep
       // the verified-looking badge while swapping the install payload.
       const repositoryLocked = existing.github_repo_id != null;
@@ -197,49 +190,13 @@ export const updatePluginAction = authActionClient
       );
 
       const shouldRescan = installChanged;
-      const updatePayload: Record<string, unknown> = {
-        name,
-        description,
-        logo: logo || null,
-        repository: effectiveRepository,
-        homepage: homepage || null,
-        keywords: keywords || [],
-      };
-
-      if (shouldRescan && existing.active) {
-        updatePayload.active = false;
-        updatePayload.scan_status = "pending";
-        updatePayload.flag_summary = null;
-        updatePayload.flag_reasons = [];
-        updatePayload.flag_severity = null;
-        updatePayload.flagged_at = null;
-      }
-
-      const { error: updateError } = await supabase
-        .from("plugins")
-        .update(updatePayload)
-        .eq("id", id);
-
-      if (updateError) {
-        if (updateError.code === "23505") {
+      if (shouldRescan) {
+        const { success } = await pluginScanLimit(userId);
+        if (!success) {
           throw new ActionError(
-            "A plugin with this name already exists. Please choose a different name.",
+            "Too many plugin updates in the last hour. Please try again later.",
           );
         }
-        throw new ActionError(
-          `Failed to update plugin: ${updateError.message}`,
-        );
-      }
-
-      const { error: deleteError } = await supabase
-        .from("plugin_components")
-        .delete()
-        .eq("plugin_id", id);
-
-      if (deleteError) {
-        throw new ActionError(
-          `Failed to update components: ${deleteError.message}`,
-        );
       }
 
       const prevByKey = new Map(
@@ -260,15 +217,32 @@ export const updatePluginAction = authActionClient
         sort_order: i,
       }));
 
-      const { error: compError } = await supabase
-        .from("plugin_components")
-        .insert(componentRows);
+      const { error: updateError } = await supabase.rpc(
+        "update_plugin_with_components",
+        {
+          p_plugin_id: id,
+          p_name: name,
+          p_description: description,
+          p_logo: logo || null,
+          p_repository: effectiveRepository,
+          p_homepage: homepage || null,
+          p_keywords: keywords || [],
+          p_components: componentRows,
+          p_deactivate_for_scan: shouldRescan && existing.active,
+        },
+      );
 
-      if (compError) {
+      if (updateError) {
+        if (updateError.code === "23505") {
+          throw new ActionError(
+            "A plugin with this name already exists. Please choose a different name.",
+          );
+        }
         throw new ActionError(
-          `Failed to save plugin components: ${compError.message}`,
+          `Failed to update plugin: ${updateError.message}`,
         );
       }
+
       if (shouldRescan) {
         try {
           await enqueuePluginScan(id);
