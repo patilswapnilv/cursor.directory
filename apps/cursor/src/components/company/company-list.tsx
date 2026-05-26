@@ -10,6 +10,7 @@ import { CompanyCard } from "./company-card";
 
 export function CompanyList({ data }: { data?: Company[] | null }) {
   const [companies, setCompanies] = useState<Company[]>(data ?? []);
+  const [isSearching, setIsSearching] = useState(false);
   const [search, setSearch] = useQueryState("q");
 
   useEffect(() => {
@@ -17,18 +18,20 @@ export function CompanyList({ data }: { data?: Company[] | null }) {
 
     // No search: show the full server-rendered list.
     if (!term) {
+      setIsSearching(false);
       setCompanies(data ?? []);
       return;
     }
 
     // With a search term, query the entire companies table rather than
     // filtering only the rows that happen to be loaded on the page.
-    setCompanies([]);
+    setIsSearching(true);
     let active = true;
     const handle = setTimeout(async () => {
       const results = await searchCompanies(term);
       if (active) {
         setCompanies(results);
+        setIsSearching(false);
       }
     }, 200);
 
@@ -47,6 +50,10 @@ export function CompanyList({ data }: { data?: Company[] | null }) {
           {companies?.map((company) => (
             <CompanyCard key={company.id} company={company} />
           ))}
+        </div>
+      ) : isSearching ? (
+        <div className="mt-24 text-center text-sm text-muted-foreground">
+          Searching...
         </div>
       ) : (
         <div className="mt-24 flex flex-col items-center">
