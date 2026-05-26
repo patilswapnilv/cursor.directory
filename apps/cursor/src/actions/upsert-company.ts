@@ -16,7 +16,10 @@ export const upsertCompanyAction = authActionClient
   .schema(
     z.object({
       id: z.string().optional(),
-      name: z.string(),
+      name: z
+        .string()
+        .trim()
+        .min(2, { message: "Name must be at least 2 characters." }),
       image: z.string().url().nullable(),
       slug: z.string().optional(),
       location: z.string().nullable(),
@@ -31,7 +34,7 @@ export const upsertCompanyAction = authActionClient
     async ({
       parsedInput: {
         id,
-        name: rawName,
+        name,
         image,
         slug,
         location,
@@ -45,7 +48,6 @@ export const upsertCompanyAction = authActionClient
     }) => {
       const supabase = await createClient();
 
-      const name = rawName.trim();
       const nameKey = name.toLowerCase();
 
       // Only treat the request as an edit when a row with the provided id

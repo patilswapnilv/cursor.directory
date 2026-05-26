@@ -143,6 +143,7 @@ export function CompanySelect({
       return;
     }
 
+    setResults([]);
     let active = true;
     setLoading(true);
 

@@ -23,6 +23,7 @@ export function CompanyList({ data }: { data?: Company[] | null }) {
 
     // With a search term, query the entire companies table rather than
     // filtering only the rows that happen to be loaded on the page.
+    setCompanies([]);
     let active = true;
     const handle = setTimeout(async () => {
       const results = await searchCompanies(term);
