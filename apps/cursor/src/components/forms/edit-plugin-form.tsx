@@ -58,6 +58,7 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
   const [description, setDescription] = useState(data.description ?? "");
   const [logo, setLogo] = useState<string | null>(data.logo);
   const [repository, setRepository] = useState(data.repository ?? "");
+  const repositoryLocked = data.github_repo_id != null;
   const [homepage, setHomepage] = useState(data.homepage ?? "");
   const [keywords, setKeywords] = useState(data.keywords.join(", "));
   const [components, setComponents] = useState<EditableComponent[]>(
@@ -127,7 +128,9 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
       name: name.trim(),
       description: description.trim(),
       logo,
-      repository: repository.trim() || null,
+      repository: repositoryLocked
+        ? (data.repository ?? null)
+        : repository.trim() || null,
       homepage: homepage.trim() || null,
       keywords: keywords
         .split(",")
@@ -139,7 +142,6 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
         slug: slugify(c.name),
         description: c.description.trim() || undefined,
         content: c.content.trim() || undefined,
-        metadata: {},
       })),
     });
   };
@@ -183,15 +185,23 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
           <label className="mb-1.5 block text-sm font-medium">
             Repository URL
             <span className="ml-1 font-normal text-muted-foreground">
-              (optional)
+              {repositoryLocked ? "(locked to GitHub source)" : "(optional)"}
             </span>
           </label>
           <Input
             value={repository}
-            onChange={(e) => setRepository(e.target.value)}
+            onChange={(e) => !repositoryLocked && setRepository(e.target.value)}
+            readOnly={repositoryLocked}
             placeholder="https://github.com/you/your-plugin"
-            className="border-border placeholder:text-[#878787]"
+            className="border-border placeholder:text-[#878787] read-only:cursor-not-allowed read-only:opacity-70"
           />
+          {repositoryLocked && (
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              This plugin was imported from GitHub, so the Source link is locked
+              to that repository to keep the displayed source consistent with
+              the install payload.
+            </p>
+          )}
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium">

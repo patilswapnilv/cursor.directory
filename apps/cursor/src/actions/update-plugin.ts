@@ -24,6 +24,100 @@ const componentSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
+type ComponentInput = z.infer<typeof componentSchema>;
+
+type ExistingComponent = {
+  type: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  content: string | null;
+  metadata: Record<string, unknown> | null;
+  sort_order: number;
+};
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function componentKey(type: string, slug: string): string {
+  return `${type}:${slug}`;
+}
+
+// Only fields that affect the install payload — cosmetic edits to name,
+// description, or sort_order must not trigger a rescan. MCP install links and
+// configs can live in metadata, so compare the metadata that will be saved.
+function fingerprintComponent(c: {
+  type: string;
+  slug?: string | null;
+  name: string;
+  content?: string | null;
+  metadata?: Record<string, unknown> | null;
+}): string {
+  const slug = c.slug || slugify(c.name);
+  return JSON.stringify({
+    type: c.type,
+    slug,
+    content: c.content ?? "",
+    metadata: c.metadata ?? {},
+  });
+}
+
+function resolveComponentMetadata(
+  comp: ComponentInput,
+  prevByKey: Map<string, ExistingComponent>,
+): Record<string, unknown> {
+  const slug = comp.slug || slugify(comp.name);
+  const submitted = comp.metadata;
+  if (submitted && Object.keys(submitted).length > 0) {
+    return submitted;
+  }
+  const prev = prevByKey.get(componentKey(comp.type, slug));
+  return prev?.metadata ?? {};
+}
+
+function installRelevantChanged(
+  prevComponents: ExistingComponent[],
+  prevRepository: string | null,
+  nextComponents: ComponentInput[],
+  nextRepository: string | null,
+): boolean {
+  if ((prevRepository ?? null) !== (nextRepository ?? null)) {
+    return true;
+  }
+
+  if (prevComponents.length !== nextComponents.length) {
+    return true;
+  }
+
+  const prevSorted = [...prevComponents]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map(fingerprintComponent)
+    .sort();
+  const prevByKey = new Map(
+    prevComponents.map((c) => [
+      componentKey(c.type, c.slug || slugify(c.name)),
+      c,
+    ]),
+  );
+  const nextSorted = nextComponents
+    .map((component) =>
+      fingerprintComponent({
+        ...component,
+        metadata: resolveComponentMetadata(component, prevByKey),
+      }),
+    )
+    .sort();
+
+  for (let i = 0; i < prevSorted.length; i++) {
+    if (prevSorted[i] !== nextSorted[i]) return true;
+  }
+  return false;
+}
+
 export const updatePluginAction = authActionClient
   .metadata({
     actionName: "update-plugin",
@@ -62,7 +156,9 @@ export const updatePluginAction = authActionClient
 
       const { data: existing, error: fetchError } = await supabase
         .from("plugins")
-        .select("id, owner_id, slug")
+        .select(
+          "id, owner_id, slug, repository, github_repo_id, active, plugin_components(type, name, slug, description, content, metadata, sort_order)",
+        )
         .eq("id", id)
         .single();
 
@@ -76,24 +172,65 @@ export const updatePluginAction = authActionClient
         );
       }
 
-      const { success } = await pluginScanLimit(userId);
-      if (!success) {
-        throw new ActionError(
-          "Too many plugin updates in the last hour. Please try again later.",
-        );
+      // Source URL is pinned to the parsed GitHub repo so an owner can't keep
+      // the verified-looking badge while swapping the install payload.
+      const repositoryLocked = existing.github_repo_id != null;
+      const effectiveRepository = repositoryLocked
+        ? (existing.repository ?? null)
+        : (repository ?? null);
+
+      const prevComponents = (existing.plugin_components ??
+        []) as ExistingComponent[];
+
+      const installChanged = installRelevantChanged(
+        prevComponents,
+        existing.repository ?? null,
+        components,
+        effectiveRepository,
+      );
+
+      const shouldRescan = installChanged;
+      if (shouldRescan) {
+        const { success } = await pluginScanLimit(userId);
+        if (!success) {
+          throw new ActionError(
+            "Too many plugin updates in the last hour. Please try again later.",
+          );
+        }
       }
 
-      const { error: updateError } = await supabase
-        .from("plugins")
-        .update({
-          name,
-          description,
-          logo: logo || null,
-          repository: repository || null,
-          homepage: homepage || null,
-          keywords: keywords || [],
-        })
-        .eq("id", id);
+      const prevByKey = new Map(
+        prevComponents.map((c) => [
+          componentKey(c.type, c.slug || slugify(c.name)),
+          c,
+        ]),
+      );
+
+      const componentRows = components.map((comp, i) => ({
+        plugin_id: id,
+        type: comp.type,
+        name: comp.name,
+        slug: comp.slug || slugify(comp.name),
+        description: comp.description || null,
+        content: comp.content || null,
+        metadata: resolveComponentMetadata(comp, prevByKey),
+        sort_order: i,
+      }));
+
+      const { error: updateError } = await supabase.rpc(
+        "update_plugin_with_components",
+        {
+          p_plugin_id: id,
+          p_name: name,
+          p_description: description,
+          p_logo: logo || null,
+          p_repository: effectiveRepository,
+          p_homepage: homepage || null,
+          p_keywords: keywords || [],
+          p_components: componentRows,
+          p_deactivate_for_scan: shouldRescan && existing.active,
+        },
+      );
 
       if (updateError) {
         if (updateError.code === "23505") {
@@ -106,56 +243,22 @@ export const updatePluginAction = authActionClient
         );
       }
 
-      const { error: deleteError } = await supabase
-        .from("plugin_components")
-        .delete()
-        .eq("plugin_id", id);
-
-      if (deleteError) {
-        throw new ActionError(
-          `Failed to update components: ${deleteError.message}`,
-        );
-      }
-
-      type ComponentInput = z.infer<typeof componentSchema>;
-      const componentRows = components.map(
-        (comp: ComponentInput, i: number) => ({
-          plugin_id: id,
-          type: comp.type,
-          name: comp.name,
-          slug:
-            comp.slug ||
-            comp.name
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, "-")
-              .replace(/^-+|-+$/g, ""),
-          description: comp.description || null,
-          content: comp.content || null,
-          metadata: comp.metadata || {},
-          sort_order: i,
-        }),
-      );
-
-      const { error: compError } = await supabase
-        .from("plugin_components")
-        .insert(componentRows);
-
-      if (compError) {
-        throw new ActionError(
-          `Failed to save plugin components: ${compError.message}`,
-        );
-      }
-
-      try {
-        await enqueuePluginScan(id);
-        kickDrainAfterResponse();
-      } catch (queueError) {
-        console.error("Failed to enqueue plugin scan", queueError);
+      if (shouldRescan) {
+        try {
+          await enqueuePluginScan(id);
+          kickDrainAfterResponse();
+        } catch (queueError) {
+          console.error("Failed to enqueue plugin scan", queueError);
+        }
       }
 
       revalidatePath("/");
       revalidatePath(`/plugins/${existing.slug}`);
 
-      return { slug: existing.slug };
+      return {
+        slug: existing.slug,
+        rescanQueued: shouldRescan,
+        repositoryLocked,
+      };
     },
   );

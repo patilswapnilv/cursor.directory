@@ -72,6 +72,7 @@ type ParsedPlugin = {
   author_name?: string;
   author_url?: string;
   author_avatar?: string;
+  github_repo_id?: number;
   components: ParsedComponent[];
 };
 

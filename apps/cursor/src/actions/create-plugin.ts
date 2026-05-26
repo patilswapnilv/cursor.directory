@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { resolveGithubRepoIdFromRepository } from "@/lib/github-plugin/parse";
 import { InsertPluginError, insertPlugin } from "@/lib/plugins/insert";
 import { pluginScanLimit } from "@/lib/rate-limit";
 import { ActionError, authActionClient } from "./safe-action";
@@ -62,6 +63,12 @@ export const createPluginAction = authActionClient
         );
       }
 
+      // Never trust a client-supplied github_repo_id — resolve from the
+      // repository URL via GitHub so squatters cannot block idempotent imports.
+      const githubRepoId = await resolveGithubRepoIdFromRepository(repository, {
+        maxWaitMs: 3000,
+      });
+
       let result: { id: string; slug: string };
       try {
         result = await insertPlugin(
@@ -74,7 +81,12 @@ export const createPluginAction = authActionClient
             keywords,
             components,
           },
-          { ownerId: userId, source: "user", skipScan: false },
+          {
+            ownerId: userId,
+            source: "user",
+            skipScan: false,
+            githubRepoId,
+          },
         );
       } catch (err) {
         if (err instanceof InsertPluginError) {
