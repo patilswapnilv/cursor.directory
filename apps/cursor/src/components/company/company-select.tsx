@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, ChevronsUpDown } from "lucide-react";
-import { parseAsBoolean, useQueryStates } from "nuqs";
+import { parseAsBoolean, parseAsString, useQueryStates } from "nuqs";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,9 +42,10 @@ export function CompanySelect({
   const [results, setResults] = useState<Company[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [{ reload }, setQueryStates] = useQueryStates({
+  const [{ reload, pickedCompany }, setQueryStates] = useQueryStates({
     reload: parseAsBoolean.withDefault(false),
     addCompany: parseAsBoolean.withDefault(false),
+    pickedCompany: parseAsString,
   });
 
   // Load the current user's own companies (shown first). Re-runs when a new
@@ -82,6 +83,17 @@ export function CompanySelect({
       active = false;
     };
   }, [reload, supabase, setQueryStates]);
+
+  // The "Add company" modal reports the chosen company (an existing match or a
+  // freshly created one) via `pickedCompany`. Select it into this field.
+  useEffect(() => {
+    if (!pickedCompany) {
+      return;
+    }
+
+    onChange(pickedCompany);
+    setQueryStates({ pickedCompany: null });
+  }, [pickedCompany, onChange, setQueryStates]);
 
   // Resolve the display name for the currently selected company id, even when
   // it was created by someone else and isn't in the user's own list.

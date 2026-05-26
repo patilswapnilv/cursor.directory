@@ -2,6 +2,7 @@
 
 import { useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
+import { searchCompanies } from "@/data/client-queries";
 import { SearchInput } from "../search-input";
 import { Button } from "../ui/button";
 import type { Company } from "./company-card";
@@ -12,12 +13,29 @@ export function CompanyList({ data }: { data?: Company[] | null }) {
   const [search, setSearch] = useQueryState("q");
 
   useEffect(() => {
-    const filteredCompanies = data?.filter((company) =>
-      company.name.toLowerCase().includes(search?.toLowerCase() ?? ""),
-    );
+    const term = search?.trim() ?? "";
 
-    setCompanies(filteredCompanies ?? []);
-  }, [search]);
+    // No search: show the full server-rendered list.
+    if (!term) {
+      setCompanies(data ?? []);
+      return;
+    }
+
+    // With a search term, query the entire companies table rather than
+    // filtering only the rows that happen to be loaded on the page.
+    let active = true;
+    const handle = setTimeout(async () => {
+      const results = await searchCompanies(term);
+      if (active) {
+        setCompanies(results);
+      }
+    }, 200);
+
+    return () => {
+      active = false;
+      clearTimeout(handle);
+    };
+  }, [search, data]);
 
   return (
     <div className="mt-8">

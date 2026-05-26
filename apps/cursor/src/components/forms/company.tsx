@@ -2,9 +2,10 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { nanoid } from "nanoid";
+import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
-import { parseAsBoolean, useQueryState } from "nuqs";
-import { useState } from "react";
+import { parseAsBoolean, parseAsString, useQueryStates } from "nuqs";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { upsertCompanyAction } from "@/actions/upsert-company";
@@ -21,6 +22,10 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  type CompanySearchResult,
+  searchCompanies,
+} from "@/data/client-queries";
 import UploadLogo from "../upload-logo";
 
 const formSchema = z.object({
@@ -74,16 +79,32 @@ export function CompanyForm({
   data?: CompanyData;
   redirect?: boolean;
 }) {
-  const [_, setReload] = useQueryState(
-    "reload",
-    parseAsBoolean.withDefault(false),
-  );
+  const router = useRouter();
+
+  const [, setQueryStates] = useQueryStates({
+    reload: parseAsBoolean.withDefault(false),
+    addCompany: parseAsBoolean.withDefault(false),
+    // Channel used to report the chosen company back to the calling selector
+    // (e.g. the MCP form's CompanySelect).
+    pickedCompany: parseAsString,
+  });
+
+  // Existing-company suggestions for the name field, so users can jump to a
+  // company someone else already added instead of creating a duplicate.
+  const isNewCompany = !data?.id;
+  const [suggestions, setSuggestions] = useState<CompanySearchResult[]>([]);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
 
   const { execute, isExecuting } = useAction(upsertCompanyAction, {
-    onSuccess: () => {
+    onSuccess: ({ data: result }) => {
       if (!redirect) {
-        // Refresh for the new company to be visible in job form
-        setReload(true);
+        // Select the new (or reused) company into the calling form, refresh the
+        // owned-company list, and close the modal.
+        setQueryStates({
+          reload: true,
+          pickedCompany: result?.id ?? null,
+          addCompany: false,
+        });
       }
     },
   });
@@ -105,6 +126,34 @@ export function CompanyForm({
     },
   });
 
+  const nameValue = form.watch("name");
+
+  useEffect(() => {
+    if (!isNewCompany) {
+      return;
+    }
+
+    const term = (nameValue ?? "").trim();
+
+    if (term.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+
+    let active = true;
+    const handle = setTimeout(async () => {
+      const results = await searchCompanies(term, 5);
+      if (active) {
+        setSuggestions(results);
+      }
+    }, 200);
+
+    return () => {
+      active = false;
+      clearTimeout(handle);
+    };
+  }, [nameValue, isNewCompany]);
+
   const onSubmit = (data: z.infer<typeof formSchema>) => {
     execute({
       id,
@@ -121,6 +170,21 @@ export function CompanyForm({
 
   const handleImageUpload = (url: string) => {
     form.setValue("image", url);
+  };
+
+  const handleSuggestionSelect = (company: CompanySearchResult) => {
+    setSuggestions([]);
+    setSuggestionsOpen(false);
+
+    if (redirect) {
+      // Browsing context (e.g. the /companies page): open the existing company.
+      router.push(`/c/${company.slug}`);
+      return;
+    }
+
+    // Selector context (e.g. the MCP form): pick the existing company instead
+    // of creating a duplicate, then close the modal.
+    setQueryStates({ pickedCompany: company.id, addCompany: false });
   };
 
   return (
@@ -141,11 +205,53 @@ export function CompanyForm({
                 <FormItem>
                   <FormLabel>Company Name</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Your company name"
-                      {...field}
-                      className="placeholder:text-[#878787] border-border"
-                    />
+                    <div className="relative">
+                      <Input
+                        placeholder="Your company name"
+                        {...field}
+                        autoComplete="off"
+                        onFocus={() => setSuggestionsOpen(true)}
+                        onBlur={() => {
+                          field.onBlur();
+                          // Delay so a suggestion click registers before hiding.
+                          setTimeout(() => setSuggestionsOpen(false), 150);
+                        }}
+                        className="placeholder:text-[#878787] border-border"
+                      />
+
+                      {isNewCompany &&
+                        suggestionsOpen &&
+                        suggestions.length > 0 && (
+                          <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-md border border-border bg-popover shadow-md">
+                            <div className="px-3 py-2 text-xs text-[#878787]">
+                              Already on Cursor Directory
+                            </div>
+                            <ul className="max-h-[200px] overflow-y-auto">
+                              {suggestions.map((company) => (
+                                <li key={company.id}>
+                                  <button
+                                    type="button"
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    onClick={() =>
+                                      handleSuggestionSelect(company)
+                                    }
+                                    className="flex w-full flex-col items-start px-3 py-2 text-left text-sm transition-colors hover:bg-accent"
+                                  >
+                                    <span className="font-medium text-foreground">
+                                      {company.name}
+                                    </span>
+                                    {company.location && (
+                                      <span className="text-xs text-[#878787]">
+                                        {company.location}
+                                      </span>
+                                    )}
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
