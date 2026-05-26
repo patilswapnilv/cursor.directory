@@ -12,7 +12,7 @@ export type CompanySearchResult = {
 // filtering an already-loaded page of results.
 export async function searchCompanies(
   term: string,
-  limit = 200,
+  limit?: number,
 ): Promise<CompanySearchResult[]> {
   const trimmed = term.trim();
 
@@ -21,21 +21,45 @@ export async function searchCompanies(
   }
 
   const supabase = createClient();
+  const baseQuery = () =>
+    supabase
+      .from("companies")
+      .select("id, name, slug, image, location")
+      .ilike("name", `%${trimmed}%`)
+      .order("name", { ascending: true });
 
-  const { data } = await supabase
-    .from("companies")
-    .select("id, name, slug, image, location")
-    .ilike("name", `%${trimmed}%`)
-    .order("name", { ascending: true })
-    .limit(limit);
+  if (limit !== undefined) {
+    const { data } = await baseQuery().limit(limit);
+    return (data ?? []).map((company) => ({
+      id: company.id,
+      name: company.name,
+      slug: company.slug,
+      image: company.image ?? "",
+      location: company.location ?? "",
+    }));
+  }
 
-  return (data ?? []).map((company) => ({
-    id: company.id,
-    name: company.name,
-    slug: company.slug,
-    image: company.image ?? "",
-    location: company.location ?? "",
-  }));
+  const PAGE_SIZE = 1000;
+  const all: CompanySearchResult[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data } = await baseQuery().range(from, from + PAGE_SIZE - 1);
+    if (!data || data.length === 0) break;
+    all.push(
+      ...data.map((company) => ({
+        id: company.id,
+        name: company.name,
+        slug: company.slug,
+        image: company.image ?? "",
+        location: company.location ?? "",
+      })),
+    );
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return all;
 }
 
 export async function getMCPsClient({
