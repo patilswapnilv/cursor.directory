@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { nanoid } from "nanoid";
-import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { parseAsBoolean, parseAsString, useQueryStates } from "nuqs";
 import { useEffect, useState } from "react";
@@ -79,8 +78,6 @@ export function CompanyForm({
   data?: CompanyData;
   redirect?: boolean;
 }) {
-  const router = useRouter();
-
   const [, setQueryStates] = useQueryStates({
     reload: parseAsBoolean.withDefault(false),
     addCompany: parseAsBoolean.withDefault(false),
@@ -89,8 +86,8 @@ export function CompanyForm({
     pickedCompany: parseAsString,
   });
 
-  // Existing-company suggestions for the name field, so users can jump to a
-  // company someone else already added instead of creating a duplicate.
+  // Existing-company suggestions for the name field, so users can reuse a
+  // company that's already on the directory instead of creating a duplicate.
   const isNewCompany = !data?.id;
   const [suggestions, setSuggestions] = useState<CompanySearchResult[]>([]);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
@@ -177,8 +174,12 @@ export function CompanyForm({
     setSuggestionsOpen(false);
 
     if (redirect) {
-      // Browsing context (e.g. the /companies page): open the existing company.
-      router.push(`/c/${company.slug}`);
+      // Profile / browse context: complete the name field with the chosen
+      // company instead of navigating away.
+      form.setValue("name", company.name, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
       return;
     }
 
