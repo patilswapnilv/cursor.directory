@@ -4,6 +4,7 @@ import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { cn } from "@/lib/utils";
+import { AddCompanyButton } from "../company/add-company-button";
 import { type Company, CompanyCard } from "../company/company-card";
 import { SearchInput } from "../search-input";
 import { Button } from "../ui/button";
@@ -138,6 +139,10 @@ export function MembersTabs({
     return companies.filter((c) => c.name.toLowerCase().includes(q));
   }, [search, companies]);
 
+  useEffect(() => {
+    setCompanyVisible(PAGE_SIZE);
+  }, [search]);
+
   const loadMoreCompanies = useCallback(
     () =>
       setCompanyVisible((prev) =>
@@ -163,9 +168,12 @@ export function MembersTabs({
       ? "No ambassadors found"
       : "No members found";
 
+  const loadCursor = isCompanies ? companyVisible : members.length;
+
   const sentinelRef = useInfiniteScroll(
     isCompanies ? loadMoreCompanies : loadMoreMembers,
     hasMore,
+    loadCursor,
   );
 
   const handleTabChange = (key: string | null) => {
@@ -188,6 +196,10 @@ export function MembersTabs({
           placeholder={searchPlaceholder}
           className="max-w-[520px]"
         />
+
+        {isCompanies ? (
+          <AddCompanyButton redirect={true} />
+        ) : null}
 
         {!isCompanies && (
           <Select

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { MobileMenu } from "./mobile-menu";
+import { Button } from "./ui/button";
 import { UserMenu } from "./user-menu";
 
 export const navigationLinks = [
@@ -17,11 +18,6 @@ export const navigationLinks = [
     href: "/members",
     label: "Members",
     match: (p: string) => p === "/members" || p.startsWith("/members/"),
-  },
-  {
-    href: "/companies",
-    label: "Companies",
-    match: (p: string) => p === "/companies" || p.startsWith("/companies/"),
   },
 ] as const;
 
@@ -60,6 +56,12 @@ export function Header() {
                 {link.label}
               </Link>
             ))}
+
+            <Link href="/plugins/new">
+              <Button variant="default" className="h-8 rounded-full px-4">
+                Submit a plugin
+              </Button>
+            </Link>
 
             <div className="flex min-w-[88px] items-center justify-end">
               <Suspense fallback={null}>

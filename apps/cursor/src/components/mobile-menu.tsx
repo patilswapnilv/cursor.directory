@@ -115,6 +115,12 @@ export function MobileMenu() {
                 </Link>
               ))}
 
+              <Link href="/plugins/new" onClick={() => setIsOpen(false)}>
+                <Button variant="default" className="mt-6 h-9 w-full rounded-full">
+                  Submit a plugin
+                </Button>
+              </Link>
+
               <div className="mt-12">
                 {user ? (
                   <>

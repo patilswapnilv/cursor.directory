@@ -17,6 +17,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.9,
     },
+    {
+      url: `${BASE_URL}/members?tab=companies`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
   ];
 
   const { data: plugins } = await getPlugins({ fetchAll: true });
@@ -35,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (companyData) {
     for (const company of companyData) {
       routes.push({
-        url: `${BASE_URL}/companies/${company.slug}`,
+        url: `${BASE_URL}/c/${company.slug}`,
         lastModified: new Date(),
         changeFrequency: "weekly",
         priority: 0.5,
