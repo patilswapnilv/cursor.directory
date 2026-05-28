@@ -1,6 +1,11 @@
 import { useEffect, useRef } from "react";
 
-export function useInfiniteScroll(onLoadMore: () => void, enabled: boolean) {
+export function useInfiniteScroll(
+  onLoadMore: () => void,
+  enabled: boolean,
+  /** Changes when more items are shown; re-observes so loading continues if the sentinel stays in view. */
+  loadedCount = 0,
+) {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -20,7 +25,7 @@ export function useInfiniteScroll(onLoadMore: () => void, enabled: boolean) {
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [onLoadMore, enabled]);
+  }, [onLoadMore, enabled, loadedCount]);
 
   return sentinelRef;
 }

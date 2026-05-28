@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { MembersTabs } from "@/components/members/members-tabs";
 import { getCompanies, getMembers, getTotalUsers } from "@/data/queries";
 import { formatNumber } from "@/utils/format";
+import { getSession } from "@/utils/supabase/auth";
 
 export const metadata: Metadata = {
   title: "Members | Cursor Directory",
@@ -21,12 +22,17 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function Page() {
-  const [{ data: totalUsers }, { data: companies }, { data: initialMembers }] =
-    await Promise.all([
-      getTotalUsers(),
-      getCompanies(),
-      getMembers({ page: 1, limit: 90 }),
-    ]);
+  const [
+    { data: totalUsers },
+    { data: companies },
+    { data: initialMembers },
+    session,
+  ] = await Promise.all([
+    getTotalUsers(),
+    getCompanies(),
+    getMembers({ page: 1, limit: 90 }),
+    getSession(),
+  ]);
 
   return (
     <div className="page-shell pb-32 pt-24 md:pt-32">
@@ -39,12 +45,14 @@ export default async function Page() {
           </p>
         </div>
 
-        <Link
-          href="/login"
-          className="flex h-10 flex-shrink-0 items-center rounded-full border border-border bg-card px-4 text-sm text-foreground shadow-cursor transition-colors hover:bg-accent"
-        >
-          Join the community
-        </Link>
+        {!session && (
+          <Link
+            href="/login"
+            className="flex h-10 flex-shrink-0 items-center rounded-full border border-border bg-card px-4 text-sm text-foreground shadow-cursor transition-colors hover:bg-accent"
+          >
+            Join the community
+          </Link>
+        )}
       </div>
 
       <Suspense>

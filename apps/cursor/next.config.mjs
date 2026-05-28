@@ -47,6 +47,16 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: "/companies",
+        destination: "/members?tab=companies",
+        permanent: true,
+      },
+      {
+        source: "/companies/:slug",
+        destination: "/c/:slug",
+        permanent: true,
+      },
+      {
         source: "/jobs",
         destination: "https://cursor.com/careers",
         permanent: true,
