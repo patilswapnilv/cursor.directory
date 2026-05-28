@@ -13,12 +13,14 @@
  *     timeout expire so the next cron tick re-reads the message.
  */
 
-import { execFile } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
+import { createWriteStream } from "node:fs";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { promisify } from "node:util";
+import { Readable, Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { Agent, CursorAgentError, type RunResult } from "@cursor/sdk";
+import { x as extractTar } from "tar";
 import { z } from "zod";
 import type {
   FlagCategory,
@@ -27,8 +29,6 @@ import type {
   ScanVerdict,
 } from "@/data/queries";
 import { createClient } from "@/utils/supabase/admin-client";
-
-const execFileAsync = promisify(execFile);
 
 /**
  * Thrown by the scan pipeline for non-recoverable errors (bad config, scan
@@ -287,41 +287,89 @@ async function applyBlockedShortCircuit(pluginId: string) {
     .eq("id", pluginId);
 }
 
-// Cap how much of the repo we materialize on the function's tmpfs. Plugins
-// are typically rules/.md/.json — kilobytes — but we share /tmp with other
-// step executions and have a hard ~500MB limit on Vercel.
-const CLONE_TIMEOUT_MS = 60_000;
-const CLONE_MAX_BUFFER = 4 * 1024 * 1024;
+// Cap how much of the repo archive we materialize on the function's tmpfs.
+// Plugins are typically rules/.md/.json — kilobytes — but we share /tmp with
+// other step executions and have a hard ~500MB limit on Vercel.
+const REPO_ARCHIVE_MAX_BYTES = 100 * 1024 * 1024;
+
+function archiveSizeGuard(tag: string) {
+  let downloaded = 0;
+  return new Transform({
+    transform(chunk: Buffer, _encoding, callback) {
+      downloaded += chunk.length;
+      if (downloaded > REPO_ARCHIVE_MAX_BYTES) {
+        callback(
+          new Error(
+            `Repository archive exceeded ${REPO_ARCHIVE_MAX_BYTES} bytes.`,
+          ),
+        );
+        return;
+      }
+      callback(null, chunk);
+    },
+    final(callback) {
+      logInfo(tag, "GitHub archive download complete", { downloaded });
+      callback();
+    },
+  });
+}
 
 async function cloneRepo(
   owner: string,
   repo: string,
   tag: string,
 ): Promise<{ cwd: string; cleanup: () => Promise<void> }> {
-  const cwd = await mkdtemp(path.join(tmpdir(), "plugin-scan-"));
+  const root = await mkdtemp(path.join(tmpdir(), "plugin-scan-"));
+  const cwd = path.join(root, "repo");
+  const archivePath = path.join(root, "repo.tar.gz");
   const cleanup = () =>
-    rm(cwd, { recursive: true, force: true }).catch(() => {});
+    rm(root, { recursive: true, force: true }).catch(() => {});
   const startedAt = Date.now();
-  logInfo(tag, "git clone start", { owner, repo, cwd });
+  const archiveUrl = `https://api.github.com/repos/${owner}/${repo}/tarball/HEAD`;
+  logInfo(tag, "GitHub archive download start", { owner, repo, cwd });
   try {
-    await execFileAsync(
-      "git",
-      [
-        "clone",
-        "--depth=1",
-        "--single-branch",
-        "--filter=blob:limit=10m",
-        `https://github.com/${owner}/${repo}.git`,
-        cwd,
-      ],
-      { timeout: CLONE_TIMEOUT_MS, maxBuffer: CLONE_MAX_BUFFER },
+    await mkdir(cwd);
+    const response = await fetch(archiveUrl, {
+      headers: {
+        Accept: "application/vnd.github+json",
+        "User-Agent": "cursor-directory-plugin-scan",
+      },
+    });
+
+    if (!response.ok || !response.body) {
+      throw new Error(
+        `GitHub archive request failed with ${response.status} ${response.statusText}`,
+      );
+    }
+
+    const contentLength = response.headers.get("content-length");
+    if (
+      contentLength &&
+      Number.parseInt(contentLength, 10) > REPO_ARCHIVE_MAX_BYTES
+    ) {
+      throw new Error(
+        `Repository archive advertised ${contentLength} bytes, above ${REPO_ARCHIVE_MAX_BYTES}.`,
+      );
+    }
+
+    await pipeline(
+      Readable.fromWeb(response.body as never),
+      archiveSizeGuard(tag),
+      createWriteStream(archivePath),
     );
-    logInfo(tag, "git clone complete", {
+
+    await extractTar({
+      file: archivePath,
+      cwd,
+      strip: 1,
+    });
+
+    logInfo(tag, "GitHub archive extracted", {
       durationMs: Date.now() - startedAt,
     });
     return { cwd, cleanup };
   } catch (err) {
-    logError(tag, "git clone failed", err);
+    logError(tag, "GitHub archive setup failed", err);
     await cleanup();
     throw err;
   }
