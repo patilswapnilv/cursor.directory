@@ -8,6 +8,7 @@
  */
 
 import { enqueuePluginScan, kickDrainAfterResponse } from "@/lib/plugins/queue";
+import { resolveComponentSlug } from "@/lib/slug";
 import { createClient } from "@/utils/supabase/admin-client";
 
 type ComponentInput = {
@@ -61,20 +62,6 @@ export class InsertPluginError extends Error {
     super(message);
     this.name = "InsertPluginError";
   }
-}
-
-// Match the cap used by the GitHub parser's slugify so user submissions and
-// the seed pipeline produce slugs in the same shape, and so neither path can
-// blow past filesystem name limits when Next.js prerenders per-slug routes.
-const MAX_SLUG_LENGTH = 80;
-
-function fallbackSlug(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, MAX_SLUG_LENGTH)
-    .replace(/-+$/g, "");
 }
 
 export async function insertPlugin(
@@ -134,7 +121,7 @@ export async function insertPlugin(
     plugin_id: plugin.id,
     type: comp.type,
     name: comp.name,
-    slug: (comp.slug || fallbackSlug(comp.name)).slice(0, MAX_SLUG_LENGTH),
+    slug: resolveComponentSlug(comp),
     description: comp.description || null,
     content: comp.content || null,
     metadata: comp.metadata || {},

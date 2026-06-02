@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { enqueuePluginScan, kickDrainAfterResponse } from "@/lib/plugins/queue";
 import { pluginScanLimit } from "@/lib/rate-limit";
+import { resolveComponentSlug } from "@/lib/slug";
 import { createClient } from "@/utils/supabase/admin-client";
 import { ActionError, authActionClient } from "./safe-action";
 
@@ -36,13 +37,6 @@ type ExistingComponent = {
   sort_order: number;
 };
 
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
 function componentKey(type: string, slug: string): string {
   return `${type}:${slug}`;
 }
@@ -57,7 +51,7 @@ function fingerprintComponent(c: {
   content?: string | null;
   metadata?: Record<string, unknown> | null;
 }): string {
-  const slug = c.slug || slugify(c.name);
+  const slug = resolveComponentSlug(c);
   return JSON.stringify({
     type: c.type,
     slug,
@@ -70,7 +64,7 @@ function resolveComponentMetadata(
   comp: ComponentInput,
   prevByKey: Map<string, ExistingComponent>,
 ): Record<string, unknown> {
-  const slug = comp.slug || slugify(comp.name);
+  const slug = resolveComponentSlug(comp);
   const submitted = comp.metadata;
   if (submitted && Object.keys(submitted).length > 0) {
     return submitted;
@@ -99,7 +93,7 @@ function installRelevantChanged(
     .sort();
   const prevByKey = new Map(
     prevComponents.map((c) => [
-      componentKey(c.type, c.slug || slugify(c.name)),
+      componentKey(c.type, resolveComponentSlug(c)),
       c,
     ]),
   );
@@ -201,7 +195,7 @@ export const updatePluginAction = authActionClient
 
       const prevByKey = new Map(
         prevComponents.map((c) => [
-          componentKey(c.type, c.slug || slugify(c.name)),
+          componentKey(c.type, resolveComponentSlug(c)),
           c,
         ]),
       );
@@ -210,7 +204,7 @@ export const updatePluginAction = authActionClient
         plugin_id: id,
         type: comp.type,
         name: comp.name,
-        slug: comp.slug || slugify(comp.name),
+        slug: resolveComponentSlug(comp),
         description: comp.description || null,
         content: comp.content || null,
         metadata: resolveComponentMetadata(comp, prevByKey),

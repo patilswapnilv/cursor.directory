@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { slugify } from "@/lib/slug";
 import type { PluginRow } from "@/data/queries";
 import UploadLogo from "../upload-logo";
 
@@ -45,13 +46,6 @@ type EditableComponent = {
   description: string;
   content: string;
 };
-
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 export function EditPluginForm({ data }: { data: PluginRow }) {
   const [name, setName] = useState(data.name);
