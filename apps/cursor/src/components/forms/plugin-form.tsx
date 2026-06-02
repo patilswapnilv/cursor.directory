@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { slugify } from "@/lib/slug";
 import UploadLogo from "../upload-logo";
 
 const COMPONENT_TYPES = [
@@ -83,13 +84,6 @@ type ManualComponent = {
   description: string;
   content: string;
 };
-
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 const autoFormSchema = z.object({
   url: z
