@@ -24,13 +24,18 @@ export const actionClient = createSafeActionClient({
       actionName: z.string(),
     });
   },
-  // Define logging middleware.
-}).use(async ({ next, clientInput, metadata }) => {
+}).use(async ({ next, metadata }) => {
   const result = await next();
 
-  console.log("Result ->", result);
-  console.log("Client input ->", clientInput);
-  console.log("Metadata ->", metadata);
+  // Log failures only — never inputs or results, which can contain user PII
+  // (emails, profile fields). Server errors are already logged with their
+  // message in handleServerError; this adds which action failed.
+  if (result.serverError || result.validationErrors) {
+    console.error(`[action:${metadata?.actionName}] failed`, {
+      serverError: result.serverError,
+      validationErrors: result.validationErrors,
+    });
+  }
 
   return result;
 });
