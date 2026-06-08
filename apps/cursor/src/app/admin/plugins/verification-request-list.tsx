@@ -10,7 +10,7 @@ import {
   setPluginVerifiedAction,
 } from "@/actions/verify-plugin";
 import { Button } from "@/components/ui/button";
-import type { PluginRow } from "@/data/queries";
+import type { PluginRow } from "@/lib/plugins/types";
 
 function VerificationRequestCard({ plugin }: { plugin: PluginRow }) {
   const [dismissed, setDismissed] = useState(false);

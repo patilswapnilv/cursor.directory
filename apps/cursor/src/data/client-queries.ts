@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/client";
+import { fetchAllPages } from "@/utils/supabase/pagination";
 
 export type CompanySearchResult = {
   id: string;
@@ -7,6 +8,24 @@ export type CompanySearchResult = {
   image: string;
   location: string;
 };
+
+type CompanyRow = {
+  id: string;
+  name: string;
+  slug: string;
+  image: string | null;
+  location: string | null;
+};
+
+function toSearchResult(company: CompanyRow): CompanySearchResult {
+  return {
+    id: company.id,
+    name: company.name,
+    slug: company.slug,
+    image: company.image ?? "",
+    location: company.location ?? "",
+  };
+}
 
 // Searches the entire companies table by name (case-insensitive), rather than
 // filtering an already-loaded page of results.
@@ -30,36 +49,14 @@ export async function searchCompanies(
 
   if (limit !== undefined) {
     const { data } = await baseQuery().limit(limit);
-    return (data ?? []).map((company) => ({
-      id: company.id,
-      name: company.name,
-      slug: company.slug,
-      image: company.image ?? "",
-      location: company.location ?? "",
-    }));
+    return ((data ?? []) as CompanyRow[]).map(toSearchResult);
   }
 
-  const PAGE_SIZE = 1000;
-  const all: CompanySearchResult[] = [];
-  let from = 0;
+  const { data } = await fetchAllPages<CompanyRow>((from, to) =>
+    baseQuery().range(from, to),
+  );
 
-  while (true) {
-    const { data } = await baseQuery().range(from, from + PAGE_SIZE - 1);
-    if (!data || data.length === 0) break;
-    all.push(
-      ...data.map((company) => ({
-        id: company.id,
-        name: company.name,
-        slug: company.slug,
-        image: company.image ?? "",
-        location: company.location ?? "",
-      })),
-    );
-    if (data.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
-  }
-
-  return all;
+  return (data ?? []).map(toSearchResult);
 }
 
 export async function getMCPsClient({

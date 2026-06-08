@@ -1,51 +1,19 @@
 "use client";
 
-import { AlertCircle, Loader2, Plus, Trash2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 import { updatePluginAction } from "@/actions/update-plugin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { slugify } from "@/lib/slug";
-import type { PluginRow } from "@/data/queries";
+import type { PluginRow } from "@/lib/plugins/types";
 import UploadLogo from "../upload-logo";
-
-const COMPONENT_TYPES = [
-  "rule",
-  "mcp_server",
-  "skill",
-  "agent",
-  "hook",
-  "lsp_server",
-  "command",
-] as const;
-
-const COMPONENT_LABELS: Record<string, string> = {
-  rule: "Rule",
-  mcp_server: "MCP Server",
-  skill: "Skill",
-  agent: "Agent",
-  hook: "Hook",
-  lsp_server: "LSP Server",
-  command: "Command",
-};
-
-type EditableComponent = {
-  id: string;
-  type: (typeof COMPONENT_TYPES)[number];
-  name: string;
-  description: string;
-  content: string;
-};
+import {
+  type ComponentDraft,
+  ComponentDraftEditor,
+  draftToComponentInput,
+} from "./component-draft-editor";
 
 export function EditPluginForm({ data }: { data: PluginRow }) {
   const [name, setName] = useState(data.name);
@@ -55,12 +23,12 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
   const repositoryLocked = data.github_repo_id != null;
   const [homepage, setHomepage] = useState(data.homepage ?? "");
   const [keywords, setKeywords] = useState(data.keywords.join(", "));
-  const [components, setComponents] = useState<EditableComponent[]>(
+  const [components, setComponents] = useState<ComponentDraft[]>(
     (data.plugin_components ?? [])
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((c) => ({
         id: crypto.randomUUID(),
-        type: c.type as EditableComponent["type"],
+        type: c.type,
         name: c.name,
         description: c.description ?? "",
         content: c.content ?? "",
@@ -78,33 +46,6 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
       );
     },
   });
-
-  const addComponent = () => {
-    setComponents((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        type: "rule",
-        name: "",
-        description: "",
-        content: "",
-      },
-    ]);
-  };
-
-  const removeComponent = (id: string) => {
-    setComponents((prev) => prev.filter((c) => c.id !== id));
-  };
-
-  const updateComponent = (
-    id: string,
-    field: keyof EditableComponent,
-    value: string,
-  ) => {
-    setComponents((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, [field]: value } : c)),
-    );
-  };
 
   const onSubmit = () => {
     setError(null);
@@ -130,13 +71,9 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
         .split(",")
         .map((k) => k.trim())
         .filter(Boolean),
-      components: validComponents.map((c) => ({
-        type: c.type,
-        name: c.name.trim(),
-        slug: slugify(c.name),
-        description: c.description.trim() || undefined,
-        content: c.content.trim() || undefined,
-      })),
+      // No metadata here: the update action falls back to each component's
+      // previously stored metadata when it is omitted.
+      components: validComponents.map(draftToComponentInput),
     });
   };
 
@@ -149,40 +86,54 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
     <div className="space-y-6">
       <div className="space-y-6">
         <div>
-          <label className="mb-1.5 block text-sm font-medium">
+          <span className="mb-1.5 block text-sm font-medium">
             Logo
             <span className="ml-1 font-normal text-muted-foreground">
               (optional)
             </span>
-          </label>
+          </span>
           <UploadLogo prefix="plugins" onUpload={setLogo} image={logo} />
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium">Name</label>
+          <label
+            htmlFor="edit-plugin-name"
+            className="mb-1.5 block text-sm font-medium"
+          >
+            Name
+          </label>
           <Input
+            id="edit-plugin-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="border-border placeholder:text-[#878787]"
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium">
+          <label
+            htmlFor="edit-plugin-description"
+            className="mb-1.5 block text-sm font-medium"
+          >
             Description
           </label>
           <Input
+            id="edit-plugin-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="border-border placeholder:text-[#878787]"
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium">
+          <label
+            htmlFor="edit-plugin-repository"
+            className="mb-1.5 block text-sm font-medium"
+          >
             Repository URL
             <span className="ml-1 font-normal text-muted-foreground">
               {repositoryLocked ? "(locked to GitHub source)" : "(optional)"}
             </span>
           </label>
           <Input
+            id="edit-plugin-repository"
             value={repository}
             onChange={(e) => !repositoryLocked && setRepository(e.target.value)}
             readOnly={repositoryLocked}
@@ -198,13 +149,17 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
           )}
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium">
+          <label
+            htmlFor="edit-plugin-homepage"
+            className="mb-1.5 block text-sm font-medium"
+          >
             Homepage
             <span className="ml-1 font-normal text-muted-foreground">
               (optional)
             </span>
           </label>
           <Input
+            id="edit-plugin-homepage"
             value={homepage}
             onChange={(e) => setHomepage(e.target.value)}
             placeholder="https://your-plugin.dev"
@@ -212,13 +167,17 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium">
+          <label
+            htmlFor="edit-plugin-keywords"
+            className="mb-1.5 block text-sm font-medium"
+          >
             Keywords
             <span className="ml-1 font-normal text-muted-foreground">
               (optional, comma-separated)
             </span>
           </label>
           <Input
+            id="edit-plugin-keywords"
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
             placeholder="react, typescript, testing"
@@ -227,101 +186,11 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
         </div>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <label className="text-sm font-medium">Components</label>
-          <button
-            type="button"
-            onClick={addComponent}
-            className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <Plus className="size-3" />
-            Add
-          </button>
-        </div>
-
-        {components.map((comp, index) => (
-          <div
-            key={comp.id}
-            className="space-y-3 rounded-lg border border-border bg-card p-4 shadow-cursor"
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                Component {index + 1}
-              </p>
-              {components.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeComponent(comp.id)}
-                  className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">Type</label>
-                <Select
-                  value={comp.type}
-                  onValueChange={(v) => updateComponent(comp.id, "type", v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COMPONENT_TYPES.map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {COMPONENT_LABELS[t]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">Name</label>
-                <Input
-                  value={comp.name}
-                  onChange={(e) =>
-                    updateComponent(comp.id, "name", e.target.value)
-                  }
-                  placeholder="my-rule"
-                  className="border-border placeholder:text-[#878787]"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">
-                Description
-                <span className="ml-1 font-normal text-muted-foreground">
-                  (optional)
-                </span>
-              </label>
-              <Input
-                value={comp.description}
-                onChange={(e) =>
-                  updateComponent(comp.id, "description", e.target.value)
-                }
-                placeholder="What this component does"
-                className="border-border placeholder:text-[#878787]"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">
-                Content
-              </label>
-              <Textarea
-                value={comp.content}
-                onChange={(e) =>
-                  updateComponent(comp.id, "content", e.target.value)
-                }
-                placeholder="Paste or write the component content here..."
-                className="min-h-[100px] border-border font-mono text-sm placeholder:text-[#878787] placeholder:font-sans"
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+      <ComponentDraftEditor
+        drafts={components}
+        onChange={setComponents}
+        header={<span className="text-sm font-medium">Components</span>}
+      />
 
       {error && (
         <div className="flex items-start gap-3 rounded-lg border border-red-500/30 bg-red-500/5 p-4">

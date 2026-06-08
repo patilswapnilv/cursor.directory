@@ -124,7 +124,7 @@ export function parseGitHubUrl(
   return { owner: match[1], repo: match[2] };
 }
 
-function authHeaders(): Record<string, string> {
+export function githubAuthHeaders(): Record<string, string> {
   return process.env.GITHUB_TOKEN
     ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
     : {};
@@ -139,7 +139,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
  * remains safe to call from server actions (which have request timeouts).
  * Bulk scripts can pass a larger budget.
  */
-async function fetchWithRateLimit(
+export async function fetchWithRateLimit(
   url: string,
   init: RequestInit & { maxWaitMs?: number } = {},
 ): Promise<Response> {
@@ -163,9 +163,10 @@ async function fetchWithRateLimit(
 
     const retryAfter = Number(res.headers.get("retry-after") ?? "");
     const reset = Number(res.headers.get("x-ratelimit-reset") ?? "0") * 1000;
-    let waitMs = Number.isFinite(retryAfter) && retryAfter > 0
-      ? retryAfter * 1000
-      : Math.max(reset - Date.now(), 1000);
+    let waitMs =
+      Number.isFinite(retryAfter) && retryAfter > 0
+        ? retryAfter * 1000
+        : Math.max(reset - Date.now(), 1000);
     waitMs = Math.min(waitMs, maxWaitMs - totalWait);
 
     if (waitMs <= 0 || attempt === maxAttempts) return res;
@@ -212,7 +213,7 @@ async function fetchGitHubTree(
       cache: "no-store",
       headers: {
         Accept: "application/vnd.github.v3+json",
-        ...authHeaders(),
+        ...githubAuthHeaders(),
       },
       maxWaitMs: opts.maxWaitMs,
     });
@@ -263,7 +264,7 @@ export async function fetchGitHubRepoMeta(
         cache: "no-store",
         headers: {
           Accept: "application/vnd.github.v3+json",
-          ...authHeaders(),
+          ...githubAuthHeaders(),
         },
         maxWaitMs: opts.maxWaitMs,
       },
