@@ -5,9 +5,9 @@
  * server actions, the GitHub parser, and seed scripts alike.
  */
 
-// Cap slugs at 80 chars. The per-slug API routes (e.g. `/api/[slug]`) are
-// `force-static`, so Vercel writes a `<slug>.prerender-config.json` file per
-// known slug at build time; a longer slug blows past the 255-byte filesystem
+// Cap slugs at 80 chars. Per-slug static routes (e.g. the legacy `/[slug]`
+// redirects) are prerendered, so Vercel writes a `<slug>.prerender-config.json`
+// file per known slug at build time; a longer slug blows past the 255-byte filesystem
 // name limit (ENAMETOOLONG) and breaks the build. It also satisfies the
 // `plugin_components_slug_length_check` Postgres constraint. 80 chars leaves
 // ample headroom for disambiguating suffixes.
