@@ -2,10 +2,6 @@
   "regions": ["sfo1", "fra1"],
   "crons": [
     {
-      "path": "/api/cron/sync-ambassadors",
-      "schedule": "0 * * * *"
-    },
-    {
       "path": "/api/cron/recover-stuck-scans",
       "schedule": "*/15 * * * *"
     },
