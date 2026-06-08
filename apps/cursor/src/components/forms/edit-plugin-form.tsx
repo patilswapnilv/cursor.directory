@@ -42,6 +42,15 @@ const COMPONENT_LABELS: Record<string, string> = {
 type EditableComponent = {
   id: string;
   type: (typeof COMPONENT_TYPES)[number];
+  /**
+   * Stored DB slug, empty for components added in this session. Preserved
+   * through the round-trip because regenerating from `name` produces a
+   * different slug whenever name and slug were derived from different
+   * sources (GitHub-imported rules slugify the filename but use the
+   * frontmatter title/description as the name), which churns slugs, breaks
+   * the rescan diff, and drops metadata keyed by the old slug.
+   */
+  slug: string;
   name: string;
   description: string;
   content: string;
@@ -61,6 +70,7 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
       .map((c) => ({
         id: crypto.randomUUID(),
         type: c.type as EditableComponent["type"],
+        slug: c.slug,
         name: c.name,
         description: c.description ?? "",
         content: c.content ?? "",
@@ -85,6 +95,7 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
       {
         id: crypto.randomUUID(),
         type: "rule",
+        slug: "",
         name: "",
         description: "",
         content: "",
@@ -133,7 +144,7 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
       components: validComponents.map((c) => ({
         type: c.type,
         name: c.name.trim(),
-        slug: slugify(c.name),
+        slug: c.slug || slugify(c.name),
         description: c.description.trim() || undefined,
         content: c.content.trim() || undefined,
       })),
