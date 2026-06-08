@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { EditPluginForm } from "@/components/forms/edit-plugin-form";
-import { PluginOwnerMenu } from "@/components/plugins/plugin-owner-menu";
 import { Login } from "@/components/login";
+import { PluginOwnerMenu } from "@/components/plugins/plugin-owner-menu";
 import { getPluginBySlug } from "@/data/queries";
 import { getSession } from "@/utils/supabase/auth";
 

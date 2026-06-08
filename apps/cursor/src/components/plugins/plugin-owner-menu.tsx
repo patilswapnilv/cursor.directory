@@ -229,9 +229,7 @@ export function PluginOwnerMenu({ plugin }: Props) {
               disabled={isToggling}
               onClick={() => toggleListing({ id: plugin.id, active: false })}
             >
-              {isToggling ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : null}
+              {isToggling ? <Loader2 className="size-4 animate-spin" /> : null}
               Unpublish
             </Button>
           </DialogFooter>

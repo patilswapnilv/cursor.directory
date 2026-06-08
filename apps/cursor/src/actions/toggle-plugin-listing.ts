@@ -29,7 +29,9 @@ export const togglePluginListingAction = authActionClient
     }
 
     if (existing.owner_id !== userId) {
-      throw new ActionError("You do not have permission to update this plugin.");
+      throw new ActionError(
+        "You do not have permission to update this plugin.",
+      );
     }
 
     if (active && existing.permanently_blocked) {

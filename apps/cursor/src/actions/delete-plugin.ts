@@ -28,7 +28,9 @@ export const deletePluginAction = authActionClient
     }
 
     if (existing.owner_id !== userId) {
-      throw new ActionError("You do not have permission to delete this plugin.");
+      throw new ActionError(
+        "You do not have permission to delete this plugin.",
+      );
     }
 
     const { error } = await supabase
