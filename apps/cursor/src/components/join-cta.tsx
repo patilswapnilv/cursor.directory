@@ -11,7 +11,6 @@ const HIDDEN_PATHS = ["/login", "/auth"];
 export function JoinCTA() {
   const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null);
   const supabase = createClient();
-  const pathname = usePathname();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -19,7 +18,17 @@ export function JoinCTA() {
     });
   }, []);
 
+  // Renders nothing until the client session check resolves, so the
+  // pathname-reading content below never runs during prerendering
+  // (usePathname is runtime data under Cache Components).
   if (isSignedIn !== false) return null;
+
+  return <JoinCTAContent />;
+}
+
+function JoinCTAContent() {
+  const pathname = usePathname();
+
   if (HIDDEN_PATHS.some((p) => pathname.startsWith(p))) return null;
 
   return (

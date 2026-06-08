@@ -1,6 +1,36 @@
-import { createClient } from "@/utils/supabase/admin-client";
+/**
+ * Server-side read queries.
+ *
+ * Every query here uses the privileged admin client (RLS bypassed), so each
+ * function is responsible for its own visibility filtering — e.g.
+ * `.eq("public", true)` for user-facing reads. Mutations live in
+ * `src/actions`.
+ *
+ * Caching model (Cache Components): public, non-viewer-specific reads are
+ * cached with `"use cache"` and tagged so mutations in `src/actions` can
+ * invalidate them (`updateTag`/`revalidateTag`). Viewer-scoped reads (owner
+ * checks, per-user lists that must be read-your-own-writes fresh) stay
+ * uncached and run inside <Suspense> at request time.
+ *
+ * Tags:
+ *   plugins            — any plugin list/detail data
+ *   plugin-{slug}      — a single plugin
+ *   users              — member lists and counts
+ *   user-{slug}        — a single public profile
+ *   followers-{id}     — a user's followers list
+ *   following-{id}     — a user's following list
+ *   stars-{userId}     — a user's starred plugins
+ *   companies          — company lists
+ *   company-{slug}     — a single company profile
+ *   mcps               — MCP listings
+ */
 
-export async function getUserProfile(slug: string, userId?: string) {
+import { cacheLife, cacheTag } from "next/cache";
+import type { PluginRow } from "@/lib/plugins/types";
+import { createClient } from "@/utils/supabase/admin-client";
+import { fetchAllPages } from "@/utils/supabase/pagination";
+
+async function fetchUserProfile(slug: string, userId?: string) {
   const supabase = await createClient();
 
   const query = supabase
@@ -36,7 +66,25 @@ export async function getUserProfile(slug: string, userId?: string) {
   };
 }
 
+async function getPublicUserProfile(slug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("users", `user-${slug}`);
+  return fetchUserProfile(slug);
+}
+
+export async function getUserProfile(slug: string, userId?: string) {
+  // Owner reads (settings, own-profile views) must be fresh and include
+  // private fields, so only the public variant is cached.
+  if (userId) return fetchUserProfile(slug, userId);
+  return getPublicUserProfile(slug);
+}
+
 export async function getUserFollowers(id: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`followers-${id}`);
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("followers")
@@ -47,6 +95,10 @@ export async function getUserFollowers(id: string) {
 }
 
 export async function getUserFollowing(id: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`following-${id}`);
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("followers")
@@ -56,7 +108,7 @@ export async function getUserFollowing(id: string) {
   return { data, error };
 }
 
-export async function getCompanyProfile(slug: string, userId?: string) {
+async function fetchCompanyProfile(slug: string, userId?: string) {
   const supabase = await createClient();
   const query = supabase
     .from("companies")
@@ -74,6 +126,19 @@ export async function getCompanyProfile(slug: string, userId?: string) {
   return { data, error };
 }
 
+async function getPublicCompanyProfile(slug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("companies", `company-${slug}`);
+  return fetchCompanyProfile(slug);
+}
+
+export async function getCompanyProfile(slug: string, userId?: string) {
+  // Owner reads stay uncached so edits are immediately visible.
+  if (userId) return fetchCompanyProfile(slug, userId);
+  return getPublicCompanyProfile(slug);
+}
+
 export async function getUserCompanies(userId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -87,6 +152,10 @@ export async function getUserCompanies(userId: string) {
 }
 
 export async function getUserPlugins(userId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("plugins");
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("plugins")
@@ -100,26 +169,19 @@ export async function getUserPlugins(userId: string) {
 }
 
 export async function getCompanies() {
-  const supabase = await createClient();
-  const all: any[] = [];
-  const PAGE_SIZE = 1000;
-  let from = 0;
+  "use cache";
+  cacheLife("hours");
+  cacheTag("companies");
 
-  while (true) {
-    const { data, error } = await supabase
+  const supabase = await createClient();
+
+  return fetchAllPages((from, to) =>
+    supabase
       .from("companies")
       .select("id, name, slug, image, location")
       .order("created_at", { ascending: false })
-      .range(from, from + PAGE_SIZE - 1);
-
-    if (error) return { data: all, error };
-    if (!data || data.length === 0) break;
-    all.push(...data);
-    if (data.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
-  }
-
-  return { data: all, error: null };
+      .range(from, to),
+  );
 }
 
 export async function getFeaturedMCPs({
@@ -127,6 +189,10 @@ export async function getFeaturedMCPs({
 }: {
   onlyPremium?: boolean;
 } = {}) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("mcps");
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("mcps")
@@ -134,18 +200,22 @@ export async function getFeaturedMCPs({
     .limit(100)
     .order("created_at", { ascending: false })
     .order("order", { ascending: false })
-    .order("created_at", { ascending: false })
     .eq("active", true)
     .or(onlyPremium ? "plan.eq.premium" : "plan.eq.featured,plan.eq.premium");
 
   return {
-    // Shuffle the data
+    // Shuffle so featured placement rotates between cache revalidations.
     data: data?.sort(() => Math.random() - 0.5),
     error,
   };
 }
 
 export async function getTotalUsers() {
+  "use cache";
+  // Mirrors the old `revalidate = 300` behavior on the members page.
+  cacheLife({ stale: 300, revalidate: 300, expire: 86400 });
+  cacheTag("users");
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("users")
@@ -156,6 +226,10 @@ export async function getTotalUsers() {
 }
 
 export async function getNewUsers() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("users");
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("users")
@@ -176,38 +250,24 @@ export async function getMCPs({
   limit?: number;
   fetchAll?: boolean;
 } = {}) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("mcps");
+
   const supabase = await createClient();
 
+  const baseQuery = () =>
+    supabase
+      .from("mcps")
+      .select("*")
+      .eq("active", true)
+      .order("company_id", { ascending: true, nullsFirst: false });
+
   if (fetchAll) {
-    const PAGE_SIZE = 100;
-    let allData: any[] = [];
-    let from = 0;
-    let hasMore = true;
-
-    while (hasMore) {
-      const { data, error } = await supabase
-        .from("mcps")
-        .select("*")
-        .eq("active", true)
-        .order("company_id", { ascending: true, nullsFirst: false })
-        .range(from, from + PAGE_SIZE - 1);
-
-      if (error) return { data: null, error };
-      if (!data || data.length === 0) break;
-
-      allData = allData.concat(data);
-      hasMore = data.length === PAGE_SIZE;
-      from += PAGE_SIZE;
-    }
-
-    return { data: allData, error: null };
+    return fetchAllPages((from, to) => baseQuery().range(from, to), 100);
   }
 
-  const { data, error } = await supabase
-    .from("mcps")
-    .select("*")
-    .eq("active", true)
-    .order("company_id", { ascending: true, nullsFirst: false })
+  const { data, error } = await baseQuery()
     .limit(limit)
     .range((page - 1) * limit, page * limit - 1);
 
@@ -215,6 +275,10 @@ export async function getMCPs({
 }
 
 export async function getRecentMCPs({ limit = 8 }: { limit?: number } = {}) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("mcps");
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("mcps")
@@ -227,6 +291,10 @@ export async function getRecentMCPs({ limit = 8 }: { limit?: number } = {}) {
 }
 
 export async function getMCPBySlug(slug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("mcps", `mcp-${slug}`);
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("mcps")
@@ -241,83 +309,6 @@ export async function getMCPBySlug(slug: string) {
 // Plugins (Open Plugins spec)
 // ---------------------------------------------------------------------------
 
-export type PluginComponent = {
-  id: string;
-  plugin_id: string;
-  type: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  content: string | null;
-  metadata: Record<string, unknown>;
-  sort_order: number;
-  created_at: string;
-};
-
-export type ScanStatus =
-  | "pending"
-  | "scanning"
-  | "safe"
-  | "flagged"
-  | "error"
-  | "unscanned";
-export type FlagSeverity = "low" | "medium" | "high";
-export type FlagCategory =
-  | "malicious_code"
-  | "prompt_injection"
-  | "spam"
-  | "nsfw"
-  | "impersonation"
-  | "low_quality";
-
-export type ScanVerdict = {
-  verdict: "safe" | "suspicious" | "malicious";
-  severity: FlagSeverity;
-  categories: FlagCategory[];
-  reasons: string[];
-  summary: string;
-};
-
-export type PluginRow = {
-  id: string;
-  name: string;
-  slug: string;
-  version: string;
-  description: string | null;
-  homepage: string | null;
-  repository: string | null;
-  license: string | null;
-  logo: string | null;
-  keywords: string[];
-  author_name: string | null;
-  author_url: string | null;
-  author_avatar: string | null;
-  owner_id: string | null;
-  active: boolean;
-  plan: string;
-  order: number;
-  install_count: number;
-  star_count: number;
-  created_at: string;
-  updated_at: string;
-  scan_status: ScanStatus;
-  scan_verdict: ScanVerdict | null;
-  flag_reasons: string[];
-  flag_severity: FlagSeverity | null;
-  flag_summary: string | null;
-  flagged_at: string | null;
-  last_scanned_at: string | null;
-  scan_run_id: string | null;
-  permanently_blocked: boolean;
-  discovery_source: string | null;
-  github_repo_id: number | null;
-  verified: boolean;
-  verified_at: string | null;
-  verified_by: string | null;
-  verification_requested_at: string | null;
-  plugin_components?: PluginComponent[];
-};
-
 export async function getPlugins({
   page = 1,
   limit = 36,
@@ -326,39 +317,28 @@ export async function getPlugins({
   page?: number;
   limit?: number;
   fetchAll?: boolean;
-} = {}): Promise<{ data: PluginRow[] | null; error: any }> {
+} = {}): Promise<{ data: PluginRow[] | null; error: unknown }> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("plugins");
+
   const supabase = await createClient();
 
+  const baseQuery = () =>
+    supabase
+      .from("plugins")
+      .select("*, plugin_components(*)")
+      .eq("active", true)
+      .order("created_at", { ascending: false });
+
   if (fetchAll) {
-    const PAGE_SIZE = 100;
-    let allData: PluginRow[] = [];
-    let from = 0;
-    let hasMore = true;
-
-    while (hasMore) {
-      const { data, error } = await supabase
-        .from("plugins")
-        .select("*, plugin_components(*)")
-        .eq("active", true)
-        .order("created_at", { ascending: false })
-        .range(from, from + PAGE_SIZE - 1);
-
-      if (error) return { data: null, error };
-      if (!data || data.length === 0) break;
-
-      allData = allData.concat(data as PluginRow[]);
-      hasMore = data.length === PAGE_SIZE;
-      from += PAGE_SIZE;
-    }
-
-    return { data: allData, error: null };
+    return fetchAllPages<PluginRow>(async (from, to) => {
+      const { data, error } = await baseQuery().range(from, to);
+      return { data: data as PluginRow[] | null, error };
+    }, 100);
   }
 
-  const { data, error } = await supabase
-    .from("plugins")
-    .select("*, plugin_components(*)")
-    .eq("active", true)
-    .order("created_at", { ascending: false })
+  const { data, error } = await baseQuery()
     .limit(limit)
     .range((page - 1) * limit, page * limit - 1);
 
@@ -373,6 +353,10 @@ export async function getPluginInstallVelocity(windowDays = 30): Promise<{
   data: Map<string, number> | null;
   error: unknown;
 }> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("plugins");
+
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("plugin_install_velocity", {
     window_days: windowDays,
@@ -391,6 +375,10 @@ export async function getPluginInstallVelocity(windowDays = 30): Promise<{
 }
 
 export async function getPluginBySlug(slug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("plugins", `plugin-${slug}`);
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("plugins")
@@ -403,27 +391,16 @@ export async function getPluginBySlug(slug: string) {
 
 export async function getPendingPlugins() {
   const supabase = await createClient();
-  const PAGE_SIZE = 100;
-  let allData: PluginRow[] = [];
-  let from = 0;
 
-  while (true) {
+  return fetchAllPages<PluginRow>(async (from, to) => {
     const { data, error } = await supabase
       .from("plugins")
       .select("*, plugin_components(*)")
       .eq("active", false)
       .order("created_at", { ascending: false })
-      .range(from, from + PAGE_SIZE - 1);
-
-    if (error) return { data: allData.length ? allData : null, error };
-    if (!data || data.length === 0) break;
-
-    allData = allData.concat(data as PluginRow[]);
-    if (data.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
-  }
-
-  return { data: allData as PluginRow[], error: null };
+      .range(from, to);
+    return { data: data as PluginRow[] | null, error };
+  }, 100);
 }
 
 export async function getFlaggedPlugins() {
@@ -481,15 +458,22 @@ export async function getStuckScans() {
 }
 
 export async function getStarredPlugins(userId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("plugins", `stars-${userId}`);
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("plugin_stars")
     .select("plugin:plugin_id(*, plugin_components(*))")
     .eq("user_id", userId);
 
-  const plugins = (data ?? [])
-    .map((row: any) => row.plugin)
-    .filter(Boolean) as PluginRow[];
+  // Without generated DB types, supabase-js can't tell this embedded
+  // resource is to-one, so the inferred shape needs correcting.
+  const rows = (data ?? []) as unknown as Array<{ plugin: PluginRow | null }>;
+  const plugins = rows
+    .map((row) => row.plugin)
+    .filter((plugin): plugin is PluginRow => Boolean(plugin));
 
   return { data: plugins, error };
 }
@@ -517,6 +501,11 @@ export async function getMembers({
   limit = 33,
   q,
 }: GetMembersParams = {}) {
+  "use cache";
+  // Mirrors the old `revalidate = 300` behavior on the members page.
+  cacheLife({ stale: 300, revalidate: 300, expire: 86400 });
+  cacheTag("users");
+
   const supabase = await createClient();
   const query = supabase
     .from("users")

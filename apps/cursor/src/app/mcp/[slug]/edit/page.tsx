@@ -14,7 +14,11 @@ export const metadata: Metadata = {
   description: "Edit your MCP server on Cursor Directory.",
 };
 
-export default async function Page({ params }: { params: Params }) {
+/**
+ * Owner-gated editor: session and `params` access stream inside the page's
+ * Suspense boundary so the route keeps a prerendered static shell.
+ */
+async function EditMCPContent({ params }: { params: Params }) {
   const { slug } = await params;
   const session = await getSession();
   const { data: mcp } = await getMCPBySlug(slug);
@@ -23,9 +27,7 @@ export default async function Page({ params }: { params: Params }) {
     return (
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
-          <Suspense fallback={null}>
-            <Login redirectTo={`/mcp/${slug}/edit`} />
-          </Suspense>
+          <Login redirectTo={`/mcp/${slug}/edit`} />
         </div>
       </div>
     );
@@ -46,5 +48,13 @@ export default async function Page({ params }: { params: Params }) {
         <EditMCPForm data={mcp} />
       </div>
     </div>
+  );
+}
+
+export default function Page({ params }: { params: Params }) {
+  return (
+    <Suspense fallback={null}>
+      <EditMCPContent params={params} />
+    </Suspense>
   );
 }

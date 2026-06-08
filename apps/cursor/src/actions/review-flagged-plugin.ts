@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { enqueuePluginScan, kickDrainAfterResponse } from "@/lib/plugins/queue";
 import { createClient } from "@/utils/supabase/admin-client";
@@ -36,8 +36,8 @@ export const approveFlaggedPluginAction = adminActionClient
     }
 
     revalidatePath("/admin/plugins");
-    revalidatePath("/");
-    revalidatePath(`/plugins/${plugin.slug}`);
+    updateTag("plugins");
+    updateTag(`plugin-${plugin.slug}`);
     return { success: true };
   });
 
@@ -65,8 +65,8 @@ export const confirmFlagAction = adminActionClient
     }
 
     revalidatePath("/admin/plugins");
-    revalidatePath("/");
-    revalidatePath(`/plugins/${plugin.slug}`);
+    updateTag("plugins");
+    updateTag(`plugin-${plugin.slug}`);
     return { success: true };
   });
 

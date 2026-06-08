@@ -1,28 +1,27 @@
+import { cacheLife, cacheTag } from "next/cache";
 import { getPluginBySlug } from "@/data/queries";
 import {
-  createOGResponse,
   formatCount,
   OG,
   OGLayout,
+  ogResponse,
+  renderOGBytes,
   resolveOgImageUrl,
 } from "@/lib/og";
 
 export const alt = "Plugin";
 export const size = { width: OG.width, height: OG.height };
 export const contentType = "image/png";
-// Must be a literal — Next.js segment config does not accept imported values.
-export const revalidate = 86400;
 
-export default async function Image({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
+async function renderImage(slug: string) {
+  "use cache";
+  cacheLife("days");
+  cacheTag("plugins", `plugin-${slug}`);
+
   const { data } = await getPluginBySlug(slug);
 
   if (!data) {
-    return createOGResponse(
+    return renderOGBytes(
       <OGLayout>
         <div
           style={{
@@ -49,7 +48,7 @@ export default async function Image({
     .map(([type, count]) => `${count} ${type}${count > 1 ? "s" : ""}`)
     .join(" · ");
 
-  return createOGResponse(
+  return renderOGBytes(
     <OGLayout>
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
@@ -69,6 +68,7 @@ export default async function Image({
             {logoUrl ? (
               <img
                 src={logoUrl}
+                alt=""
                 width={60}
                 height={60}
                 style={{ borderRadius: 10, objectFit: "contain" }}
@@ -196,4 +196,13 @@ export default async function Image({
       </div>
     </OGLayout>,
   );
+}
+
+export default async function Image({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  return ogResponse(await renderImage(slug));
 }

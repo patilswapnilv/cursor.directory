@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/utils/supabase/server";
 import { authActionClient } from "./safe-action";
@@ -23,6 +23,14 @@ export const toggleFollowAction = authActionClient
     }) => {
       const supabase = await createClient();
 
+      const invalidate = () => {
+        // Profile follower counts, the followed user's followers list, and
+        // the current user's following list must all reflect the change.
+        updateTag(`user-${slug}`);
+        updateTag(`followers-${userId}`);
+        updateTag(`following-${currentUserId}`);
+      };
+
       if (action === "follow") {
         const { error } = await supabase
           .from("followers")
@@ -32,7 +40,7 @@ export const toggleFollowAction = authActionClient
           throw new Error(error.message);
         }
 
-        revalidatePath(`/u/${slug}`);
+        invalidate();
         return;
       }
 
@@ -44,6 +52,6 @@ export const toggleFollowAction = authActionClient
           .eq("following_id", userId);
       }
 
-      revalidatePath(`/u/${slug}`);
+      invalidate();
     },
   );

@@ -3,6 +3,7 @@ import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { Suspense } from "react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { JoinCTA } from "@/components/join-cta";
@@ -76,7 +77,10 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <NuqsAdapter>
-            <ScrollToTop />
+            {/* Reads the pathname (runtime data); renders nothing visual. */}
+            <Suspense fallback={null}>
+              <ScrollToTop />
+            </Suspense>
             <Header />
             {children}
             <JoinCTA />

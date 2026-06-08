@@ -1,6 +1,7 @@
-import { readFile } from "fs/promises";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { cacheLife } from "next/cache";
 import { ImageResponse } from "next/og";
-import { join } from "path";
 import type { ReactElement } from "react";
 
 export { formatCount } from "@/lib/utils";
@@ -148,20 +149,43 @@ export function OGLayout({ children }: { children: ReactElement }) {
   );
 }
 
-export async function createOGResponse(element: ReactElement) {
+/**
+ * Renders an OG element tree to PNG bytes.
+ *
+ * With Cache Components, OG routes cache the *bytes* (serializable) rather
+ * than the `ImageResponse` (a Response, not serializable). Call this inside a
+ * `"use cache"` scope — build the JSX in the same scope, since React elements
+ * must not cross a cache boundary as introspected arguments.
+ */
+export async function renderOGBytes(
+  element: ReactElement,
+): Promise<Uint8Array> {
   const fonts = await loadFonts();
-  return new ImageResponse(element, {
+  const image = new ImageResponse(element, {
     width: OG.width,
     height: OG.height,
     fonts,
+  });
+  return new Uint8Array(await image.arrayBuffer());
+}
+
+export function ogResponse(bytes: Uint8Array) {
+  return new Response(bytes as BodyInit, {
     headers: {
+      "Content-Type": "image/png",
       "Cache-Control": OG_CACHE_CONTROL,
     },
   });
 }
 
-export async function createListingOG(title: string, subtitle: string) {
-  return createOGResponse(
+/**
+ * Cached static listing card, keyed by (title, subtitle). `max` lifetime:
+ * the copy only changes with a deploy, and the build id rotates cache keys.
+ */
+export async function renderListingOGBytes(title: string, subtitle: string) {
+  "use cache";
+  cacheLife("max");
+  return renderOGBytes(
     <OGLayout>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div

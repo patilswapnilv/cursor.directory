@@ -21,11 +21,12 @@ export const metadata: Metadata = {
   },
 };
 
-export const dynamic = "force-static";
-// Velocity data refreshes daily via the snapshot cron. Revalidating
-// the homepage every hour keeps the leaderboard close to live install
-// activity without sacrificing the static cache benefit.
-export const revalidate = 3600;
+// All data here comes from `"use cache"` queries tagged `plugins`/`users`,
+// so the page prerenders into the static shell and refreshes when actions
+// invalidate those tags (installs, stars, plugin mutations). The pg_cron
+// snapshot drift (20260514_plugin_install_snapshots) is covered by the
+// time-based `cacheLife("hours")` on `getPluginInstallVelocity`, which
+// revalidates in the background even during quiet periods.
 
 function toLeaderboardItem(
   p: NonNullable<Awaited<ReturnType<typeof getPlugins>>["data"]>[number],

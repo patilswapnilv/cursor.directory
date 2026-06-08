@@ -1,28 +1,12 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 import { z } from "zod";
 import { resolveGithubRepoIdFromRepository } from "@/lib/github-plugin/parse";
 import { InsertPluginError, insertPlugin } from "@/lib/plugins/insert";
+import { componentInputSchema } from "@/lib/plugins/types";
 import { pluginScanLimit } from "@/lib/rate-limit";
 import { ActionError, authActionClient } from "./safe-action";
-
-const componentSchema = z.object({
-  type: z.enum([
-    "rule",
-    "mcp_server",
-    "skill",
-    "agent",
-    "hook",
-    "lsp_server",
-    "command",
-  ]),
-  name: z.string().min(1),
-  slug: z.string().optional(),
-  description: z.string().optional(),
-  content: z.string().optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-});
 
 export const createPluginAction = authActionClient
   .metadata({
@@ -39,7 +23,7 @@ export const createPluginAction = authActionClient
       homepage: z.string().url().nullable().optional(),
       keywords: z.array(z.string()).optional(),
       components: z
-        .array(componentSchema)
+        .array(componentInputSchema)
         .min(1, "At least one component is required"),
     }),
   )
@@ -100,7 +84,7 @@ export const createPluginAction = authActionClient
         throw err;
       }
 
-      revalidatePath("/");
+      updateTag("plugins");
 
       return { slug: result.slug };
     },

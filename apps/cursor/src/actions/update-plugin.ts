@@ -1,31 +1,13 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 import { z } from "zod";
 import { enqueuePluginScan, kickDrainAfterResponse } from "@/lib/plugins/queue";
+import { type ComponentInput, componentInputSchema } from "@/lib/plugins/types";
 import { pluginScanLimit } from "@/lib/rate-limit";
 import { resolveComponentSlug } from "@/lib/slug";
 import { createClient } from "@/utils/supabase/admin-client";
 import { ActionError, authActionClient } from "./safe-action";
-
-const componentSchema = z.object({
-  type: z.enum([
-    "rule",
-    "mcp_server",
-    "skill",
-    "agent",
-    "hook",
-    "lsp_server",
-    "command",
-  ]),
-  name: z.string().min(1),
-  slug: z.string().optional(),
-  description: z.string().optional(),
-  content: z.string().optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-});
-
-type ComponentInput = z.infer<typeof componentSchema>;
 
 type ExistingComponent = {
   type: string;
@@ -128,7 +110,7 @@ export const updatePluginAction = authActionClient
       homepage: z.string().url().nullable().optional(),
       keywords: z.array(z.string()).optional(),
       components: z
-        .array(componentSchema)
+        .array(componentInputSchema)
         .min(1, "At least one component is required"),
     }),
   )
@@ -246,8 +228,8 @@ export const updatePluginAction = authActionClient
         }
       }
 
-      revalidatePath("/");
-      revalidatePath(`/plugins/${existing.slug}`);
+      updateTag("plugins");
+      updateTag(`plugin-${existing.slug}`);
 
       return {
         slug: existing.slug,

@@ -18,13 +18,20 @@ export async function generateMetadata({ params }: { params: Params }) {
   };
 }
 
-export default async function Page({ params }: { params: Params }) {
+/**
+ * `params` is awaited inside the Suspense boundary so the page chrome and
+ * skeleton prerender into the static shell while the company profile streams.
+ */
+async function CompanyLoader({ params }: { params: Params }) {
   const { slug } = await params;
+  return <Company slug={slug} />;
+}
 
+export default function Page({ params }: { params: Params }) {
   return (
     <div className="page-shell max-w-4xl min-h-screen pb-32 pt-24 md:pt-32">
       <Suspense fallback={<CompanySkeleton />}>
-        <Company slug={slug} />
+        <CompanyLoader params={params} />
       </Suspense>
     </div>
   );

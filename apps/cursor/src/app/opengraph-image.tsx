@@ -1,17 +1,14 @@
-import {
-  CursorIcon,
-  createOGResponse,
-  OG,
-  OGLayout,
-} from "@/lib/og";
+import { cacheLife } from "next/cache";
+import { CursorIcon, OG, OGLayout, ogResponse, renderOGBytes } from "@/lib/og";
 
 export const alt = "Cursor Directory";
 export const size = { width: OG.width, height: OG.height };
 export const contentType = "image/png";
-export const revalidate = 86400;
 
-export default async function Image() {
-  return createOGResponse(
+async function renderImage() {
+  "use cache";
+  cacheLife("max");
+  return renderOGBytes(
     <OGLayout>
       <div
         style={{
@@ -50,4 +47,8 @@ export default async function Image() {
       </div>
     </OGLayout>,
   );
+}
+
+export default async function Image() {
+  return ogResponse(await renderImage());
 }

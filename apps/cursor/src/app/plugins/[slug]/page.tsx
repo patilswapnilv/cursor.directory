@@ -53,5 +53,3 @@ export default async function Page({ params }: { params: Params }) {
 
   return <PluginDetailView plugin={plugin} />;
 }
-
-export const revalidate = 3600;

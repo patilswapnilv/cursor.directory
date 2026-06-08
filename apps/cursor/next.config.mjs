@@ -5,6 +5,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  cacheComponents: true,
   turbopack: {
     root: resolve(__dirname, "../.."),
   },

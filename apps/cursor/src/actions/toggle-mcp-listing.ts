@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/utils/supabase/server";
 import { authActionClient } from "./safe-action";
@@ -32,9 +32,8 @@ export const toggleMCPListingAction = authActionClient
       throw new Error(error.message);
     }
 
-    revalidatePath(`/mcp/${data.slug}`);
-    revalidatePath("/mcp");
-    revalidatePath("/");
+    updateTag("mcps");
+    updateTag(`mcp-${data.slug}`);
 
     return data;
   });

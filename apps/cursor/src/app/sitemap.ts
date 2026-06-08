@@ -1,9 +1,14 @@
 import type { MetadataRoute } from "next";
+import { cacheLife, cacheTag } from "next/cache";
 import { getCompanies, getPlugins } from "@/data/queries";
 
 const BASE_URL = "https://cursor.directory";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("plugins", "companies");
+
   const routes: MetadataRoute.Sitemap = [
     {
       url: BASE_URL,

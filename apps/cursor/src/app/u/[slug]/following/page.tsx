@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { MembersCard } from "@/components/members/members-card";
 import { ProfileTop } from "@/components/profile/profile-top";
 import { getUserFollowing, getUserProfile } from "@/data/queries";
@@ -16,17 +17,20 @@ export async function generateMetadata({ params }: { params: Params }) {
   };
 }
 
-export default async function Page({ params }: { params: Params }) {
+/**
+ * Session-gated content: the session read and `params` access stream inside
+ * the page's Suspense boundary so the route still prerenders a static shell.
+ */
+async function FollowingList({ params }: { params: Params }) {
   const { slug } = await params;
 
-  const { data } = await getUserProfile(slug);
-
-  const { data: following } = await getUserFollowing(data?.id);
   const session = await getSession();
 
   if (!session) {
     redirect("/login");
   }
+
+  const { data } = await getUserProfile(slug);
 
   if (!data) {
     return (
@@ -36,32 +40,42 @@ export default async function Page({ params }: { params: Params }) {
     );
   }
 
-  return (
-    <div className="page-shell max-w-4xl min-h-screen pb-32 pt-24 md:pt-32">
-      <div className="w-full">
-        <ProfileTop data={data} isOwner={session.user.id === data.id} />
+  const { data: following } = await getUserFollowing(data.id);
 
-        <div className="mt-12 border-t border-border pt-6">
-          <h3 className="section-eyebrow">Following</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Following {following?.length ?? 0} people.
-          </p>
-          <div className="mt-5 flex flex-col gap-1">
-            {following?.length === 0 && (
-              <div className="text-sm text-muted-foreground">No following</div>
-            )}
-            {following?.map((user) => (
-              <MembersCard
-                // @ts-expect-error
-                key={user.following.id}
-                // @ts-expect-error
-                member={user.following}
-                noBorder
-              />
-            ))}
-          </div>
+  return (
+    <div className="w-full">
+      <ProfileTop data={data} isOwner={session.user.id === data.id} />
+
+      <div className="mt-12 border-t border-border pt-6">
+        <h3 className="section-eyebrow">Following</h3>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Following {following?.length ?? 0} people.
+        </p>
+        <div className="mt-5 flex flex-col gap-1">
+          {following?.length === 0 && (
+            <div className="text-sm text-muted-foreground">No following</div>
+          )}
+          {following?.map((user) => (
+            <MembersCard
+              // @ts-expect-error
+              key={user.following.id}
+              // @ts-expect-error
+              member={user.following}
+              noBorder
+            />
+          ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+export default function Page({ params }: { params: Params }) {
+  return (
+    <div className="page-shell max-w-4xl min-h-screen pb-32 pt-24 md:pt-32">
+      <Suspense fallback={null}>
+        <FollowingList params={params} />
+      </Suspense>
     </div>
   );
 }

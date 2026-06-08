@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { NotificationSettings } from "@/components/profile/notification-settings";
 import { ProfileTop } from "@/components/profile/profile-top";
 import { getUserProfile } from "@/data/queries";
@@ -6,11 +7,15 @@ import { getSession } from "@/utils/supabase/auth";
 
 type Params = Promise<{ slug: string }>;
 
-export default async function Page({ params }: { params: Params }) {
+/**
+ * Owner-only settings: the session read and owner-scoped (uncached) profile
+ * read stream inside the page's Suspense boundary.
+ */
+async function SettingsContent({ params }: { params: Params }) {
   const { slug } = await params;
 
-  const { data } = await getUserProfile(slug);
   const session = await getSession();
+  const { data } = await getUserProfile(slug, session?.user?.id);
 
   if (!data) {
     return (
@@ -25,21 +30,29 @@ export default async function Page({ params }: { params: Params }) {
   }
 
   return (
-    <div className="page-shell max-w-4xl min-h-screen pb-32 pt-24 md:pt-32">
-      <div className="w-full">
-        <ProfileTop data={data} isOwner={true} />
+    <div className="w-full">
+      <ProfileTop data={data} isOwner={true} />
 
-        <div className="mt-10">
-          <h3 className="section-eyebrow">Settings</h3>
-          <div className="flex flex-col gap-2 mt-4">
-            <NotificationSettings
-              data={{
-                follow_email: data.follow_email,
-              }}
-            />
-          </div>
+      <div className="mt-10">
+        <h3 className="section-eyebrow">Settings</h3>
+        <div className="flex flex-col gap-2 mt-4">
+          <NotificationSettings
+            data={{
+              follow_email: data.follow_email,
+            }}
+          />
         </div>
       </div>
+    </div>
+  );
+}
+
+export default function Page({ params }: { params: Params }) {
+  return (
+    <div className="page-shell max-w-4xl min-h-screen pb-32 pt-24 md:pt-32">
+      <Suspense fallback={null}>
+        <SettingsContent params={params} />
+      </Suspense>
     </div>
   );
 }
