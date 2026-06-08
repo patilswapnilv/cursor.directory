@@ -14,9 +14,10 @@ import {
 // Vercel max for Pro / Enterprise + Fluid Compute (default since 2025) is 800s.
 // Source: https://vercel.com/docs/functions/configuring-functions/duration
 //
-// The `Agent.prompt` step can take 1–3 minutes for a typical plugin; the git
-// clone is bounded by CLONE_TIMEOUT_MS (60s) inside scan.ts. 800s gives us
-// generous headroom for the worst-case agent run.
+// The `Agent.prompt` step can take 1–3 minutes for a typical plugin; the repo
+// archive download is bounded by REPO_ARCHIVE_MAX_BYTES and a rate-limit
+// retry budget inside scan.ts. 800s gives us generous headroom for the
+// worst-case agent run.
 export const dynamic = "force-dynamic";
 export const maxDuration = 800;
 
