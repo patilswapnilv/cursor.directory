@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { formatNumber } from "@/utils/format";
+import { formatCount } from "@/lib/utils";
 import { AmbassadorBadge } from "../ambassador-badge";
 import { EditProfileModal } from "../modals/edit-profile-modal";
 import { EditableAvatar } from "./editable-avatar";
@@ -60,12 +60,12 @@ export function ProfileHeader({
         <div className="flex flex-wrap gap-4 pt-1 md:gap-5">
           <Link href={`/u/${slug}/following`}>
             <span className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-              {formatNumber(following_count)} Following
+              {formatCount(following_count)} Following
             </span>
           </Link>
           <Link href={`/u/${slug}/followers`}>
             <span className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-              {formatNumber(followers_count)} Followers
+              {formatCount(followers_count)} Followers
             </span>
           </Link>
         </div>
