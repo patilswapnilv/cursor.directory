@@ -37,6 +37,14 @@ const nextConfig = {
         permanent: true,
       },
       {
+        // Legacy MCP detail URLs map to their plugin page. Excludes `new`,
+        // which is the MCP submission form route. Edit pages (`/mcp/x/edit`)
+        // are two segments deep and never match this single-segment source.
+        source: "/mcp/:slug((?!new$)[^/]+)",
+        destination: "/plugins/mcp-:slug",
+        permanent: true,
+      },
+      {
         source: "/official/:path*",
         destination: "/",
         permanent: true,
