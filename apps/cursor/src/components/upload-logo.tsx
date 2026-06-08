@@ -17,8 +17,6 @@ export default function UploadLogo({
   image,
 }: UploadLogoProps) {
   const [preview, setPreview] = useState<string | null>(image ?? null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
@@ -30,8 +28,6 @@ export default function UploadLogo({
     if (file.size > MAX_FILE_SIZE) {
       return;
     }
-
-    setIsUploading(true);
 
     try {
       // Create preview
@@ -47,7 +43,7 @@ export default function UploadLogo({
       const fileExt = file.name.split(".").pop();
       const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
 
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from("avatars")
         .upload(`${prefix}/${fileName}`, file, {
           cacheControl: "3600",
@@ -68,14 +64,11 @@ export default function UploadLogo({
       onUpload?.(publicUrl);
     } catch (error) {
       console.error("Error uploading file:", error);
-    } finally {
-      setIsUploading(false);
     }
   };
 
-  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: DragEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    setIsDragging(false);
 
     const file = e.dataTransfer.files[0];
     if (file) {
@@ -83,14 +76,9 @@ export default function UploadLogo({
     }
   };
 
-  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+  // preventDefault is required for the drop event to fire.
+  const handleDragOver = (e: DragEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
   };
 
   const handleFileInput = (e: ChangeEvent<HTMLInputElement>) => {
@@ -105,30 +93,7 @@ export default function UploadLogo({
   };
 
   return (
-    <div
-      className={`relative w-[80px] h-[80px] border border-border 
-         transition-colors duration-200 cursor-pointer`}
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onClick={handleClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          handleClick();
-        }
-      }}
-      style={{
-        backgroundImage: `repeating-linear-gradient(
-          -60deg,
-          transparent,
-          transparent 1px,
-          #2C2C2C 1px,
-          #2C2C2C 2px,
-          transparent 2px,
-          transparent 6px
-        )`,
-      }}
-    >
+    <>
       <input
         ref={fileInputRef}
         type="file"
@@ -137,18 +102,39 @@ export default function UploadLogo({
         accept="image/*"
       />
 
-      {preview ? (
-        <Image
-          src={preview}
-          alt="Logo preview"
-          fill
-          className="object-cover rounded-lg"
-        />
-      ) : (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-primary">
-          <PlusIcon className="size-4" />
-        </div>
-      )}
-    </div>
+      <button
+        type="button"
+        aria-label="Upload logo"
+        className={`relative block w-[80px] h-[80px] border border-border 
+           transition-colors duration-200 cursor-pointer`}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onClick={handleClick}
+        style={{
+          backgroundImage: `repeating-linear-gradient(
+            -60deg,
+            transparent,
+            transparent 1px,
+            #2C2C2C 1px,
+            #2C2C2C 2px,
+            transparent 2px,
+            transparent 6px
+          )`,
+        }}
+      >
+        {preview ? (
+          <Image
+            src={preview}
+            alt="Logo preview"
+            fill
+            className="object-cover rounded-lg"
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-primary">
+            <PlusIcon className="size-4" />
+          </div>
+        )}
+      </button>
+    </>
   );
 }

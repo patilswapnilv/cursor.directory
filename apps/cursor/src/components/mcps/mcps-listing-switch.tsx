@@ -17,7 +17,7 @@ export function MCPListingSwitch({ id, active }: MCPListingSwitchProps) {
       currentState: {
         active,
       },
-      updateFn: (currentState, input) => ({
+      updateFn: (_currentState, input) => ({
         active: input.active,
       }),
       onSuccess: () => {

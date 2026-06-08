@@ -11,3 +11,7 @@ next-env.d.ts
 .seed/
 tsconfig.tsbuildinfo
 .swc
+
+# Local research scratch data (contains names/emails — never commit)
+.compile_research/
+compile_*.csv

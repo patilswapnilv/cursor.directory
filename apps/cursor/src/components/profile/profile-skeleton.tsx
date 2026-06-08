@@ -50,9 +50,9 @@ export function ProfileSkeleton() {
         </div>
 
         <div className="mt-6 space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {["row-1", "row-2", "row-3"].map((key) => (
             <div
-              key={i}
+              key={key}
               className="flex gap-3 rounded-lg border border-border p-4"
             >
               <Skeleton className="size-8 shrink-0 rounded-full" />

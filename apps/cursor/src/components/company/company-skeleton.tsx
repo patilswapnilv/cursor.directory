@@ -42,9 +42,9 @@ export function CompanySkeleton() {
       <div className="mt-12 border-t border-border pt-6">
         <Skeleton className="mb-4 h-3 w-10" />
         <div className="space-y-3">
-          {Array.from({ length: 2 }).map((_, i) => (
+          {["job-1", "job-2"].map((key) => (
             <div
-              key={i}
+              key={key}
               className="flex items-center gap-4 rounded-lg border border-border p-4"
             >
               <Skeleton className="size-10 shrink-0 rounded-md" />

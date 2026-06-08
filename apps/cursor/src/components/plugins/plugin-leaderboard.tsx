@@ -147,9 +147,7 @@ function buildRows(
   // zero installs ever are not "trending".
   const candidates =
     sort === "trending"
-      ? safeItems.filter(
-          (i) => (i.installs30d ?? 0) > 0 || i.installCount > 0,
-        )
+      ? safeItems.filter((i) => (i.installs30d ?? 0) > 0 || i.installCount > 0)
       : safeItems;
   const sorted = [...candidates].sort(
     (a, b) => metricFor(b, sort) - metricFor(a, sort),
@@ -280,8 +278,7 @@ function MoreRow({
     >
       <span aria-hidden />
       <span className="truncate">
-        +{count} more from{" "}
-        <span className="text-foreground">{author}</span>
+        +{count} more from <span className="text-foreground">{author}</span>
       </span>
       {sort === "recent" ? (
         <span aria-hidden />
@@ -397,13 +394,7 @@ export function PluginLeaderboard({
         ) : null}
       </div>
 
-      {hasMore ? (
-        <div
-          ref={sentinelRef}
-          className="h-10"
-          aria-hidden
-        />
-      ) : null}
+      {hasMore ? <div ref={sentinelRef} className="h-10" aria-hidden /> : null}
     </div>
   );
 }

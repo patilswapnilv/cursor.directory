@@ -18,7 +18,7 @@ export function NotificationSettings({ data }: NotificationSettingsProps) {
       currentState: {
         follow_email: data.follow_email ?? true,
       },
-      updateFn: (currentState, input) => ({
+      updateFn: (_currentState, input) => ({
         follow_email: input.follow_email,
       }),
       onSuccess: () => {
