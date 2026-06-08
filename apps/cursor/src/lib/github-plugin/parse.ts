@@ -124,7 +124,7 @@ export function parseGitHubUrl(
   return { owner: match[1], repo: match[2] };
 }
 
-function authHeaders(): Record<string, string> {
+export function githubAuthHeaders(): Record<string, string> {
   return process.env.GITHUB_TOKEN
     ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
     : {};
@@ -139,7 +139,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
  * remains safe to call from server actions (which have request timeouts).
  * Bulk scripts can pass a larger budget.
  */
-async function fetchWithRateLimit(
+export async function fetchWithRateLimit(
   url: string,
   init: RequestInit & { maxWaitMs?: number } = {},
 ): Promise<Response> {
@@ -212,7 +212,7 @@ async function fetchGitHubTree(
       cache: "no-store",
       headers: {
         Accept: "application/vnd.github.v3+json",
-        ...authHeaders(),
+        ...githubAuthHeaders(),
       },
       maxWaitMs: opts.maxWaitMs,
     });
@@ -263,7 +263,7 @@ export async function fetchGitHubRepoMeta(
         cache: "no-store",
         headers: {
           Accept: "application/vnd.github.v3+json",
-          ...authHeaders(),
+          ...githubAuthHeaders(),
         },
         maxWaitMs: opts.maxWaitMs,
       },

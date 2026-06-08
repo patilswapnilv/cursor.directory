@@ -28,6 +28,10 @@ import type {
   PluginComponent,
   ScanVerdict,
 } from "@/data/queries";
+import {
+  fetchWithRateLimit,
+  githubAuthHeaders,
+} from "@/lib/github-plugin/parse";
 import { createClient } from "@/utils/supabase/admin-client";
 
 /**
@@ -41,6 +45,23 @@ export class FatalScanError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "FatalScanError";
+  }
+}
+
+/**
+ * Terminal repo-fetch failure: GitHub deterministically refuses to serve the
+ * archive (repo deleted/private/DMCA'd, or larger than our scan budget).
+ * Re-fetching won't change the answer, so the scan resolves to a
+ * "suspicious / manual review" verdict instead of retrying. Anything else
+ * thrown during the archive download (DNS, rate limit, GitHub 5xx) is treated
+ * as transient and bubbles out so the queue redelivers the message — an infra
+ * hiccup must not permanently flag a legitimate plugin (see
+ * cursor/community-plugins#395).
+ */
+class UnscannableRepoError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UnscannableRepoError";
   }
 }
 
@@ -292,6 +313,39 @@ async function applyBlockedShortCircuit(pluginId: string) {
 // other step executions and have a hard ~500MB limit on Vercel.
 const REPO_ARCHIVE_MAX_BYTES = 100 * 1024 * 1024;
 
+// The Vercel function sandbox only guarantees a writable /tmp; os.homedir()
+// points at a path that may not exist or be read-only (`/home/sbx_user...`).
+// The Cursor SDK persists local-agent state under `~/.cursor/projects/...` by
+// default, which crashed every scan with `mkdir ENOENT` (see
+// cursor/community-plugins#395). A single stable dir — not per-scan — so a
+// warm function instance reuses one run store instead of opening a new
+// sqlite handle per scan.
+const SDK_STATE_HOME = path.join(tmpdir(), "cursor-sdk-home");
+
+/**
+ * Point every Cursor SDK state surface at writable tmpfs and return the
+ * `stateRoot` to pass to `Agent.prompt`:
+ *
+ * - `platform.stateRoot` covers the SDK's in-process run/checkpoint stores
+ *   (the `sdk-agent-store` path that failed in production).
+ * - `HOME` / `CURSOR_CONFIG_DIR` / `CURSOR_DATA_DIR` cover the spawned
+ *   `cursor-agent` process and the SDK's remaining `homedir()` fallbacks.
+ *
+ * Mutating `process.env` is safe here: this module only runs inside the
+ * drain route's function, and the values are constants so concurrent
+ * invocations in a shared instance can't observe a mix.
+ */
+async function redirectSdkStateToTmp(): Promise<string> {
+  const cursorDir = path.join(SDK_STATE_HOME, ".cursor");
+  const stateRoot = path.join(SDK_STATE_HOME, "sdk-agent-store");
+  process.env.HOME = SDK_STATE_HOME;
+  process.env.CURSOR_CONFIG_DIR = cursorDir;
+  process.env.CURSOR_DATA_DIR = cursorDir;
+  await mkdir(cursorDir, { recursive: true });
+  await mkdir(stateRoot, { recursive: true });
+  return stateRoot;
+}
+
 function archiveSizeGuard(tag: string) {
   let downloaded = 0;
   return new Transform({
@@ -299,8 +353,8 @@ function archiveSizeGuard(tag: string) {
       downloaded += chunk.length;
       if (downloaded > REPO_ARCHIVE_MAX_BYTES) {
         callback(
-          new Error(
-            `Repository archive exceeded ${REPO_ARCHIVE_MAX_BYTES} bytes.`,
+          new UnscannableRepoError(
+            `Repository archive exceeded the ${REPO_ARCHIVE_MAX_BYTES}-byte scan limit.`,
           ),
         );
         return;
@@ -329,12 +383,22 @@ async function cloneRepo(
   logInfo(tag, "GitHub archive download start", { owner, repo, cwd });
   try {
     await mkdir(cwd);
-    const response = await fetch(archiveUrl, {
+    // GITHUB_TOKEN (when configured) lifts the 60 req/hr anonymous rate limit
+    // shared across all tenants of the function's egress IP.
+    const response = await fetchWithRateLimit(archiveUrl, {
       headers: {
         Accept: "application/vnd.github+json",
         "User-Agent": "cursor-directory-plugin-scan",
+        ...githubAuthHeaders(),
       },
+      maxWaitMs: 30_000,
     });
+
+    if ([404, 410, 451].includes(response.status)) {
+      throw new UnscannableRepoError(
+        `GitHub returned ${response.status} for ${owner}/${repo} — the repository does not exist or is not public.`,
+      );
+    }
 
     if (!response.ok || !response.body) {
       throw new Error(
@@ -347,8 +411,8 @@ async function cloneRepo(
       contentLength &&
       Number.parseInt(contentLength, 10) > REPO_ARCHIVE_MAX_BYTES
     ) {
-      throw new Error(
-        `Repository archive advertised ${contentLength} bytes, above ${REPO_ARCHIVE_MAX_BYTES}.`,
+      throw new UnscannableRepoError(
+        `Repository archive advertised ${contentLength} bytes, above the ${REPO_ARCHIVE_MAX_BYTES}-byte scan limit.`,
       );
     }
 
@@ -418,24 +482,33 @@ async function runSecurityAgent(
       logInfo(tag, "no repo URL; using empty cwd", { cwd });
     }
   } catch (err) {
-    logError(tag, "clone setup failed; returning suspicious verdict", err);
-    return {
-      verdict: "suspicious",
-      severity: "low",
-      categories: [],
-      reasons: ["repository_clone_failed"],
-      summary: `Could not clone ${plugin.repository}: ${err instanceof Error ? err.message : String(err)}. Manual review required.`,
-      runId: null,
-    };
+    if (err instanceof UnscannableRepoError) {
+      logError(tag, "repo unscannable; returning suspicious verdict", err);
+      return {
+        verdict: "suspicious",
+        severity: "low",
+        categories: [],
+        reasons: ["repository_clone_failed"],
+        summary: `Could not fetch ${plugin.repository}: ${err.message} Manual review required.`,
+        runId: null,
+      };
+    }
+    // Transient failure (network, rate limit, GitHub 5xx): rethrow so the
+    // drain route leaves the message for pgmq to redeliver instead of
+    // permanently flagging the plugin over an infra hiccup.
+    logError(tag, "repo fetch failed; treating as retryable", err);
+    throw err;
   }
 
   try {
+    const stateRoot = await redirectSdkStateToTmp();
     const prompt = buildPrompt(plugin, { hasRepo, similar });
     logInfo(tag, "Agent.prompt start", {
       cwd,
       hasRepo,
       promptChars: prompt.length,
       model: "composer-2",
+      stateRoot,
     });
 
     const agentStartedAt = Date.now();
@@ -446,6 +519,11 @@ async function runSecurityAgent(
         model: { id: "composer-2" },
         local: { cwd },
         name: `scan:${plugin.slug}`,
+        // Keep the SDK's run store off the (read-only) default home dir.
+        // `CursorAgentPlatformOptions` isn't shipped with the SDK's types,
+        // so this field is typed as `any` — the runtime contract is
+        // `{ stateRoot?: string; workspaceRef?: string }`.
+        platform: { stateRoot },
       });
     } catch (err) {
       if (err instanceof CursorAgentError && err.isRetryable) {
