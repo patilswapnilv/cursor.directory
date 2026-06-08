@@ -110,6 +110,7 @@ export function PluginForm() {
             data.components.map((c) => ({
               id: crypto.randomUUID(),
               type: c.type as ComponentType,
+              slug: c.slug,
               name: c.name,
               description: c.description ?? "",
               content: c.content ?? "",

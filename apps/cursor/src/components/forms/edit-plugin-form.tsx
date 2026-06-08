@@ -29,6 +29,7 @@ export function EditPluginForm({ data }: { data: PluginRow }) {
       .map((c) => ({
         id: crypto.randomUUID(),
         type: c.type,
+        slug: c.slug,
         name: c.name,
         description: c.description ?? "",
         content: c.content ?? "",

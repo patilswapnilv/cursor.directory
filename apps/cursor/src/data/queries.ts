@@ -151,21 +151,42 @@ export async function getUserCompanies(userId: string) {
   return { data, error };
 }
 
-export async function getUserPlugins(userId: string) {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("plugins");
-
+async function fetchUserPlugins(
+  userId: string,
+  { includeInactive = false }: { includeInactive?: boolean } = {},
+) {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("plugins")
     .select("*, plugin_components(*)")
-    .eq("owner_id", userId)
-    .eq("active", true)
+    .eq("owner_id", userId);
+
+  if (!includeInactive) {
+    query = query.eq("active", true);
+  }
+
+  const { data, error } = await query
     .order("install_count", { ascending: false })
     .order("created_at", { ascending: false });
 
   return { data: data as PluginRow[] | null, error };
+}
+
+async function getPublicUserPlugins(userId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("plugins");
+  return fetchUserPlugins(userId);
+}
+
+export async function getUserPlugins(
+  userId: string,
+  { includeInactive = false }: { includeInactive?: boolean } = {},
+) {
+  // Owner views include inactive plugins and must reflect publish/delete
+  // actions immediately, so only the public variant is cached.
+  if (includeInactive) return fetchUserPlugins(userId, { includeInactive });
+  return getPublicUserPlugins(userId);
 }
 
 export async function getCompanies() {

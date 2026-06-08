@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Pencil } from "lucide-react";
+import { Download } from "lucide-react";
 import Link from "next/link";
 import { useAction } from "next-safe-action/hooks";
 import { useCallback, useEffect, useState } from "react";
@@ -19,6 +19,7 @@ import { McpSection } from "./detail/mcp-section";
 import { PluginLogo } from "./detail/plugin-logo";
 import { RulesSection } from "./detail/rules-section";
 import { ScanStatusBanner } from "./detail/scan-status-banner";
+import { PluginOwnerMenu } from "./plugin-owner-menu";
 import { StarButton } from "./star-button";
 import { VerifiedBadge } from "./verified-badge";
 import { VerifyControls } from "./verify-controls";
@@ -75,6 +76,13 @@ export function PluginDetailView({ plugin }: { plugin: PluginRow }) {
     <div className="min-h-screen px-4 pt-24 md:pt-32">
       <div className="page-shell max-w-4xl px-0 py-8">
         <ScanStatusBanner plugin={plugin} isOwner={isOwner} />
+        {isOwner && !plugin.active && (
+          <div className="mb-6 flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3">
+            <span className="text-sm text-muted-foreground">
+              This plugin is unpublished and hidden from the directory.
+            </span>
+          </div>
+        )}
         <div className="mb-6 flex items-center gap-4">
           <PluginLogo logo={plugin.logo} name={plugin.name} size={40} />
           <div className="flex-1">
@@ -87,19 +95,11 @@ export function PluginDetailView({ plugin }: { plugin: PluginRow }) {
               </div>
               <div className="flex items-center gap-2">
                 <VerifyControls plugin={plugin} />
+                <PluginOwnerMenu plugin={plugin} />
                 <span className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground">
                   <Download className="size-3.5" />
                   <span className="text-xs">{formatCount(installCount)}</span>
                 </span>
-                {isOwner && (
-                  <Link
-                    href={`/plugins/${plugin.slug}/edit`}
-                    className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                  >
-                    <Pencil className="size-3.5" />
-                    Edit
-                  </Link>
-                )}
                 <StarButton
                   pluginId={plugin.id}
                   slug={plugin.slug}

@@ -26,6 +26,15 @@ import { slugify } from "@/lib/slug";
 export type ComponentDraft = {
   id: string;
   type: ComponentType;
+  /**
+   * Stored DB (or parser-derived) slug, empty for components added in the
+   * form. Preserved through the round-trip because regenerating from `name`
+   * produces a different slug whenever name and slug were derived from
+   * different sources (GitHub-imported rules slugify the filename but use
+   * the frontmatter title/description as the name), which churns slugs,
+   * breaks the rescan diff, and drops metadata keyed by the old slug.
+   */
+  slug: string;
   name: string;
   description: string;
   content: string;
@@ -35,6 +44,7 @@ export function newComponentDraft(): ComponentDraft {
   return {
     id: crypto.randomUUID(),
     type: "rule",
+    slug: "",
     name: "",
     description: "",
     content: "",
@@ -51,7 +61,7 @@ export function draftToComponentInput(draft: ComponentDraft): ComponentInput {
   return {
     type: draft.type,
     name: draft.name.trim(),
-    slug: slugify(draft.name),
+    slug: draft.slug || slugify(draft.name),
     description: draft.description.trim() || undefined,
     content: draft.content.trim() || undefined,
   };
