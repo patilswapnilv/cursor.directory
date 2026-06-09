@@ -143,24 +143,47 @@ type Row =
       sort: LeaderboardSort;
     };
 
+// While searching, a plugin whose name or slug exactly matches the query
+// is pinned to the top regardless of the tab metric — searching "vercel"
+// should always surface the Vercel plugin first, even on Trending where
+// fuzzier matches may have higher recent install velocity.
+function isExactMatch(item: LeaderboardItem, query: string): boolean {
+  if (!query) return false;
+  return (
+    item.name.trim().toLowerCase() === query ||
+    item.slug.toLowerCase() === query
+  );
+}
+
 function buildRows(
   items: LeaderboardItem[],
   sort: LeaderboardSort,
   groupByAuthor: boolean,
   now: number,
+  searchQuery: string,
 ): Row[] {
+  const query = searchQuery.trim().toLowerCase();
   const safeItems = items.filter((i) => !isExcluded(i));
   // Trending requires *some* signal: either real recent installs, or
   // at least a positive lifetime install_count (so we can compute a
   // synthetic per-month estimate from the install rate). Plugins with
-  // zero installs ever are not "trending".
+  // zero installs ever are not "trending" — unless they exactly match an
+  // active search, in which case hiding them would be more confusing.
   const candidates =
     sort === "trending"
-      ? safeItems.filter((i) => (i.installs30d ?? 0) > 0 || i.installCount > 0)
+      ? safeItems.filter(
+          (i) =>
+            (i.installs30d ?? 0) > 0 ||
+            i.installCount > 0 ||
+            isExactMatch(i, query),
+        )
       : safeItems;
-  const sorted = [...candidates].sort(
-    (a, b) => metricFor(b, sort, now) - metricFor(a, sort, now),
-  );
+  const sorted = [...candidates].sort((a, b) => {
+    const exactDiff =
+      Number(isExactMatch(b, query)) - Number(isExactMatch(a, query));
+    if (exactDiff !== 0) return exactDiff;
+    return metricFor(b, sort, now) - metricFor(a, sort, now);
+  });
 
   if (!groupByAuthor) {
     return sorted.map((item, i) => ({ kind: "item", rank: i + 1, item }));
@@ -307,6 +330,7 @@ export function PluginLeaderboard({
   groupByAuthor = false,
   maxItems = Number.POSITIVE_INFINITY,
   chunkSize = 50,
+  searchQuery = "",
 }: {
   items: LeaderboardItem[];
   /**
@@ -319,14 +343,16 @@ export function PluginLeaderboard({
   groupByAuthor?: boolean;
   maxItems?: number;
   chunkSize?: number;
+  /** Active search query, used to pin exact matches to the top. */
+  searchQuery?: string;
 }) {
   const [sort, setSort] = useState<LeaderboardSort>(initialSort);
   const [visible, setVisible] = useState(chunkSize);
 
   const rows = useMemo(() => {
-    const built = buildRows(items, sort, groupByAuthor, now);
+    const built = buildRows(items, sort, groupByAuthor, now, searchQuery);
     return built.slice(0, maxItems);
-  }, [items, sort, groupByAuthor, maxItems, now]);
+  }, [items, sort, groupByAuthor, maxItems, now, searchQuery]);
 
   const visibleRows = rows.slice(0, visible);
   const hasMore = visible < rows.length;

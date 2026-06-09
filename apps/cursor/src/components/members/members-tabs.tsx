@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
@@ -31,11 +32,15 @@ export type Member = {
   is_ambassador?: boolean;
 };
 
-const categoryTabs = [
-  { key: null, label: "Developers" },
-  { key: "ambassadors", label: "Ambassadors" },
-  { key: "companies", label: "Companies" },
-] as const;
+export type MembersTab = "developers" | "ambassadors" | "companies";
+
+// Each tab is a dedicated, fully prerendered route. Tab switches are
+// prefetched client navigations and hard reloads serve identical HTML.
+const categoryTabs: { tab: MembersTab; label: string; href: string }[] = [
+  { tab: "developers", label: "Developers", href: "/members" },
+  { tab: "ambassadors", label: "Ambassadors", href: "/members/ambassadors" },
+  { tab: "companies", label: "Companies", href: "/members/companies" },
+];
 
 async function fetchMembersPage(
   offset: number,
@@ -53,19 +58,28 @@ async function fetchMembersPage(
 }
 
 export function MembersTabs({
+  tab,
   totalMembers,
-  companies,
+  companies = [],
   initialMembers = [],
 }: {
+  tab: MembersTab;
   totalMembers: number;
-  companies: Company[];
+  companies?: Company[];
   initialMembers?: Member[];
 }) {
-  const [selectedTab, setSelectedTab] = useQueryState("tab");
+  const isAmbassadors = tab === "ambassadors";
+  const isCompanies = tab === "companies";
+
   const [sort, setSort] = useQueryState("sort");
-  const [search] = useQueryState("q");
+  const [search, setSearch] = useQueryState("q");
+  // Tabs used to be a `?tab=` query param; the redirect that maps legacy
+  // URLs onto these routes can't strip the param, so drop it client-side.
+  const [legacyTab, setLegacyTab] = useQueryState("tab");
   const [members, setMembers] = useState<Member[]>(initialMembers);
-  const [loading, setLoading] = useState(initialMembers.length === 0);
+  const [loading, setLoading] = useState(
+    !isCompanies && initialMembers.length === 0,
+  );
   const [hasMoreMembers, setHasMoreMembers] = useState(
     initialMembers.length === PAGE_SIZE,
   );
@@ -78,12 +92,20 @@ export function MembersTabs({
   sortRef.current = sort;
   searchRef.current = search;
 
-  const isAmbassadors = selectedTab === "ambassadors";
-  const ambassadorsRef = useRef(isAmbassadors);
-  ambassadorsRef.current = isAmbassadors;
+  useEffect(() => {
+    if (legacyTab !== null) setLegacyTab(null);
+  }, [legacyTab, setLegacyTab]);
 
   useEffect(() => {
-    if (initialLoadRef.current && !sort && !search && !isAmbassadors) {
+    if (isCompanies) return;
+
+    // The server already rendered the first unfiltered page for this tab.
+    if (
+      initialLoadRef.current &&
+      !sort &&
+      !search &&
+      initialMembers.length > 0
+    ) {
       initialLoadRef.current = false;
       return;
     }
@@ -116,7 +138,7 @@ export function MembersTabs({
       cancelled = true;
       clearTimeout(debounce);
     };
-  }, [sort, search, isAmbassadors]);
+  }, [sort, search, isAmbassadors, isCompanies, initialMembers.length]);
 
   const loadMoreMembers = useCallback(() => {
     if (loadingRef.current || !hasMoreMembers) return;
@@ -126,14 +148,14 @@ export function MembersTabs({
       offsetRef.current,
       sortRef.current,
       searchRef.current,
-      ambassadorsRef.current,
+      isAmbassadors,
     ).then(({ data, hasMore }) => {
       setMembers((prev) => [...prev, ...data]);
       offsetRef.current += data.length;
       setHasMoreMembers(hasMore);
       loadingRef.current = false;
     });
-  }, [hasMoreMembers]);
+  }, [hasMoreMembers, isAmbassadors]);
 
   const filteredCompanies = useMemo(() => {
     const q = (search ?? "").toLowerCase();
@@ -153,7 +175,6 @@ export function MembersTabs({
     [filteredCompanies.length],
   );
 
-  const isCompanies = selectedTab === "companies";
   const hasMore = isCompanies
     ? companyVisible < filteredCompanies.length
     : hasMoreMembers;
@@ -178,13 +199,23 @@ export function MembersTabs({
     loadCursor,
   );
 
-  const handleTabChange = (key: string | null) => {
-    setSelectedTab(key);
-    setCompanyVisible(PAGE_SIZE);
+  // Carry the active search/sort over when switching tabs, mirroring the
+  // previous query-param tab behavior.
+  const tabHref = (href: string) => {
+    const params = new URLSearchParams();
+    if (search) params.set("q", search);
+    if (sort) params.set("sort", sort);
+    const qs = params.toString();
+    return qs ? `${href}?${qs}` : href;
   };
 
   const handleSortChange = (key: string | null) => {
     setSort(key);
+  };
+
+  const clearFilters = () => {
+    setSearch(null);
+    setSort(null);
   };
 
   const visibleItems = isCompanies
@@ -218,27 +249,19 @@ export function MembersTabs({
       </div>
 
       <div className="mt-6 flex items-center gap-2">
-        {categoryTabs.map((tab) => (
+        {categoryTabs.map((category) => (
           <Button
-            key={tab.label}
-            variant={
-              tab.key === null
-                ? !selectedTab
-                  ? "secondary"
-                  : "ghost"
-                : selectedTab === tab.key
-                  ? "secondary"
-                  : "ghost"
-            }
+            key={category.tab}
+            asChild
+            variant={tab === category.tab ? "secondary" : "ghost"}
             className={cn(
               "h-8 rounded-full px-4",
-              (tab.key === null ? !selectedTab : selectedTab === tab.key)
+              tab === category.tab
                 ? "text-foreground"
                 : "text-muted-foreground",
             )}
-            onClick={() => handleTabChange(tab.key)}
           >
-            {tab.label}
+            <Link href={tabHref(category.href)}>{category.label}</Link>
           </Button>
         ))}
       </div>
@@ -280,7 +303,7 @@ export function MembersTabs({
           <Button
             variant="outline"
             className="mt-4 rounded-full border-border"
-            onClick={() => handleTabChange(null)}
+            onClick={clearFilters}
           >
             Clear filters
           </Button>

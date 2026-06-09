@@ -1,33 +1,27 @@
-import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import type { Company } from "@/components/company/company-card";
 import { JoinCommunityLink } from "@/components/members/join-community-link";
-import { type Member, MembersTabs } from "@/components/members/members-tabs";
+import {
+  type Member,
+  type MembersTab,
+  MembersTabs,
+} from "@/components/members/members-tabs";
 import { getCompanies, getMembers, getTotalUsers } from "@/data/queries";
 import { formatCount } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Members | Cursor Directory",
-  description: "Thousands of developers and companies building with Cursor.",
-  openGraph: {
-    title: "Members | Cursor Directory",
-    description: "Thousands of developers and companies building with Cursor.",
-  },
-  twitter: {
-    title: "Members | Cursor Directory",
-    description: "Thousands of developers and companies building with Cursor.",
-  },
-};
-
 /**
- * The entire page is cached (stale-while-revalidate, 5-minute background
+ * Shared content for the /members, /members/ambassadors and
+ * /members/companies routes. Each tab has a dedicated, fully prerendered
+ * URL so a hard reload serves the exact same HTML as a client-side tab
+ * switch — no layout shift from hydrating a `?tab=` query param.
+ *
+ * The whole subtree is cached (stale-while-revalidate, 5-minute background
  * refresh): no per-request rendering, no streaming holes. The session-aware
  * "Join" CTA is a client component gated on an auth-cookie check, and the
- * tab/search filters are client-only state (see `nuqs-static-adapter`), so
- * nothing defers to request time. The `[[...number]]` segment is ignored —
- * legacy paginated URLs all serve this same cached page.
+ * search/sort filters are client-only state (see `nuqs-static-adapter`),
+ * so nothing defers to request time.
  */
-export default async function Page() {
+export async function MembersPageContent({ tab }: { tab: MembersTab }) {
   "use cache";
   cacheLife({ stale: 300, revalidate: 300, expire: 86400 });
   cacheTag("users", "companies");
@@ -35,8 +29,16 @@ export default async function Page() {
   const [{ data: totalUsers }, { data: companies }, { data: initialMembers }] =
     await Promise.all([
       getTotalUsers(),
-      getCompanies(),
-      getMembers({ page: 1, limit: 90 }),
+      tab === "companies"
+        ? getCompanies()
+        : Promise.resolve({ data: null, error: null }),
+      tab === "companies"
+        ? Promise.resolve({ data: null, error: null })
+        : getMembers({
+            page: 1,
+            limit: 90,
+            ambassadorsOnly: tab === "ambassadors",
+          }),
     ]);
 
   return (
@@ -54,6 +56,7 @@ export default async function Page() {
       </div>
 
       <MembersTabs
+        tab={tab}
         totalMembers={totalUsers?.count ?? 0}
         companies={(companies as Company[] | null) ?? []}
         initialMembers={(initialMembers as Member[] | null) ?? []}

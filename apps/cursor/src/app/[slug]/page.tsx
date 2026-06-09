@@ -1,41 +1,28 @@
 import { notFound, redirect } from "next/navigation";
-import { getPlugins } from "@/data/queries";
+import { getRuleRedirectSlugs, getRuleRedirectTarget } from "@/data/queries";
 
 type Params = Promise<{ slug: string }>;
 
-/**
- * Rules predate plugins and now live as `rule`-type plugin components.
- * Maps every rule component slug to its parent plugin's slug (first plugin
- * wins, matching the newest-first order plugins are fetched in).
- */
-async function getRuleRedirects(): Promise<Map<string, string>> {
-  const { data: plugins } = await getPlugins({ fetchAll: true });
-
-  const redirects = new Map<string, string>();
-  for (const plugin of plugins ?? []) {
-    for (const component of plugin.plugin_components ?? []) {
-      if (component.type === "rule" && !redirects.has(component.slug)) {
-        redirects.set(component.slug, plugin.slug);
-      }
-    }
-  }
-  return redirects;
-}
-
 export async function generateStaticParams() {
-  const redirects = await getRuleRedirects();
-  return [...redirects.keys()].map((slug) => ({ slug }));
+  const { data } = await getRuleRedirectSlugs();
+  const unique = [...new Set((data ?? []).map((row) => row.slug))];
+  return unique.map((slug) => ({ slug }));
 }
 
 /**
  * Legacy rule URLs (`/{rule-slug}`) redirect to the plugin that now contains
- * the rule component.
+ * the rule component. Rules predate plugins and live on as `rule`-type
+ * plugin components.
+ *
+ * Each page resolves its own slug with a small per-slug cached query.
+ * Don't share a fetch-the-whole-plugins-table cache entry here: thousands
+ * of these pages prerender concurrently, and waiting on that slow fill
+ * times out the build (`USE_CACHE_TIMEOUT`).
  */
 export default async function Page({ params }: { params: Params }) {
   const { slug } = await params;
 
-  const redirects = await getRuleRedirects();
-  const pluginSlug = redirects.get(slug);
+  const { data: pluginSlug } = await getRuleRedirectTarget(slug);
 
   if (pluginSlug) {
     redirect(`/plugins/${pluginSlug}`);
