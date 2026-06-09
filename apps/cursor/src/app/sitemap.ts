@@ -23,7 +23,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/members?tab=companies`,
+      url: `${BASE_URL}/members`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/members/ambassadors`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/members/companies`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.8,

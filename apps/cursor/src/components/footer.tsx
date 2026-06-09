@@ -17,7 +17,7 @@ const columns = [
     title: "Community",
     links: [
       { href: "/members", label: "Members" },
-      { href: "/members?tab=companies", label: "Companies" },
+      { href: "/members/companies", label: "Companies" },
     ],
   },
   {

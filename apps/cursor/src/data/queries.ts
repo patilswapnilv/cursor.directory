@@ -515,12 +515,14 @@ type GetMembersParams = {
   page?: number;
   limit?: number;
   q?: string;
+  ambassadorsOnly?: boolean;
 };
 
 export async function getMembers({
   page = 1,
   limit = 33,
   q,
+  ambassadorsOnly = false,
 }: GetMembersParams = {}) {
   "use cache";
   // Mirrors the old `revalidate = 300` behavior on the members page.
@@ -530,12 +532,16 @@ export async function getMembers({
   const supabase = await createClient();
   const query = supabase
     .from("users")
-    .select("id, name, image, slug, follower_count")
+    .select("id, name, image, slug, follower_count, is_ambassador")
     .eq("public", true)
     .order("created_at", { ascending: false })
     .limit(limit)
     .range((page - 1) * limit, page * limit - 1)
     .neq("name", "unknown user");
+
+  if (ambassadorsOnly) {
+    query.eq("is_ambassador", true);
+  }
 
   if (q) {
     query.textSearch("name", q, {

@@ -56,8 +56,23 @@ const nextConfig = {
         permanent: true,
       },
       {
+        // Legacy query-param tabs now live on dedicated prerendered routes.
+        // The named capture is consumed by the destination, so `tab` is
+        // stripped while other params (q, sort) pass through.
+        source: "/members",
+        has: [
+          {
+            type: "query",
+            key: "tab",
+            value: "(?<tab>ambassadors|companies)",
+          },
+        ],
+        destination: "/members/:tab",
+        permanent: false,
+      },
+      {
         source: "/companies",
-        destination: "/members?tab=companies",
+        destination: "/members/companies",
         permanent: true,
       },
       {
