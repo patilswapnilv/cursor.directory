@@ -71,6 +71,14 @@ const nextConfig = {
         permanent: false,
       },
       {
+        // Old paginated members URLs (/members/2, ...). Digits only, so the
+        // named tab routes (/members/ambassadors, /members/companies) are
+        // never shadowed.
+        source: "/members/:number(\\d+)",
+        destination: "/members",
+        permanent: true,
+      },
+      {
         source: "/companies",
         destination: "/members/companies",
         permanent: true,
