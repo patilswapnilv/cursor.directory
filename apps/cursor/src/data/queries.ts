@@ -366,6 +366,66 @@ export async function getPlugins({
   return { data: data as PluginRow[] | null, error };
 }
 
+// Slugs of every `rule` component on an active plugin. Legacy rule URLs
+// (`/{rule-slug}`) prerender a redirect to the parent plugin, and there are
+// thousands of them — they need a slugs-only query. Building the list from
+// `getPlugins({ fetchAll: true })` (full table, all columns, serial pages)
+// inside every prerendering page caused `USE_CACHE_TIMEOUT` build failures.
+export async function getRuleRedirectSlugs() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("plugins");
+
+  const supabase = await createClient();
+
+  return fetchAllPages<{ slug: string }>((from, to) =>
+    supabase
+      .from("plugin_components")
+      .select("slug, plugins!inner(id)")
+      .eq("type", "rule")
+      .eq("plugins.active", true)
+      .order("id", { ascending: true })
+      .range(from, to),
+  );
+}
+
+// Resolves a legacy rule slug to the slug of the active plugin that contains
+// it. The newest plugin wins when several contain the same rule slug,
+// matching the old redirect map that was built from a newest-first plugin
+// list. Cached per slug, so each redirect page fills a tiny cache entry
+// instead of waiting on the full-table plugins fetch.
+export async function getRuleRedirectTarget(ruleSlug: string): Promise<{
+  data: string | null;
+  error: unknown;
+}> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("plugins");
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("plugin_components")
+    .select("plugins!inner(slug, created_at)")
+    .eq("type", "rule")
+    .eq("slug", ruleSlug)
+    .eq("plugins.active", true);
+
+  if (error) return { data: null, error };
+
+  const newest = (data ?? [])
+    .map(
+      (row) =>
+        row.plugins as unknown as { slug: string; created_at: string } | null,
+    )
+    .filter((plugin) => plugin !== null)
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    )[0];
+
+  return { data: newest?.slug ?? null, error: null };
+}
+
 // Returns a Map<plugin_id, installs in last `windowDays` days>, derived
 // from `plugin_install_snapshots` via the `plugin_install_velocity` SQL
 // function. Plugins with no snapshot history yet (or no fresh installs)
