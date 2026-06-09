@@ -528,8 +528,123 @@ begin
 end$$;
 
 -- ---------------------------------------------------------------------------
--- Storage: policies for the public `avatars` bucket (bucket itself is
--- declared in supabase/config.toml for local dev).
+-- Function privileges: increment_install_count is invoked only from the
+-- service-role admin client (src/actions/track-install.ts). Postgres grants
+-- EXECUTE to PUBLIC by default, so without this any anon/authenticated caller
+-- could inflate plugins.install_count via PostgREST. Revoke it and re-grant to
+-- service_role only (mirrors the hardening on later RPCs such as
+-- update_plugin_with_components and toggle_plugin_star).
+-- ---------------------------------------------------------------------------
+revoke execute on function public.increment_install_count(uuid) from public, anon, authenticated;
+grant execute on function public.increment_install_count(uuid) to service_role;
+
+-- ---------------------------------------------------------------------------
+-- Row Level Security. The hosted base schema enforces RLS on these tables and
+-- the app's browser/cookie-scoped clients (anon / authenticated) rely on it,
+-- while the service-role admin client bypasses RLS. Enable RLS and add policies
+-- that mirror that posture so a fresh local database matches production instead
+-- of leaving every row world-readable/writable.
+-- ---------------------------------------------------------------------------
+do $$
+declare t text;
+begin
+  foreach t in array array[
+    'users', 'companies', 'plugins', 'plugin_components', 'plugin_stars',
+    'followers', 'mcps'
+  ] loop
+    if not exists (
+      select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace
+      where n.nspname = 'public' and c.relname = t and c.relrowsecurity
+    ) then
+      execute format('alter table public.%I enable row level security', t);
+    end if;
+  end loop;
+end$$;
+
+do $$
+begin
+  -- users: a session may read and edit only its own profile row. Public
+  -- profile and directory reads run through the service-role admin client.
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'users' and policyname = 'users_select_own') then
+    create policy users_select_own on public.users
+      for select to authenticated using ((select auth.uid()) = id);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'users' and policyname = 'users_update_own') then
+    create policy users_update_own on public.users
+      for update to authenticated using ((select auth.uid()) = id) with check ((select auth.uid()) = id);
+  end if;
+
+  -- companies: public rows are readable by anyone (directory search) and a user
+  -- always sees and owns the companies they created.
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'companies' and policyname = 'companies_select_public_or_own') then
+    create policy companies_select_public_or_own on public.companies
+      for select using (public = true or (select auth.uid()) = owner_id);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'companies' and policyname = 'companies_insert_own') then
+    create policy companies_insert_own on public.companies
+      for insert to authenticated with check ((select auth.uid()) = owner_id);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'companies' and policyname = 'companies_update_own') then
+    create policy companies_update_own on public.companies
+      for update to authenticated using ((select auth.uid()) = owner_id) with check ((select auth.uid()) = owner_id);
+  end if;
+
+  -- plugins: active listings are world-readable; owners read/modify their own
+  -- rows (seed rows have a null owner_id and are reachable only via active).
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'plugins' and policyname = 'plugins_select_active_or_own') then
+    create policy plugins_select_active_or_own on public.plugins
+      for select using (active = true or (select auth.uid()) = owner_id);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'plugins' and policyname = 'plugins_update_own') then
+    create policy plugins_update_own on public.plugins
+      for update to authenticated using ((select auth.uid()) = owner_id) with check ((select auth.uid()) = owner_id);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'plugins' and policyname = 'plugins_delete_own') then
+    create policy plugins_delete_own on public.plugins
+      for delete to authenticated using ((select auth.uid()) = owner_id);
+  end if;
+
+  -- followers: a user manages only the rows where they are the follower.
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'followers' and policyname = 'followers_select_own') then
+    create policy followers_select_own on public.followers
+      for select to authenticated using ((select auth.uid()) = follower_id);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'followers' and policyname = 'followers_insert_own') then
+    create policy followers_insert_own on public.followers
+      for insert to authenticated with check ((select auth.uid()) = follower_id);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'followers' and policyname = 'followers_delete_own') then
+    create policy followers_delete_own on public.followers
+      for delete to authenticated using ((select auth.uid()) = follower_id);
+  end if;
+
+  -- plugin_stars: a user reads only their own stars; writes go through the
+  -- SECURITY DEFINER toggle_plugin_star RPC (20260523_plugin_star_atomic.sql).
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'plugin_stars' and policyname = 'plugin_stars_select_own') then
+    create policy plugin_stars_select_own on public.plugin_stars
+      for select to authenticated using ((select auth.uid()) = user_id);
+  end if;
+
+  -- mcps: active listings are world-readable; owners modify their own rows.
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'mcps' and policyname = 'mcps_select_active_or_own') then
+    create policy mcps_select_active_or_own on public.mcps
+      for select using (active = true or (select auth.uid()) = owner_id);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'mcps' and policyname = 'mcps_update_own') then
+    create policy mcps_update_own on public.mcps
+      for update to authenticated using ((select auth.uid()) = owner_id) with check ((select auth.uid()) = owner_id);
+  end if;
+
+  -- plugin_components is intentionally left without an anon/authenticated
+  -- policy: it is written by the admin client and read via plugin joins on the
+  -- server, so RLS denies all direct Data API access (service_role bypasses it).
+end$$;
+
+-- ---------------------------------------------------------------------------
+-- Storage: policies for the public `avatars` bucket (bucket itself is declared
+-- in supabase/config.toml). The bucket is shared across user, company, plugin
+-- and mcp uploads with mixed path prefixes, so write access is scoped to the
+-- object owner (owner_id) rather than the first path segment.
 -- ---------------------------------------------------------------------------
 do $$
 begin
@@ -548,7 +663,8 @@ begin
       and policyname = 'avatars_authenticated_insert'
   ) then
     create policy avatars_authenticated_insert on storage.objects
-      for insert to authenticated with check (bucket_id = 'avatars');
+      for insert to authenticated
+      with check (bucket_id = 'avatars' and owner_id = (select auth.uid())::text);
   end if;
 
   if not exists (
@@ -557,6 +673,8 @@ begin
       and policyname = 'avatars_authenticated_update'
   ) then
     create policy avatars_authenticated_update on storage.objects
-      for update to authenticated using (bucket_id = 'avatars');
+      for update to authenticated
+      using (bucket_id = 'avatars' and owner_id = (select auth.uid())::text)
+      with check (bucket_id = 'avatars' and owner_id = (select auth.uid())::text);
   end if;
 end$$;
