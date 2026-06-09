@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { PluginForm } from "@/components/forms/plugin-form";
 import { getSession } from "@/utils/supabase/auth";
 
@@ -19,13 +20,22 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function Page() {
+/**
+ * The auth gate reads the session (runtime API), so it streams inside
+ * Suspense. The marketing copy above stays in the static shell, which also
+ * means link prefetches of this page no longer invoke a function.
+ */
+async function NewPluginGate() {
   const session = await getSession();
 
   if (!session) {
     redirect("/login?next=/plugins/new");
   }
 
+  return <PluginForm />;
+}
+
+export default function Page() {
   return (
     <div className="min-h-screen px-6 pt-24 md:pt-32 pb-32">
       <div className="mx-auto w-full max-w-lg">
@@ -47,7 +57,9 @@ export default async function Page() {
           </p>
         </div>
 
-        <PluginForm />
+        <Suspense fallback={null}>
+          <NewPluginGate />
+        </Suspense>
       </div>
     </div>
   );

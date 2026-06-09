@@ -3,32 +3,43 @@ import { getPlugins } from "@/data/queries";
 
 type Params = Promise<{ slug: string }>;
 
-export async function generateStaticParams() {
+/**
+ * Rules predate plugins and now live as `rule`-type plugin components.
+ * Maps every rule component slug to its parent plugin's slug (first plugin
+ * wins, matching the newest-first order plugins are fetched in).
+ */
+async function getRuleRedirects(): Promise<Map<string, string>> {
   const { data: plugins } = await getPlugins({ fetchAll: true });
-  if (!plugins) return [];
 
-  return plugins.flatMap((plugin) =>
-    (plugin.plugin_components ?? [])
-      .filter((c) => c.type === "rule")
-      .map((rule) => ({ slug: rule.slug })),
-  );
+  const redirects = new Map<string, string>();
+  for (const plugin of plugins ?? []) {
+    for (const component of plugin.plugin_components ?? []) {
+      if (component.type === "rule" && !redirects.has(component.slug)) {
+        redirects.set(component.slug, plugin.slug);
+      }
+    }
+  }
+  return redirects;
 }
 
+export async function generateStaticParams() {
+  const redirects = await getRuleRedirects();
+  return [...redirects.keys()].map((slug) => ({ slug }));
+}
+
+/**
+ * Legacy rule URLs (`/{rule-slug}`) redirect to the plugin that now contains
+ * the rule component.
+ */
 export default async function Page({ params }: { params: Params }) {
   const { slug } = await params;
 
-  const { data: plugins } = await getPlugins({ fetchAll: true });
-  const parentPlugin = (plugins ?? []).find((p) =>
-    (p.plugin_components ?? []).some(
-      (c) => c.type === "rule" && c.slug === slug,
-    ),
-  );
+  const redirects = await getRuleRedirects();
+  const pluginSlug = redirects.get(slug);
 
-  if (parentPlugin) {
-    redirect(`/plugins/${parentPlugin.slug}`);
+  if (pluginSlug) {
+    redirect(`/plugins/${pluginSlug}`);
   }
 
   notFound();
 }
-
-export const revalidate = 3600;

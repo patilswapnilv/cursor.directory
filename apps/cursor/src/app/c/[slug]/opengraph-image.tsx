@@ -1,26 +1,26 @@
+import { cacheLife, cacheTag } from "next/cache";
 import { getCompanyProfile } from "@/data/queries";
 import {
-  createOGResponse,
   OG,
   OGLayout,
+  ogResponse,
+  renderOGBytes,
   resolveOgImageUrl,
 } from "@/lib/og";
 
 export const alt = "Company Profile";
 export const size = { width: OG.width, height: OG.height };
 export const contentType = "image/png";
-export const revalidate = 86400;
 
-export default async function Image({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
+async function renderImage(slug: string) {
+  "use cache";
+  cacheLife("days");
+  cacheTag("companies", `company-${slug}`);
+
   const { data } = await getCompanyProfile(slug);
 
   if (!data) {
-    return createOGResponse(
+    return renderOGBytes(
       <OGLayout>
         <div
           style={{
@@ -38,7 +38,7 @@ export default async function Image({
 
   const logoUrl = resolveOgImageUrl(data.image);
 
-  return createOGResponse(
+  return renderOGBytes(
     <OGLayout>
       <div style={{ display: "flex", alignItems: "center", gap: 40 }}>
         {logoUrl && (
@@ -57,6 +57,7 @@ export default async function Image({
           >
             <img
               src={logoUrl}
+              alt=""
               width={104}
               height={104}
               style={{ borderRadius: 14, objectFit: "contain" }}
@@ -131,4 +132,13 @@ export default async function Image({
       </div>
     </OGLayout>,
   );
+}
+
+export default async function Image({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  return ogResponse(await renderImage(slug));
 }

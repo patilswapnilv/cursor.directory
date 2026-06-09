@@ -10,7 +10,7 @@ import {
   declinePluginAction,
 } from "@/actions/review-plugin";
 import { Button } from "@/components/ui/button";
-import type { PluginRow } from "@/data/queries";
+import type { PluginRow } from "@/lib/plugins/types";
 
 function PluginReviewCard({ plugin }: { plugin: PluginRow }) {
   const [dismissed, setDismissed] = useState(false);

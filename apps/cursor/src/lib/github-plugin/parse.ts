@@ -163,9 +163,10 @@ export async function fetchWithRateLimit(
 
     const retryAfter = Number(res.headers.get("retry-after") ?? "");
     const reset = Number(res.headers.get("x-ratelimit-reset") ?? "0") * 1000;
-    let waitMs = Number.isFinite(retryAfter) && retryAfter > 0
-      ? retryAfter * 1000
-      : Math.max(reset - Date.now(), 1000);
+    let waitMs =
+      Number.isFinite(retryAfter) && retryAfter > 0
+        ? retryAfter * 1000
+        : Math.max(reset - Date.now(), 1000);
     waitMs = Math.min(waitMs, maxWaitMs - totalWait);
 
     if (waitMs <= 0 || attempt === maxAttempts) return res;

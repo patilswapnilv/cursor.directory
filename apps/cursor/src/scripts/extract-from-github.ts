@@ -223,7 +223,8 @@ async function githubTopicSearch(
   const out: Candidate[] = [];
   const PER_PAGE = 100;
   const MAX_PAGES = 10;
-  const query = minStars > 0 ? `topic:${topic} stars:>=${minStars}` : `topic:${topic}`;
+  const query =
+    minStars > 0 ? `topic:${topic} stars:>=${minStars}` : `topic:${topic}`;
 
   for (let page = 1; page <= MAX_PAGES; page++) {
     const data = await githubSearch<{ full_name?: string }>(
@@ -292,9 +293,7 @@ async function loadResumeIds(output: string): Promise<Set<number>> {
   return ids;
 }
 
-async function discoverCandidates(
-  args: Args,
-): Promise<Map<string, Candidate>> {
+async function discoverCandidates(args: Args): Promise<Map<string, Candidate>> {
   const candidates = new Map<string, Candidate>();
 
   if (!args.refreshCandidates && existsSync(args.candidatesCache)) {

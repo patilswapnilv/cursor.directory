@@ -1,7 +1,10 @@
 {
   "name": "directories",
   "private": true,
-  "workspaces": ["packages/*", "apps/*"],
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
     "@tailwindcss/postcss": "^4.3.0"

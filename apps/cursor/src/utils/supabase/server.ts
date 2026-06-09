@@ -1,28 +1,21 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export async function createClient({
-  admin = false,
-}: {
-  admin?: boolean;
-} = {}) {
+/**
+ * Cookie-scoped Supabase client for server components, server actions, and
+ * route handlers. Queries run as the logged-in user with RLS enforced.
+ *
+ * For privileged access that bypasses RLS, use
+ * `@/utils/supabase/admin-client` instead — never mix the secret key with
+ * cookie-based session auth.
+ */
+export async function createClient() {
   const cookieStore = await cookies();
-
-  const auth = admin
-    ? {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-      }
-    : {};
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    admin
-      ? process.env.SUPABASE_SECRET_KEY!
-      : process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
-      auth,
       cookies: {
         getAll() {
           return cookieStore.getAll();

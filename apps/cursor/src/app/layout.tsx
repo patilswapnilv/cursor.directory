@@ -2,13 +2,14 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { Suspense } from "react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { JoinCTA } from "@/components/join-cta";
 import { GlobalModals } from "@/components/modals/global-modals";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { Toaster } from "@/components/ui/sonner";
+import { NuqsAdapter } from "@/lib/nuqs-static-adapter";
 import { cn } from "@/lib/utils";
 import { cursorGothic } from "@/styles/fonts";
 
@@ -76,7 +77,10 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <NuqsAdapter>
-            <ScrollToTop />
+            {/* Reads the pathname (runtime data); renders nothing visual. */}
+            <Suspense fallback={null}>
+              <ScrollToTop />
+            </Suspense>
             <Header />
             {children}
             <JoinCTA />

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/utils/supabase/server";
 import { ActionError, authActionClient } from "./safe-action";
@@ -28,7 +28,9 @@ export const deletePluginAction = authActionClient
     }
 
     if (existing.owner_id !== userId) {
-      throw new ActionError("You do not have permission to delete this plugin.");
+      throw new ActionError(
+        "You do not have permission to delete this plugin.",
+      );
     }
 
     const { error } = await supabase
@@ -41,7 +43,9 @@ export const deletePluginAction = authActionClient
       throw new ActionError(`Failed to delete plugin: ${error.message}`);
     }
 
-    revalidatePath("/");
+    // Deletions must disappear from cached lists immediately for the owner.
+    updateTag("plugins");
+    updateTag(`plugin-${existing.slug}`);
     revalidatePath("/admin/plugins");
 
     return { slug: existing.slug };

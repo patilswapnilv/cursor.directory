@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { enqueuePluginScan, kickDrainAfterResponse } from "@/lib/plugins/queue";
 import { createClient } from "@/utils/supabase/admin-client";
@@ -36,8 +36,8 @@ export const approveFlaggedPluginAction = adminActionClient
     }
 
     revalidatePath("/admin/plugins");
-    revalidatePath("/");
-    revalidatePath(`/plugins/${plugin.slug}`);
+    updateTag("plugins");
+    updateTag(`plugin-${plugin.slug}`);
     return { success: true };
   });
 
@@ -65,8 +65,8 @@ export const confirmFlagAction = adminActionClient
     }
 
     revalidatePath("/admin/plugins");
-    revalidatePath("/");
-    revalidatePath(`/plugins/${plugin.slug}`);
+    updateTag("plugins");
+    updateTag(`plugin-${plugin.slug}`);
     return { success: true };
   });
 
@@ -76,16 +76,26 @@ export const rescanPluginAction = adminActionClient
   .action(async ({ parsedInput: { pluginId } }) => {
     const supabase = await createClient();
 
-    const { error: resetError } = await supabase
+    const { data: plugin, error: resetError } = await supabase
       .from("plugins")
       .update({ scan_status: "pending" })
-      .eq("id", pluginId);
+      .eq("id", pluginId)
+      .select("slug")
+      .single();
 
-    if (resetError) {
+    if (resetError || !plugin) {
       throw new ActionError(
-        `Failed to reset scan state: ${resetError.message}`,
+        `Failed to reset scan state: ${resetError?.message ?? "not found"}`,
       );
     }
+
+    // The status reset must reach cached readers (detail banner, leaderboard)
+    // right away, so invalidate before enqueueing — a queue failure must not
+    // leave cached views showing the stale status when the row is already
+    // pending. The drain route only invalidates again once the scan ends.
+    revalidatePath("/admin/plugins");
+    updateTag("plugins");
+    updateTag(`plugin-${plugin.slug}`);
 
     try {
       await enqueuePluginScan(pluginId);
@@ -96,6 +106,5 @@ export const rescanPluginAction = adminActionClient
       );
     }
 
-    revalidatePath("/admin/plugins");
     return { success: true };
   });

@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 import { requireCronAuth } from "@/lib/cron-auth";
 import {
@@ -18,8 +19,15 @@ import {
 // archive download is bounded by REPO_ARCHIVE_MAX_BYTES and a rate-limit
 // retry budget inside scan.ts. 800s gives us generous headroom for the
 // worst-case agent run.
-export const dynamic = "force-dynamic";
 export const maxDuration = 800;
+
+/**
+ * Scan outcomes mutate plugin rows (scan_status, flags), so cached plugin
+ * reads must be refreshed. All plugin cache entries carry the `plugins` tag.
+ */
+function invalidatePluginCaches() {
+  revalidateTag("plugins", "max");
+}
 
 // Visibility timeout: how long the message is invisible to other consumers
 // after a successful `read`. Set comfortably longer than `maxDuration` so we
@@ -95,6 +103,7 @@ export async function GET(request: NextRequest) {
     });
     await markScanFailed(pluginId, `Exceeded ${MAX_ATTEMPTS} scan attempts`);
     await archivePluginScan(msg_id);
+    invalidatePluginCaches();
     return NextResponse.json({
       ok: true,
       buried: pluginId,
@@ -108,6 +117,7 @@ export async function GET(request: NextRequest) {
   try {
     await runPluginScan(pluginId);
     await archivePluginScan(msg_id);
+    invalidatePluginCaches();
     logInfo("scanned ok", { pluginId, msg_id });
     return NextResponse.json({ ok: true, scanned: pluginId, msg_id });
   } catch (err) {
@@ -118,6 +128,7 @@ export async function GET(request: NextRequest) {
       await archivePluginScan(msg_id).catch((archiveErr) =>
         logError("archive (fatal) failed", archiveErr),
       );
+      invalidatePluginCaches();
       return NextResponse.json(
         {
           ok: false,

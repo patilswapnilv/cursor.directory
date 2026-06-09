@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/utils/supabase/admin-client";
 import { ActionError, authActionClient } from "./safe-action";
@@ -40,6 +40,6 @@ export const requestPluginVerificationAction = authActionClient
     }
 
     revalidatePath("/admin/plugins");
-    revalidatePath(`/plugins/${plugin.slug}`);
+    updateTag(`plugin-${plugin.slug}`);
     return { success: true };
   });

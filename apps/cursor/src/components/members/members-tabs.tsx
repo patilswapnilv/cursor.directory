@@ -20,7 +20,9 @@ import { MembersCard } from "./members-card";
 
 const PAGE_SIZE = 90;
 
-type Member = {
+const SKELETON_KEYS = Array.from({ length: 12 }, (_, i) => `skeleton-${i}`);
+
+export type Member = {
   id: string;
   slug: string;
   image: string;
@@ -197,9 +199,7 @@ export function MembersTabs({
           className="max-w-[520px]"
         />
 
-        {isCompanies ? (
-          <AddCompanyButton redirect={true} />
-        ) : null}
+        {isCompanies ? <AddCompanyButton redirect={true} /> : null}
 
         {!isCompanies && (
           <Select
@@ -245,9 +245,9 @@ export function MembersTabs({
 
       {loading && visibleItems.length === 0 ? (
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 12 }).map((_, i) => (
+          {SKELETON_KEYS.map((key) => (
             <div
-              key={i}
+              key={key}
               className="flex items-center gap-3 rounded-md border border-border p-3"
             >
               <Skeleton className="size-10 rounded-[6px]" />

@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,15 +23,12 @@ export function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const supabase = createClient();
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function getUser() {
-      setIsLoading(true);
       const session = await supabase.auth.getSession();
 
       if (!session.data.session) {
-        setIsLoading(false);
         return;
       }
 
@@ -43,7 +39,6 @@ export function MobileMenu() {
         .single();
 
       setUser(data);
-      setIsLoading(false);
     }
 
     if (!user) {
@@ -116,7 +111,10 @@ export function MobileMenu() {
               ))}
 
               <Link href="/plugins/new" onClick={() => setIsOpen(false)}>
-                <Button variant="default" className="mt-6 h-9 w-full rounded-full">
+                <Button
+                  variant="default"
+                  className="mt-6 h-9 w-full rounded-full"
+                >
                   Submit a plugin
                 </Button>
               </Link>

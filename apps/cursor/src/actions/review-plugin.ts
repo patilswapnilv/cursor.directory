@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/utils/supabase/admin-client";
 import { ActionError, adminActionClient } from "./safe-action";
@@ -27,10 +27,10 @@ export const approvePluginAction = adminActionClient
       .single();
 
     revalidatePath("/admin/plugins");
-    revalidatePath("/");
+    updateTag("plugins");
 
     if (plugin?.slug) {
-      revalidatePath(`/plugins/${plugin.slug}`);
+      updateTag(`plugin-${plugin.slug}`);
     }
 
     return { success: true };
@@ -52,7 +52,7 @@ export const declinePluginAction = adminActionClient
     }
 
     revalidatePath("/admin/plugins");
-    revalidatePath("/");
+    updateTag("plugins");
 
     return { success: true };
   });

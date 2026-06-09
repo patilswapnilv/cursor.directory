@@ -5,6 +5,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  cacheComponents: true,
   turbopack: {
     root: resolve(__dirname, "../.."),
   },
@@ -34,6 +35,14 @@ const nextConfig = {
       {
         source: "/mcp",
         destination: "/",
+        permanent: true,
+      },
+      {
+        // Legacy MCP detail URLs map to their plugin page. Excludes `new`,
+        // which is the MCP submission form route. Edit pages (`/mcp/x/edit`)
+        // are two segments deep and never match this single-segment source.
+        source: "/mcp/:slug((?!new$)[^/]+)",
+        destination: "/plugins/mcp-:slug",
         permanent: true,
       },
       {

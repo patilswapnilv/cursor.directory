@@ -12,9 +12,12 @@ import { HeroTitle } from "./hero-title";
 export function Startpage({
   leaderboardItems,
   totalUsers,
+  generatedAt,
 }: {
   leaderboardItems: LeaderboardItem[];
   totalUsers: number;
+  /** Cache-scope timestamp for deterministic leaderboard age math. */
+  generatedAt: number;
 }) {
   const [search] = useQueryState("q", { defaultValue: "" });
 
@@ -54,7 +57,7 @@ export function Startpage({
 
           {visibleItems.length > 0 ? (
             <div className="mx-auto mb-14 w-full max-w-[880px]">
-              <PluginLeaderboard items={visibleItems} />
+              <PluginLeaderboard items={visibleItems} now={generatedAt} />
             </div>
           ) : (
             <div className="mt-16 flex flex-col items-center">

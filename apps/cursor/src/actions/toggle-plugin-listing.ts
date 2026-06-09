@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/utils/supabase/server";
 import { ActionError, authActionClient } from "./safe-action";
@@ -29,7 +29,9 @@ export const togglePluginListingAction = authActionClient
     }
 
     if (existing.owner_id !== userId) {
-      throw new ActionError("You do not have permission to update this plugin.");
+      throw new ActionError(
+        "You do not have permission to update this plugin.",
+      );
     }
 
     if (active && existing.permanently_blocked) {
@@ -50,8 +52,9 @@ export const togglePluginListingAction = authActionClient
       throw new ActionError(error.message);
     }
 
-    revalidatePath("/");
-    revalidatePath(`/plugins/${data.slug}`);
+    // Publish/unpublish must be visible to the owner on the next render.
+    updateTag("plugins");
+    updateTag(`plugin-${data.slug}`);
 
     return data;
   });

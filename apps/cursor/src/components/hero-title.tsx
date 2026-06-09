@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { formatNumber } from "@/utils/format";
+import { formatCount } from "@/lib/utils";
 
 const linkClass = "border-b border-dashed border-input text-foreground";
 
@@ -15,7 +15,7 @@ export function HeroTitle({ totalUsers }: { totalUsers: number }) {
       <p className="marketing-copy mx-auto max-w-[760px] text-balance">
         Discover and install plugins from{" "}
         <Link href="/members" className={linkClass}>
-          {formatNumber(totalUsers)}+ developers
+          {formatCount(totalUsers)}+ developers
         </Link>
         , ranked by what&rsquo;s trending.
       </p>

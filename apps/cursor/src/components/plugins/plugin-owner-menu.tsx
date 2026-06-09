@@ -43,7 +43,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { PluginRow } from "@/data/queries";
+import type { PluginRow } from "@/lib/plugins/types";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
 
@@ -229,9 +229,7 @@ export function PluginOwnerMenu({ plugin }: Props) {
               disabled={isToggling}
               onClick={() => toggleListing({ id: plugin.id, active: false })}
             >
-              {isToggling ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : null}
+              {isToggling ? <Loader2 className="size-4 animate-spin" /> : null}
               Unpublish
             </Button>
           </DialogFooter>

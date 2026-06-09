@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { installGlobalLimit, installPerPluginLimit } from "@/lib/rate-limit";
 import { createClient as createAdminClient } from "@/utils/supabase/admin-client";
@@ -36,8 +36,11 @@ export const trackInstallAction = actionClient
       plugin_id_input: pluginId,
     });
 
-    revalidatePath("/");
-    revalidatePath(`/plugins/${slug}`);
+    // Counters tolerate stale-while-revalidate: serve the cached leaderboard
+    // and plugin page instantly while fresh counts regenerate in the
+    // background (avoids a blocking re-render per install).
+    revalidateTag("plugins", "max");
+    revalidateTag(`plugin-${slug}`, "max");
 
     return { tracked: true } satisfies TrackInstallResult;
   });

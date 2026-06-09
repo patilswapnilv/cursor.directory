@@ -9,7 +9,7 @@ import {
   setPluginVerifiedAction,
 } from "@/actions/verify-plugin";
 import { Button } from "@/components/ui/button";
-import type { PluginRow } from "@/data/queries";
+import type { PluginRow } from "@/lib/plugins/types";
 import { isAdminClient } from "@/utils/admin";
 import { createClient } from "@/utils/supabase/client";
 

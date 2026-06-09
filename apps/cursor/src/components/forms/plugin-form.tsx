@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Check, Loader2, Plus, Trash2 } from "lucide-react";
+import { AlertCircle, Check, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
@@ -20,37 +20,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { slugify } from "@/lib/slug";
+import type { ComponentType } from "@/lib/plugins/types";
 import UploadLogo from "../upload-logo";
-
-const COMPONENT_TYPES = [
-  "rule",
-  "mcp_server",
-  "skill",
-  "agent",
-  "hook",
-  "lsp_server",
-  "command",
-] as const;
-
-const COMPONENT_LABELS: Record<string, string> = {
-  rule: "Rule",
-  mcp_server: "MCP Server",
-  skill: "Skill",
-  agent: "Agent",
-  hook: "Hook",
-  lsp_server: "LSP Server",
-  command: "Command",
-};
+import {
+  type ComponentDraft,
+  ComponentDraftEditor,
+  draftToComponentInput,
+  newComponentDraft,
+} from "./component-draft-editor";
 
 type ParsedComponent = {
   type: string;
@@ -77,20 +55,18 @@ type ParsedPlugin = {
   components: ParsedComponent[];
 };
 
-type ManualComponent = {
-  id: string;
-  type: (typeof COMPONENT_TYPES)[number];
-  name: string;
-  description: string;
-  content: string;
-};
-
 const autoFormSchema = z.object({
   url: z
     .string()
     .url("Please enter a valid URL")
     .regex(/github\.com/, "Must be a GitHub URL"),
 });
+
+function publishableComponents(drafts: ComponentDraft[]) {
+  return drafts
+    .filter((c) => c.name.trim())
+    .map((draft) => ({ ...draftToComponentInput(draft), metadata: {} }));
+}
 
 export function PluginForm() {
   const router = useRouter();
@@ -101,7 +77,7 @@ export function PluginForm() {
   const [editedDescription, setEditedDescription] = useState("");
   const [parseError, setParseError] = useState<string | null>(null);
   const [publishError, setPublishError] = useState<string | null>(null);
-  const [editedComponents, setEditedComponents] = useState<ManualComponent[]>(
+  const [editedComponents, setEditedComponents] = useState<ComponentDraft[]>(
     [],
   );
 
@@ -113,14 +89,8 @@ export function PluginForm() {
   const [manualRepository, setManualRepository] = useState("");
   const [manualHomepage, setManualHomepage] = useState("");
   const [manualKeywords, setManualKeywords] = useState("");
-  const [manualComponents, setManualComponents] = useState<ManualComponent[]>([
-    {
-      id: crypto.randomUUID(),
-      type: "rule",
-      name: "",
-      description: "",
-      content: "",
-    },
+  const [manualComponents, setManualComponents] = useState<ComponentDraft[]>([
+    newComponentDraft(),
   ]);
 
   const form = useForm<z.infer<typeof autoFormSchema>>({
@@ -139,7 +109,8 @@ export function PluginForm() {
           setEditedComponents(
             data.components.map((c) => ({
               id: crypto.randomUUID(),
-              type: c.type as ManualComponent["type"],
+              type: c.type as ComponentType,
+              slug: c.slug,
               name: c.name,
               description: c.description ?? "",
               content: c.content ?? "",
@@ -183,8 +154,8 @@ export function PluginForm() {
     if (!parsed) return;
     setPublishError(null);
 
-    const validComponents = editedComponents.filter((c) => c.name.trim());
-    if (validComponents.length === 0) {
+    const components = publishableComponents(editedComponents);
+    if (components.length === 0) {
       setPublishError("At least one component with a name is required.");
       return;
     }
@@ -196,25 +167,18 @@ export function PluginForm() {
       repository: parsed.repository,
       homepage: parsed.homepage ?? null,
       keywords: parsed.keywords,
-      components: validComponents.map((c) => ({
-        type: c.type as any,
-        name: c.name.trim(),
-        slug: slugify(c.name),
-        description: c.description.trim() || undefined,
-        content: c.content.trim() || undefined,
-        metadata: {},
-      })),
+      components,
     });
   };
 
   const onPublishManual = () => {
     setPublishError(null);
 
-    const validComponents = manualComponents.filter((c) => c.name.trim());
+    const components = publishableComponents(manualComponents);
     if (
       !manualName.trim() ||
       !manualDescription.trim() ||
-      validComponents.length === 0
+      components.length === 0
     ) {
       setPublishError(
         "Please fill in the plugin name, description, and at least one component with a name.",
@@ -232,69 +196,8 @@ export function PluginForm() {
         .split(",")
         .map((k) => k.trim())
         .filter(Boolean),
-      components: validComponents.map((c) => ({
-        type: c.type as any,
-        name: c.name.trim(),
-        slug: slugify(c.name),
-        description: c.description.trim() || undefined,
-        content: c.content.trim() || undefined,
-        metadata: {},
-      })),
+      components,
     });
-  };
-
-  const addManualComponent = () => {
-    setManualComponents((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        type: "rule",
-        name: "",
-        description: "",
-        content: "",
-      },
-    ]);
-  };
-
-  const removeManualComponent = (id: string) => {
-    setManualComponents((prev) => prev.filter((c) => c.id !== id));
-  };
-
-  const updateManualComponent = (
-    id: string,
-    field: keyof ManualComponent,
-    value: string,
-  ) => {
-    setManualComponents((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, [field]: value } : c)),
-    );
-  };
-
-  const addAutoComponent = () => {
-    setEditedComponents((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        type: "rule",
-        name: "",
-        description: "",
-        content: "",
-      },
-    ]);
-  };
-
-  const removeAutoComponent = (id: string) => {
-    setEditedComponents((prev) => prev.filter((c) => c.id !== id));
-  };
-
-  const updateAutoComponent = (
-    id: string,
-    field: keyof ManualComponent,
-    value: string,
-  ) => {
-    setEditedComponents((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, [field]: value } : c)),
-    );
   };
 
   const manualFormValid =
@@ -378,12 +281,12 @@ export function PluginForm() {
               <div className="space-y-6">
                 <div className="space-y-6">
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium">
+                    <span className="mb-1.5 block text-sm font-medium">
                       Logo
                       <span className="ml-1 font-normal text-muted-foreground">
                         (optional)
                       </span>
-                    </label>
+                    </span>
                     <UploadLogo
                       prefix="plugins"
                       onUpload={setAutoLogo}
@@ -391,20 +294,28 @@ export function PluginForm() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium">
+                    <label
+                      htmlFor="auto-plugin-name"
+                      className="mb-1.5 block text-sm font-medium"
+                    >
                       Name
                     </label>
                     <Input
+                      id="auto-plugin-name"
                       value={editedName}
                       onChange={(e) => setEditedName(e.target.value)}
                       className="border-border placeholder:text-[#878787]"
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium">
+                    <label
+                      htmlFor="auto-plugin-description"
+                      className="mb-1.5 block text-sm font-medium"
+                    >
                       Description
                     </label>
                     <Input
+                      id="auto-plugin-description"
                       value={editedDescription}
                       onChange={(e) => setEditedDescription(e.target.value)}
                       className="border-border placeholder:text-[#878787]"
@@ -429,8 +340,10 @@ export function PluginForm() {
                   )}
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
+                <ComponentDraftEditor
+                  drafts={editedComponents}
+                  onChange={setEditedComponents}
+                  header={
                     <div className="flex items-center gap-2">
                       <Check className="size-3.5 text-emerald-500" />
                       <p className="text-sm text-muted-foreground">
@@ -440,116 +353,8 @@ export function PluginForm() {
                           : "components"}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={addAutoComponent}
-                      className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                    >
-                      <Plus className="size-3" />
-                      Add
-                    </button>
-                  </div>
-
-                  {editedComponents.map((comp, index) => (
-                    <div
-                      key={comp.id}
-                      className="space-y-3 rounded-lg border border-border bg-card p-4 shadow-cursor"
-                    >
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground">
-                          Component {index + 1}
-                        </p>
-                        {editedComponents.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeAutoComponent(comp.id)}
-                            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="mb-1.5 block text-sm font-medium">
-                            Type
-                          </label>
-                          <Select
-                            value={comp.type}
-                            onValueChange={(v) =>
-                              updateAutoComponent(comp.id, "type", v)
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {COMPONENT_TYPES.map((t) => (
-                                <SelectItem key={t} value={t}>
-                                  {COMPONENT_LABELS[t]}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <label className="mb-1.5 block text-sm font-medium">
-                            Name
-                          </label>
-                          <Input
-                            value={comp.name}
-                            onChange={(e) =>
-                              updateAutoComponent(
-                                comp.id,
-                                "name",
-                                e.target.value,
-                              )
-                            }
-                            placeholder="my-rule"
-                            className="border-border placeholder:text-[#878787]"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="mb-1.5 block text-sm font-medium">
-                          Description
-                          <span className="ml-1 font-normal text-muted-foreground">
-                            (optional)
-                          </span>
-                        </label>
-                        <Input
-                          value={comp.description}
-                          onChange={(e) =>
-                            updateAutoComponent(
-                              comp.id,
-                              "description",
-                              e.target.value,
-                            )
-                          }
-                          placeholder="What this component does"
-                          className="border-border placeholder:text-[#878787]"
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1.5 block text-sm font-medium">
-                          Content
-                        </label>
-                        <Textarea
-                          value={comp.content}
-                          onChange={(e) =>
-                            updateAutoComponent(
-                              comp.id,
-                              "content",
-                              e.target.value,
-                            )
-                          }
-                          placeholder="Paste or write the component content here..."
-                          className="min-h-[100px] border-border font-mono text-sm placeholder:text-[#878787] placeholder:font-sans"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                  }
+                />
 
                 {publishError && (
                   <div className="flex items-start gap-3 rounded-lg border border-red-500/30 bg-red-500/5 p-4">
@@ -598,12 +403,12 @@ export function PluginForm() {
           <div className="space-y-6">
             <div className="space-y-6">
               <div>
-                <label className="mb-1.5 block text-sm font-medium">
+                <span className="mb-1.5 block text-sm font-medium">
                   Logo
                   <span className="ml-1 font-normal text-muted-foreground">
                     (optional)
                   </span>
-                </label>
+                </span>
                 <UploadLogo
                   prefix="plugins"
                   onUpload={setManualLogo}
@@ -611,8 +416,14 @@ export function PluginForm() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Name</label>
+                <label
+                  htmlFor="manual-plugin-name"
+                  className="mb-1.5 block text-sm font-medium"
+                >
+                  Name
+                </label>
                 <Input
+                  id="manual-plugin-name"
                   value={manualName}
                   onChange={(e) => setManualName(e.target.value)}
                   placeholder="My Plugin"
@@ -620,10 +431,14 @@ export function PluginForm() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium">
+                <label
+                  htmlFor="manual-plugin-description"
+                  className="mb-1.5 block text-sm font-medium"
+                >
                   Description
                 </label>
                 <Input
+                  id="manual-plugin-description"
                   value={manualDescription}
                   onChange={(e) => setManualDescription(e.target.value)}
                   placeholder="A short description of what this plugin does"
@@ -631,13 +446,17 @@ export function PluginForm() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium">
+                <label
+                  htmlFor="manual-plugin-repository"
+                  className="mb-1.5 block text-sm font-medium"
+                >
                   Repository URL
                   <span className="ml-1 font-normal text-muted-foreground">
                     (optional)
                   </span>
                 </label>
                 <Input
+                  id="manual-plugin-repository"
                   value={manualRepository}
                   onChange={(e) => setManualRepository(e.target.value)}
                   placeholder="https://github.com/you/your-plugin"
@@ -645,13 +464,17 @@ export function PluginForm() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium">
+                <label
+                  htmlFor="manual-plugin-homepage"
+                  className="mb-1.5 block text-sm font-medium"
+                >
                   Homepage
                   <span className="ml-1 font-normal text-muted-foreground">
                     (optional)
                   </span>
                 </label>
                 <Input
+                  id="manual-plugin-homepage"
                   value={manualHomepage}
                   onChange={(e) => setManualHomepage(e.target.value)}
                   placeholder="https://your-plugin.dev"
@@ -659,13 +482,17 @@ export function PluginForm() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium">
+                <label
+                  htmlFor="manual-plugin-keywords"
+                  className="mb-1.5 block text-sm font-medium"
+                >
                   Keywords
                   <span className="ml-1 font-normal text-muted-foreground">
                     (optional, comma-separated)
                   </span>
                 </label>
                 <Input
+                  id="manual-plugin-keywords"
                   value={manualKeywords}
                   onChange={(e) => setManualKeywords(e.target.value)}
                   placeholder="react, typescript, testing"
@@ -674,115 +501,11 @@ export function PluginForm() {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Components</label>
-                <button
-                  type="button"
-                  onClick={addManualComponent}
-                  className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                >
-                  <Plus className="size-3" />
-                  Add
-                </button>
-              </div>
-
-              {manualComponents.map((comp, index) => (
-                <div
-                  key={comp.id}
-                  className="space-y-3 rounded-lg border border-border bg-card p-4 shadow-cursor"
-                >
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">
-                      Component {index + 1}
-                    </p>
-                    {manualComponents.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeManualComponent(comp.id)}
-                        className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="mb-1.5 block text-sm font-medium">
-                        Type
-                      </label>
-                      <Select
-                        value={comp.type}
-                        onValueChange={(v) =>
-                          updateManualComponent(comp.id, "type", v)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {COMPONENT_TYPES.map((t) => (
-                            <SelectItem key={t} value={t}>
-                              {COMPONENT_LABELS[t]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="mb-1.5 block text-sm font-medium">
-                        Name
-                      </label>
-                      <Input
-                        value={comp.name}
-                        onChange={(e) =>
-                          updateManualComponent(comp.id, "name", e.target.value)
-                        }
-                        placeholder="my-rule"
-                        className="border-border placeholder:text-[#878787]"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium">
-                      Description
-                      <span className="ml-1 font-normal text-muted-foreground">
-                        (optional)
-                      </span>
-                    </label>
-                    <Input
-                      value={comp.description}
-                      onChange={(e) =>
-                        updateManualComponent(
-                          comp.id,
-                          "description",
-                          e.target.value,
-                        )
-                      }
-                      placeholder="What this component does"
-                      className="border-border placeholder:text-[#878787]"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium">
-                      Content
-                    </label>
-                    <Textarea
-                      value={comp.content}
-                      onChange={(e) =>
-                        updateManualComponent(
-                          comp.id,
-                          "content",
-                          e.target.value,
-                        )
-                      }
-                      placeholder="Paste or write the component content here..."
-                      className="min-h-[100px] border-border font-mono text-sm placeholder:text-[#878787] placeholder:font-sans"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ComponentDraftEditor
+              drafts={manualComponents}
+              onChange={setManualComponents}
+              header={<span className="text-sm font-medium">Components</span>}
+            />
 
             {publishError && (
               <div className="flex items-start gap-3 rounded-lg border border-red-500/30 bg-red-500/5 p-4">

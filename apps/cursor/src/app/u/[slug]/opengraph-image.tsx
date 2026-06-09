@@ -1,26 +1,26 @@
+import { cacheLife, cacheTag } from "next/cache";
 import { getUserProfile } from "@/data/queries";
 import {
-  createOGResponse,
   OG,
   OGLayout,
+  ogResponse,
+  renderOGBytes,
   resolveOgImageUrl,
 } from "@/lib/og";
 
 export const alt = "User Profile";
 export const size = { width: OG.width, height: OG.height };
 export const contentType = "image/png";
-export const revalidate = 86400;
 
-export default async function Image({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
+async function renderImage(slug: string) {
+  "use cache";
+  cacheLife("days");
+  cacheTag("users", `user-${slug}`);
+
   const { data } = await getUserProfile(slug);
 
   if (!data) {
-    return createOGResponse(
+    return renderOGBytes(
       <OGLayout>
         <div
           style={{
@@ -38,12 +38,13 @@ export default async function Image({
 
   const avatarUrl = resolveOgImageUrl(data.image);
 
-  return createOGResponse(
+  return renderOGBytes(
     <OGLayout>
       <div style={{ display: "flex", alignItems: "center", gap: 40 }}>
         {avatarUrl && (
           <img
             src={avatarUrl}
+            alt=""
             width={140}
             height={140}
             style={{ borderRadius: "50%", border: `1px solid ${OG.border}` }}
@@ -140,4 +141,13 @@ export default async function Image({
       </div>
     </OGLayout>,
   );
+}
+
+export default async function Image({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  return ogResponse(await renderImage(slug));
 }

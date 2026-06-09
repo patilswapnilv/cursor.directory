@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { EditPluginForm } from "@/components/forms/edit-plugin-form";
-import { PluginOwnerMenu } from "@/components/plugins/plugin-owner-menu";
 import { Login } from "@/components/login";
+import { PluginOwnerMenu } from "@/components/plugins/plugin-owner-menu";
 import { getPluginBySlug } from "@/data/queries";
 import { getSession } from "@/utils/supabase/auth";
 
@@ -14,7 +14,11 @@ export const metadata: Metadata = {
   description: "Edit your plugin on Cursor Directory.",
 };
 
-export default async function Page({ params }: { params: Params }) {
+/**
+ * Owner-gated editor: session and `params` access stream inside the page's
+ * Suspense boundary so the route keeps a prerendered static shell.
+ */
+async function EditPluginContent({ params }: { params: Params }) {
   const { slug } = await params;
   const session = await getSession();
   const { data: plugin } = await getPluginBySlug(slug);
@@ -27,9 +31,7 @@ export default async function Page({ params }: { params: Params }) {
     return (
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
-          <Suspense fallback={null}>
-            <Login redirectTo={`/plugins/${slug}/edit`} />
-          </Suspense>
+          <Login redirectTo={`/plugins/${slug}/edit`} />
         </div>
       </div>
     );
@@ -50,5 +52,13 @@ export default async function Page({ params }: { params: Params }) {
         <EditPluginForm data={plugin} />
       </div>
     </div>
+  );
+}
+
+export default function Page({ params }: { params: Params }) {
+  return (
+    <Suspense fallback={null}>
+      <EditPluginContent params={params} />
+    </Suspense>
   );
 }

@@ -18,13 +18,21 @@ export async function generateMetadata({ params }: { params: Params }) {
   };
 }
 
-export default async function Page({ params }: { params: Params }) {
+/**
+ * Awaiting `params` (a runtime API — no static params are generated for
+ * profiles) happens inside the Suspense boundary so the page chrome and
+ * skeleton prerender into the static shell while the profile streams.
+ */
+async function ProfileLoader({ params }: { params: Params }) {
   const { slug } = await params;
+  return <Profile slug={slug} />;
+}
 
+export default function Page({ params }: { params: Params }) {
   return (
     <div className="page-shell max-w-4xl min-h-screen pb-32 pt-24 md:pt-32">
       <Suspense fallback={<ProfileSkeleton />}>
-        <Profile slug={slug} />
+        <ProfileLoader params={params} />
       </Suspense>
     </div>
   );

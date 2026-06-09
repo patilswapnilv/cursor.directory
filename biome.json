@@ -1,7 +1,18 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
   "files": {
-    "includes": ["**", "!**/.wrangler", "!**/node_modules"]
+    "includes": [
+      "**",
+      "!**/.wrangler",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/.compile_research"
+    ]
   },
   "assist": {
     "enabled": true,
@@ -9,6 +20,11 @@
       "source": {
         "organizeImports": "on"
       }
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   },
   "linter": {

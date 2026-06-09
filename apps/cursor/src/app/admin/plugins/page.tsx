@@ -15,7 +15,11 @@ export const metadata: Metadata = {
   title: "Review Plugins | Admin",
 };
 
-export default async function AdminPluginsPage() {
+/**
+ * Admin-gated, intentionally uncached: the session read and moderation-queue
+ * queries run per request and stream inside the page's Suspense boundary.
+ */
+async function AdminPluginsContent() {
   const session = await getSession();
 
   if (!session || !isAdmin(session.user.id)) {
@@ -35,6 +39,17 @@ export default async function AdminPluginsPage() {
   ]);
 
   return (
+    <AdminPluginsTabs
+      flagged={flagged ?? []}
+      stuck={stuck ?? []}
+      pending={pending ?? []}
+      verification={verification ?? []}
+    />
+  );
+}
+
+export default function AdminPluginsPage() {
+  return (
     <div className="min-h-screen px-6 pt-24 md:pt-32 pb-32">
       <div className="mx-auto w-full max-w-3xl">
         <div className="mb-10">
@@ -46,13 +61,8 @@ export default async function AdminPluginsPage() {
           </p>
         </div>
 
-        <Suspense>
-          <AdminPluginsTabs
-            flagged={flagged ?? []}
-            stuck={stuck ?? []}
-            pending={pending ?? []}
-            verification={verification ?? []}
-          />
+        <Suspense fallback={null}>
+          <AdminPluginsContent />
         </Suspense>
       </div>
     </div>

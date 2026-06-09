@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { rescanPluginAction } from "@/actions/review-flagged-plugin";
 import { declinePluginAction } from "@/actions/review-plugin";
 import { Button } from "@/components/ui/button";
-import type { PluginRow } from "@/data/queries";
+import type { PluginRow } from "@/lib/plugins/types";
 
 function StuckCard({ plugin }: { plugin: PluginRow }) {
   const [dismissed, setDismissed] = useState(false);

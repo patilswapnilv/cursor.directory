@@ -3,7 +3,6 @@ import { requireCronAuth } from "@/lib/cron-auth";
 import { enqueuePluginScan } from "@/lib/plugins/queue";
 import { createClient } from "@/utils/supabase/admin-client";
 
-export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 // Retry plugins that have been sitting in pending/scanning longer than this.

@@ -22,16 +22,18 @@ import { pipeline } from "node:stream/promises";
 import { Agent, CursorAgentError, type RunResult } from "@cursor/sdk";
 import { x as extractTar } from "tar";
 import { z } from "zod";
-import type {
-  FlagCategory,
-  FlagSeverity,
-  PluginComponent,
-  ScanVerdict,
-} from "@/data/queries";
 import {
   fetchWithRateLimit,
   githubAuthHeaders,
+  parseGitHubUrl,
 } from "@/lib/github-plugin/parse";
+import {
+  FLAG_CATEGORIES,
+  FLAG_SEVERITIES,
+  type PluginComponent,
+  SCAN_VERDICTS,
+  type ScanVerdict,
+} from "@/lib/plugins/types";
 import { createClient } from "@/utils/supabase/admin-client";
 
 /**
@@ -71,18 +73,9 @@ type ComponentRow = Pick<
 >;
 
 const verdictSchema = z.object({
-  verdict: z.enum(["safe", "suspicious", "malicious"]),
-  severity: z.enum(["low", "medium", "high"]),
-  categories: z.array(
-    z.enum([
-      "malicious_code",
-      "prompt_injection",
-      "spam",
-      "nsfw",
-      "impersonation",
-      "low_quality",
-    ]),
-  ),
+  verdict: z.enum(SCAN_VERDICTS),
+  severity: z.enum(FLAG_SEVERITIES),
+  categories: z.array(z.enum(FLAG_CATEGORIES)),
   reasons: z.array(z.string().min(1)).min(0),
   summary: z.string().min(1),
 });
@@ -127,14 +120,6 @@ export type SimilarPluginRow = {
 // reason about clusters of duplicates without blowing up the prompt.
 const SIMILAR_THRESHOLD = 0.7;
 const SIMILAR_LIMIT = 5;
-
-const GITHUB_URL = /github\.com\/([^/]+)\/([^/]+?)(?:\.git)?(?:\/|$)/;
-
-function parseGitHubUrl(url: string): { owner: string; repo: string } | null {
-  const match = url.match(GITHUB_URL);
-  if (!match) return null;
-  return { owner: match[1], repo: match[2] };
-}
 
 // Tagged logger so scan-related lines are greppable in the dev terminal
 // and in Vercel function logs. Keep messages structured; the second arg
@@ -665,7 +650,7 @@ function parseVerdict(text: string): ScanVerdict {
   return {
     verdict: validated.data.verdict,
     severity: validated.data.severity,
-    categories: validated.data.categories as FlagCategory[],
+    categories: validated.data.categories,
     reasons: validated.data.reasons,
     summary: validated.data.summary,
   };
@@ -725,7 +710,7 @@ async function applyVerdict(
       flag_reasons: verdict.reasons.length
         ? verdict.reasons
         : verdict.categories,
-      flag_severity: verdict.severity as FlagSeverity,
+      flag_severity: verdict.severity,
       flagged_at: now,
     })
     .eq("id", pluginId);
