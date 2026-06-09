@@ -39,7 +39,7 @@ export const updateMCPListingAction = authActionClient
         })
         .eq("id", id)
         .eq("owner_id", userId)
-        .select("id")
+        .select("id, slug")
         .single();
 
       if (error) {
@@ -47,6 +47,7 @@ export const updateMCPListingAction = authActionClient
       }
 
       updateTag("mcps");
+      updateTag(`mcp-${data.slug}`);
 
       return data;
     },

@@ -1,6 +1,6 @@
 "use server";
 
-import { updateTag } from "next/cache";
+import { revalidateTag, updateTag } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/utils/supabase/server";
 import { authActionClient } from "./safe-action";
@@ -29,6 +29,11 @@ export const toggleFollowAction = authActionClient
         updateTag(`user-${slug}`);
         updateTag(`followers-${userId}`);
         updateTag(`following-${currentUserId}`);
+        // The members directory caches rows (incl. follower_count) under
+        // `users`. Background-refresh it like other ambient counters
+        // (see star-plugin) instead of synchronously flushing every
+        // users-tagged entry on each follow click.
+        revalidateTag("users", "max");
       };
 
       if (action === "follow") {

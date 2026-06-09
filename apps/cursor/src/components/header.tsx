@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { MobileMenu } from "./mobile-menu";
 import { Button } from "./ui/button";
+import { Skeleton } from "./ui/skeleton";
 import { UserMenu } from "./user-menu";
 
 export const navigationLinks = [
@@ -82,7 +83,9 @@ export function Header() {
             </Link>
 
             <div className="flex min-w-[88px] items-center justify-end">
-              <Suspense fallback={null}>
+              {/* Fallback matches UserMenu's own loading skeleton so the
+                  static shell shows the same placeholder instead of a gap. */}
+              <Suspense fallback={<Skeleton className="size-6 rounded-none" />}>
                 <UserMenu />
               </Suspense>
             </div>

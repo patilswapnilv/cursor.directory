@@ -76,14 +76,16 @@ export const rescanPluginAction = adminActionClient
   .action(async ({ parsedInput: { pluginId } }) => {
     const supabase = await createClient();
 
-    const { error: resetError } = await supabase
+    const { data: plugin, error: resetError } = await supabase
       .from("plugins")
       .update({ scan_status: "pending" })
-      .eq("id", pluginId);
+      .eq("id", pluginId)
+      .select("slug")
+      .single();
 
-    if (resetError) {
+    if (resetError || !plugin) {
       throw new ActionError(
-        `Failed to reset scan state: ${resetError.message}`,
+        `Failed to reset scan state: ${resetError?.message ?? "not found"}`,
       );
     }
 
@@ -97,5 +99,9 @@ export const rescanPluginAction = adminActionClient
     }
 
     revalidatePath("/admin/plugins");
+    // The status reset must reach cached readers (detail banner, leaderboard)
+    // right away; the drain route only invalidates again once the scan ends.
+    updateTag("plugins");
+    updateTag(`plugin-${plugin.slug}`);
     return { success: true };
   });

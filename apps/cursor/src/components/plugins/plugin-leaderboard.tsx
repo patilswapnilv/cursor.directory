@@ -57,12 +57,17 @@ function isExcluded(item: LeaderboardItem): boolean {
 // at launch and taper), but defensible as an *estimate* and clearly
 // marked in the UI with a `~` prefix to distinguish from measured
 // velocity.
-function syntheticVelocity(item: LeaderboardItem): number {
+//
+// `now` is passed in (instead of calling Date.now()) so rendering stays
+// deterministic — required for the leaderboard to be part of the cached
+// static shell under Cache Components. It refreshes whenever the page
+// cache revalidates.
+function syntheticVelocity(item: LeaderboardItem, now: number): number {
   const lifetime = Math.max(0, item.installCount);
   if (lifetime === 0) return 0;
   const ageDays = Math.max(
     1,
-    (Date.now() - new Date(item.createdAt).getTime()) / DAY_MS,
+    (now - new Date(item.createdAt).getTime()) / DAY_MS,
   );
   return Math.round(lifetime * Math.min(1, 30 / ageDays));
 }
@@ -79,13 +84,13 @@ function syntheticVelocity(item: LeaderboardItem): number {
 // exposed by `plugin_install_velocity`). For plugins younger than the
 // window, the SQL function returns their full install_count — every
 // install they have happened inside the window by definition.
-function trendingScore(item: LeaderboardItem): number {
+function trendingScore(item: LeaderboardItem, now: number): number {
   const realVelocity = Math.max(0, item.installs30d ?? 0);
   const lifetime = Math.max(0, item.installCount);
   if (realVelocity > 0) {
     return realVelocity * 1_000_000_000 + lifetime;
   }
-  return syntheticVelocity(item) * 1_000 + lifetime;
+  return syntheticVelocity(item, now) * 1_000 + lifetime;
 }
 
 const isSvgLogo = (url: string) => url.endsWith(".svg");
@@ -100,10 +105,14 @@ function isValidImageUrl(url: string | null | undefined): url is string {
   }
 }
 
-function metricFor(item: LeaderboardItem, sort: LeaderboardSort): number {
+function metricFor(
+  item: LeaderboardItem,
+  sort: LeaderboardSort,
+  now: number,
+): number {
   switch (sort) {
     case "trending":
-      return trendingScore(item);
+      return trendingScore(item, now);
     case "installs":
       return item.installCount;
     case "recent":
@@ -111,9 +120,8 @@ function metricFor(item: LeaderboardItem, sort: LeaderboardSort): number {
   }
 }
 
-function formatRelativeDate(iso: string): string {
+function formatRelativeDate(iso: string, now: number): string {
   const then = new Date(iso).getTime();
-  const now = Date.now();
   const diff = Math.max(0, now - then);
   const day = 24 * 60 * 60 * 1000;
   const days = Math.floor(diff / day);
@@ -139,6 +147,7 @@ function buildRows(
   items: LeaderboardItem[],
   sort: LeaderboardSort,
   groupByAuthor: boolean,
+  now: number,
 ): Row[] {
   const safeItems = items.filter((i) => !isExcluded(i));
   // Trending requires *some* signal: either real recent installs, or
@@ -150,7 +159,7 @@ function buildRows(
       ? safeItems.filter((i) => (i.installs30d ?? 0) > 0 || i.installCount > 0)
       : safeItems;
   const sorted = [...candidates].sort(
-    (a, b) => metricFor(b, sort) - metricFor(a, sort),
+    (a, b) => metricFor(b, sort, now) - metricFor(a, sort, now),
   );
 
   if (!groupByAuthor) {
@@ -163,7 +172,7 @@ function buildRows(
     if (!it.author) continue;
     totalsPerAuthor.set(
       it.author,
-      (totalsPerAuthor.get(it.author) ?? 0) + metricFor(it, sort),
+      (totalsPerAuthor.get(it.author) ?? 0) + metricFor(it, sort, now),
     );
     countPerAuthor.set(it.author, (countPerAuthor.get(it.author) ?? 0) + 1);
   }
@@ -293,12 +302,19 @@ function MoreRow({
 
 export function PluginLeaderboard({
   items,
+  now,
   initialSort = "trending",
   groupByAuthor = false,
   maxItems = Number.POSITIVE_INFINITY,
   chunkSize = 50,
 }: {
   items: LeaderboardItem[];
+  /**
+   * Reference timestamp for age-based scoring and "Xd ago" labels. Computed
+   * inside the cached page scope (never `Date.now()` here) so prerendering
+   * stays deterministic; it refreshes when the page cache revalidates.
+   */
+  now: number;
   initialSort?: LeaderboardSort;
   groupByAuthor?: boolean;
   maxItems?: number;
@@ -308,9 +324,9 @@ export function PluginLeaderboard({
   const [visible, setVisible] = useState(chunkSize);
 
   const rows = useMemo(() => {
-    const built = buildRows(items, sort, groupByAuthor);
+    const built = buildRows(items, sort, groupByAuthor, now);
     return built.slice(0, maxItems);
-  }, [items, sort, groupByAuthor, maxItems]);
+  }, [items, sort, groupByAuthor, maxItems, now]);
 
   const visibleRows = rows.slice(0, visible);
   const hasMore = visible < rows.length;
@@ -375,7 +391,7 @@ export function PluginLeaderboard({
           }
           const display =
             sort === "recent"
-              ? formatRelativeDate(row.item.createdAt)
+              ? formatRelativeDate(row.item.createdAt, now)
               : formatCount(row.item.installCount);
           return (
             <ItemRow

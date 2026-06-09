@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Suspense } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import type { Company } from "@/components/company/company-card";
+import { JoinCommunityLink } from "@/components/members/join-community-link";
 import { type Member, MembersTabs } from "@/components/members/members-tabs";
 import { getCompanies, getMembers, getTotalUsers } from "@/data/queries";
 import { formatCount } from "@/lib/utils";
-import { getSession } from "@/utils/supabase/auth";
 
 export const metadata: Metadata = {
   title: "Members | Cursor Directory",
@@ -21,25 +20,18 @@ export const metadata: Metadata = {
 };
 
 /**
- * Reading the session opts a component out of the static shell, so the
- * "Join" CTA streams in for signed-out visitors while the rest of the page
- * (cached member/company data) is prerendered.
+ * The entire page is cached (stale-while-revalidate, 5-minute background
+ * refresh): no per-request rendering, no streaming holes. The session-aware
+ * "Join" CTA is a client component gated on an auth-cookie check, and the
+ * tab/search filters are client-only state (see `nuqs-static-adapter`), so
+ * nothing defers to request time. The `[[...number]]` segment is ignored —
+ * legacy paginated URLs all serve this same cached page.
  */
-async function JoinCommunityLink() {
-  const session = await getSession();
-  if (session) return null;
-
-  return (
-    <Link
-      href="/login"
-      className="flex h-10 flex-shrink-0 items-center rounded-full border border-border bg-card px-4 text-sm text-foreground shadow-cursor transition-colors hover:bg-accent"
-    >
-      Join the community
-    </Link>
-  );
-}
-
 export default async function Page() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 300, expire: 86400 });
+  cacheTag("users", "companies");
+
   const [{ data: totalUsers }, { data: companies }, { data: initialMembers }] =
     await Promise.all([
       getTotalUsers(),
@@ -58,18 +50,14 @@ export default async function Page() {
           </p>
         </div>
 
-        <Suspense fallback={null}>
-          <JoinCommunityLink />
-        </Suspense>
+        <JoinCommunityLink />
       </div>
 
-      <Suspense>
-        <MembersTabs
-          totalMembers={totalUsers?.count ?? 0}
-          companies={(companies as Company[] | null) ?? []}
-          initialMembers={(initialMembers as Member[] | null) ?? []}
-        />
-      </Suspense>
+      <MembersTabs
+        totalMembers={totalUsers?.count ?? 0}
+        companies={(companies as Company[] | null) ?? []}
+        initialMembers={(initialMembers as Member[] | null) ?? []}
+      />
     </div>
   );
 }

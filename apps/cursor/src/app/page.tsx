@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import type { LeaderboardItem } from "@/components/plugins/plugin-leaderboard";
 import { Startpage } from "@/components/startpage";
 import {
@@ -20,13 +20,6 @@ export const metadata: Metadata = {
     description: "Discover plugins built by the Cursor community.",
   },
 };
-
-// All data here comes from `"use cache"` queries tagged `plugins`/`users`,
-// so the page prerenders into the static shell and refreshes when actions
-// invalidate those tags (installs, stars, plugin mutations). The pg_cron
-// snapshot drift (20260514_plugin_install_snapshots) is covered by the
-// time-based `cacheLife("hours")` on `getPluginInstallVelocity`, which
-// revalidates in the background even during quiet periods.
 
 function toLeaderboardItem(
   p: NonNullable<Awaited<ReturnType<typeof getPlugins>>["data"]>[number],
@@ -52,7 +45,20 @@ function toLeaderboardItem(
   };
 }
 
+/**
+ * The entire page is cached (stale-while-revalidate): served from the static
+ * shell, refreshed in the background hourly, and expired immediately when
+ * actions invalidate the `plugins`/`users` tags (installs, stars, plugin
+ * mutations). The `?q=` search filter is client-only state (see
+ * `nuqs-static-adapter`), so nothing here defers to request time. The
+ * hourly background revalidation also covers pg_cron snapshot drift in the
+ * install-velocity leaderboard (20260514_plugin_install_snapshots).
+ */
 export default async function Page() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("plugins", "users");
+
   const [
     { data: totalUsers },
     { data: allPluginsData },
@@ -68,15 +74,18 @@ export default async function Page() {
     toLeaderboardItem(p, velocity.get(p.id) ?? 0),
   );
 
+  // Captured inside the cache scope so leaderboard age math is deterministic
+  // during prerendering; refreshes with each cache revalidation.
+  const generatedAt = Date.now();
+
   return (
     <div className="min-h-screen w-full">
       <div className="w-full">
-        <Suspense>
-          <Startpage
-            leaderboardItems={leaderboardItems}
-            totalUsers={totalUsers?.count ?? 0}
-          />
-        </Suspense>
+        <Startpage
+          leaderboardItems={leaderboardItems}
+          totalUsers={totalUsers?.count ?? 0}
+          generatedAt={generatedAt}
+        />
       </div>
     </div>
   );
