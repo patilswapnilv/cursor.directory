@@ -89,6 +89,14 @@ export const rescanPluginAction = adminActionClient
       );
     }
 
+    // The status reset must reach cached readers (detail banner, leaderboard)
+    // right away, so invalidate before enqueueing — a queue failure must not
+    // leave cached views showing the stale status when the row is already
+    // pending. The drain route only invalidates again once the scan ends.
+    revalidatePath("/admin/plugins");
+    updateTag("plugins");
+    updateTag(`plugin-${plugin.slug}`);
+
     try {
       await enqueuePluginScan(pluginId);
       kickDrainAfterResponse();
@@ -98,10 +106,5 @@ export const rescanPluginAction = adminActionClient
       );
     }
 
-    revalidatePath("/admin/plugins");
-    // The status reset must reach cached readers (detail banner, leaderboard)
-    // right away; the drain route only invalidates again once the scan ends.
-    updateTag("plugins");
-    updateTag(`plugin-${plugin.slug}`);
     return { success: true };
   });
