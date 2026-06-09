@@ -61,7 +61,11 @@ export function Startpage({
 
           {visibleItems.length > 0 ? (
             <div className="mx-auto mb-14 w-full max-w-[880px]">
-              <PluginLeaderboard items={visibleItems} now={generatedAt} />
+              <PluginLeaderboard
+                items={visibleItems}
+                now={generatedAt}
+                searchQuery={isSearching ? query : ""}
+              />
             </div>
           ) : (
             <div className="mt-16 flex flex-col items-center">
