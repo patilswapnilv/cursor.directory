@@ -19,6 +19,7 @@ import { McpSection } from "./detail/mcp-section";
 import { PluginLogo } from "./detail/plugin-logo";
 import { RulesSection } from "./detail/rules-section";
 import { ScanStatusBanner } from "./detail/scan-status-banner";
+import { PluginAdminPanel } from "./plugin-admin-panel";
 import { PluginOwnerMenu } from "./plugin-owner-menu";
 import { StarButton } from "./star-button";
 import { VerifiedBadge } from "./verified-badge";
@@ -75,6 +76,7 @@ export function PluginDetailView({ plugin }: { plugin: PluginRow }) {
   return (
     <div className="min-h-screen px-4 pt-24 md:pt-32">
       <div className="page-shell max-w-4xl px-0 py-8">
+        <PluginAdminPanel plugin={plugin} />
         <ScanStatusBanner plugin={plugin} isOwner={isOwner} />
         {isOwner && !plugin.active && (
           <div className="mb-6 flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3">

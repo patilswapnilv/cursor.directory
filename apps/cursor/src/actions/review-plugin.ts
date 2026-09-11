@@ -36,6 +36,37 @@ export const approvePluginAction = adminActionClient
     return { success: true };
   });
 
+/**
+ * Admin counterpart to the owner's unpublish: hides the plugin from the
+ * directory without blocking it, so the owner (or an admin) can re-publish.
+ * Use `confirmFlagAction` instead when the plugin should stay down.
+ */
+export const unpublishPluginAction = adminActionClient
+  .metadata({ actionName: "unpublish-plugin" })
+  .schema(z.object({ pluginId: z.string().uuid() }))
+  .action(async ({ parsedInput: { pluginId } }) => {
+    const supabase = await createClient();
+
+    const { data: plugin, error } = await supabase
+      .from("plugins")
+      .update({ active: false })
+      .eq("id", pluginId)
+      .select("slug")
+      .single();
+
+    if (error || !plugin) {
+      throw new ActionError(
+        `Failed to unpublish plugin: ${error?.message ?? "not found"}`,
+      );
+    }
+
+    revalidatePath("/admin/plugins");
+    updateTag("plugins");
+    updateTag(`plugin-${plugin.slug}`);
+
+    return { success: true };
+  });
+
 export const declinePluginAction = adminActionClient
   .metadata({ actionName: "decline-plugin" })
   .schema(z.object({ pluginId: z.string().uuid() }))
